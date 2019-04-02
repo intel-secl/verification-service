@@ -9,16 +9,7 @@ import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.validation.ValidationUtil;
 import com.intel.mtwilson.core.flavor.model.Flavor;
 import com.intel.mtwilson.flavor.controller.exceptions.NonexistentEntityException;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorLocator;
-import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupCollection;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupFilterCriteria;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorFlavorgroupLink;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorFlavorgroupLinkCollection;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorFlavorgroupLinkFilterCriteria;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkCollection;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkFilterCriteria;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupLocator;
+import com.intel.mtwilson.flavor.rest.v2.model.*;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorFlavorgroupLinkRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorgroupHostLinkRepository;
@@ -29,14 +20,7 @@ import com.intel.mtwilson.repository.RepositoryInvalidInputException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -149,6 +133,45 @@ public class FlavorgroupResource {
         }
 
         return flavorgroup;
+    }
+
+    @POST
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
+    @Path("/{flavorgroupId}/flavors")
+    @RequiresPermissions("flavorgroups:create")
+    public void createFlavorgroupFlavorLinks(@PathParam("flavorgroupId") UUID flavorgroupId, FlavorFlavorgroupLinkCreateCriteria criteria) {
+        if(criteria.getFlavorId() == null) {
+            throw new WebApplicationException("Flavor ID is required to associate with flavorgroup.");
+        }
+        FlavorFlavorgroupLinkRepository repo = new FlavorFlavorgroupLinkRepository();
+        FlavorFlavorgroupLinkLocator flavorgroupLinkLocator = new FlavorFlavorgroupLinkLocator();
+        flavorgroupLinkLocator.flavorgroupId = flavorgroupId;
+        flavorgroupLinkLocator.flavorId = criteria.getFlavorId();
+        FlavorFlavorgroupLink flavorFlavorgroupLink = repo.retrieve(flavorgroupLinkLocator);
+        if (flavorFlavorgroupLink != null) {
+            throw new RepositoryInvalidInputException("Specified flavor-flavorgroup link already exists");
+        }
+        FlavorFlavorgroupLink link = new FlavorFlavorgroupLink();
+        link.setFlavorId(criteria.getFlavorId());
+        link.setFlavorgroupId(flavorgroupId);
+
+        repo.create(link);
+    }
+
+    @DELETE
+    @Path("/{flavorgroupId}/flavors/{flavorId}")
+    @RequiresPermissions("flavorgroups:delete")
+    public void deleteFlavorgroupFlavorLinks(@PathParam("flavorgroupId") UUID flavorgroupId, @PathParam("flavorId") UUID flavorId) {
+        FlavorFlavorgroupLinkRepository repo = new FlavorFlavorgroupLinkRepository();
+        FlavorFlavorgroupLinkLocator flavorgroupLinkLocator = new FlavorFlavorgroupLinkLocator();
+        flavorgroupLinkLocator.flavorgroupId = flavorgroupId;
+        flavorgroupLinkLocator.flavorId = flavorId;
+        FlavorFlavorgroupLink flavorFlavorgroupLink = repo.retrieve(flavorgroupLinkLocator);
+        if (flavorFlavorgroupLink == null) {
+            log.error("Flavor-Flavorgroup link retrieve : error during flavor-flavorgroup link retrieve");
+            throw new RepositoryInvalidInputException("Specified flavor-flavorgroup link does not exists");
+        }
+        repo.delete(flavorgroupLinkLocator);
     }
 
     @GET

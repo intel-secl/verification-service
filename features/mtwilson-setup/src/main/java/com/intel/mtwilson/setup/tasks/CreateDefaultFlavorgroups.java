@@ -12,7 +12,6 @@ import com.intel.mtwilson.flavor.model.FlavorMatchPolicyCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupFilterCriteria;
-import com.intel.mtwilson.flavor.rest.v2.repository.FlavorRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorgroupRepository;
 import com.intel.mtwilson.setup.LocalSetupTask;
 import com.intel.mtwilson.setup.SetupException;
@@ -29,13 +28,11 @@ import javax.sql.DataSource;
  */
 public class CreateDefaultFlavorgroups extends LocalSetupTask {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CreateDefaultFlavorgroups.class);
-    
     private String databaseDriver;
     private String databaseUrl;
     private String databaseVendor;
-    private final String automaticFlavorgroupName = "mtwilson_automatic";
-    private final String uniqueFlavorgroupName = "mtwilson_unique";
-    
+
+
     public CreateDefaultFlavorgroups() { }
     
     @Override
@@ -80,35 +77,51 @@ public class CreateDefaultFlavorgroups extends LocalSetupTask {
         }
         
         // look for automatic flavorgroup
-        FlavorgroupFilterCriteria automaticFlavorgroupFilterCriteria = new FlavorgroupFilterCriteria();
-        automaticFlavorgroupFilterCriteria.nameEqualTo = automaticFlavorgroupName;
-        FlavorgroupCollection automaticFlavorgroups
-                = new FlavorgroupRepository().search(automaticFlavorgroupFilterCriteria);
+        FlavorgroupCollection automaticFlavorgroups = getFlavorgroupCollection(Flavorgroup.AUTOMATIC_FLAVORGROUP);
         
         // validation fault if the automatic flavorgroup does not exist
-        if (automaticFlavorgroups == null || automaticFlavorgroups.getFlavorgroups() == null
-                || automaticFlavorgroups.getFlavorgroups().isEmpty()) {
+        if (isFlavorgroupCollectionEmpty(automaticFlavorgroups)) {
             validation("Automatic flavorgroup does not exist");
+        } else if (!Flavorgroup.getAutomaticFlavorMatchPolicy().equals(automaticFlavorgroups.getFlavorgroups().get(0).getFlavorMatchPolicyCollection())) {
+            validation("Automatic flavorgroup policy does not match");
         }
         
         // look for unique flavorgroup
-        FlavorgroupFilterCriteria uniqueFlavorgroupFilterCriteria = new FlavorgroupFilterCriteria();
-        uniqueFlavorgroupFilterCriteria.nameEqualTo = uniqueFlavorgroupName;
-        FlavorgroupCollection uniqueFlavorgroups
-                = new FlavorgroupRepository().search(uniqueFlavorgroupFilterCriteria);
+        FlavorgroupCollection uniqueFlavorgroups = getFlavorgroupCollection(Flavorgroup.UNIQUE_FLAVORGROUP);
         
         // validation fault if the automatic flavorgroup does not exist
-        if (uniqueFlavorgroups == null || uniqueFlavorgroups.getFlavorgroups() == null
-                || uniqueFlavorgroups.getFlavorgroups().isEmpty()) {
+        if (isFlavorgroupCollectionEmpty(uniqueFlavorgroups)) {
             validation("Unique flavorgroup does not exist");
         }
+
+        // look for unique flavorgroup
+        FlavorgroupCollection defaultSoftwareFlavorgroups = getFlavorgroupCollection(Flavorgroup.DEFAULT_SOFTWARE_FLAVORGROUP);
+
+        // validation fault if the automatic flavorgroup does not exist
+        if (isFlavorgroupCollectionEmpty(defaultSoftwareFlavorgroups)) {
+            validation("Default software flavorgroup does not exist");
+        } else if (!Flavorgroup.getIseclSoftwareFlavorMatchPolicy().equals(defaultSoftwareFlavorgroups.getFlavorgroups().get(0).getFlavorMatchPolicyCollection())) {
+            validation("Default software flavorgroup policy does not match");
+        }
+    }
+
+    private boolean isFlavorgroupCollectionEmpty(FlavorgroupCollection automaticFlavorgroups) {
+        return automaticFlavorgroups == null || automaticFlavorgroups.getFlavorgroups() == null
+                || automaticFlavorgroups.getFlavorgroups().isEmpty();
+    }
+
+    private FlavorgroupCollection getFlavorgroupCollection(String automaticFlavorgroup) {
+        FlavorgroupFilterCriteria automaticFlavorgroupFilterCriteria = new FlavorgroupFilterCriteria();
+        automaticFlavorgroupFilterCriteria.nameEqualTo = automaticFlavorgroup;
+        return new FlavorgroupRepository().search(automaticFlavorgroupFilterCriteria);
     }
 
     @Override
     protected void execute() throws Exception {
         // create the automatic and unique flavorgroups
-        createFlavorgroup(automaticFlavorgroupName, new FlavorRepository().createAutomaticFlavorMatchPolicy());
-        createFlavorgroup(uniqueFlavorgroupName, null);
+        createOrUpdateFlavorgroup(Flavorgroup.AUTOMATIC_FLAVORGROUP, Flavorgroup.getAutomaticFlavorMatchPolicy());
+        createOrUpdateFlavorgroup(Flavorgroup.UNIQUE_FLAVORGROUP, null);
+        createOrUpdateFlavorgroup(Flavorgroup.DEFAULT_SOFTWARE_FLAVORGROUP, Flavorgroup.getIseclSoftwareFlavorMatchPolicy());
     }
     
     private boolean testConnection() {
@@ -151,23 +164,33 @@ public class CreateDefaultFlavorgroups extends LocalSetupTask {
             throw new SetupException("Cannot load persistence unit info", e);
         }   
     }
-    
-    private Flavorgroup createFlavorgroup(String flavorgroupName, FlavorMatchPolicyCollection policy) {
+
+    private Flavorgroup createOrUpdateFlavorgroup(String flavorgroupName, FlavorMatchPolicyCollection expectedPolicy) {
         // look for flavorgroup
-        FlavorgroupFilterCriteria flavorgroupFilterCriteria = new FlavorgroupFilterCriteria();
-        flavorgroupFilterCriteria.nameEqualTo = flavorgroupName;
-        FlavorgroupCollection flavorgroups
-                = new FlavorgroupRepository().search(flavorgroupFilterCriteria);
-        
-        // create the automatic flavorgroup if it is not already there
-        if (flavorgroups == null || flavorgroups.getFlavorgroups() == null
-                || flavorgroups.getFlavorgroups().isEmpty()) {
-            Flavorgroup newFlavorgroup = new Flavorgroup();
-            newFlavorgroup.setName(flavorgroupName);
-            newFlavorgroup.setFlavorMatchPolicyCollection(policy);
-            return new FlavorgroupRepository().create(newFlavorgroup);
+        FlavorgroupCollection flavorgroups = getFlavorgroupCollection(flavorgroupName);
+        Flavorgroup flavorgroup;
+        // create flavorgroup if it is not already there
+        if (isFlavorgroupCollectionEmpty(flavorgroups)) {
+            flavorgroup = createFlavorgroup(flavorgroupName, expectedPolicy);
+        } else {
+            flavorgroup = flavorgroups.getFlavorgroups().get(0);
+            if (expectedPolicy != null && !expectedPolicy.equals(flavorgroup.getFlavorMatchPolicyCollection())) {
+                log.debug("Update Flavorgroup [{}] for latest policies", flavorgroupName);
+                flavorgroup = updateFlavorgroup(expectedPolicy, flavorgroup);
+            }
         }
-        log.debug("Flavorgroup [{}] already exists", flavorgroupName);
-        return flavorgroups.getFlavorgroups().get(0);
+        return flavorgroup;
+    }
+
+    private Flavorgroup updateFlavorgroup(FlavorMatchPolicyCollection expectedPolicy, Flavorgroup flavorgroup) {
+        flavorgroup.setFlavorMatchPolicyCollection(expectedPolicy);
+        return new FlavorgroupRepository().store(flavorgroup);
+    }
+
+    private Flavorgroup createFlavorgroup(String flavorgroupName, FlavorMatchPolicyCollection policy) {
+        Flavorgroup newFlavorgroup = new Flavorgroup();
+        newFlavorgroup.setName(flavorgroupName);
+        newFlavorgroup.setFlavorMatchPolicyCollection(policy);
+        return new FlavorgroupRepository().create(newFlavorgroup);
     }
 }

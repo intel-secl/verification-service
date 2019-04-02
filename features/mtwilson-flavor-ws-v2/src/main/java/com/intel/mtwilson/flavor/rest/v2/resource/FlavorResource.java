@@ -13,6 +13,10 @@ import com.intel.mtwilson.core.flavor.PlatformFlavorFactory;
 import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.core.flavor.common.PlatformFlavorException;
 import com.intel.mtwilson.core.flavor.model.Flavor;
+
+import static com.intel.mtwilson.core.flavor.SoftwareFlavor.DEFAULT_FLAVOR_PREFIX;
+import static com.intel.mtwilson.core.flavor.common.FlavorPart.*;
+
 import com.intel.mtwilson.core.flavor.model.Meta;
 import com.intel.mtwilson.flavor.model.FlavorMatchPolicyCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorCollection;
@@ -40,6 +44,8 @@ import com.intel.mtwilson.flavor.rest.v2.repository.FlavorRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorgroupHostLinkRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorgroupRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.HostRepository;
+import com.intel.mtwilson.flavor.rest.v2.utils.FlavorGroupUtils;
+import com.intel.mtwilson.flavor.rest.v2.utils.FlavorUtils;
 import com.intel.mtwilson.i18n.HostState;
 import com.intel.mtwilson.jaxrs2.mediatype.DataMediaType;
 import com.intel.mtwilson.jaxrs2.provider.JacksonObjectMapperProvider;
@@ -53,11 +59,7 @@ import com.intel.mtwilson.tag.model.TagCertificateLocator;
 import com.intel.mtwilson.tag.rest.v2.repository.TagCertificateRepository;
 import com.intel.mtwilson.tls.policy.TlsPolicyDescriptor;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.BeanParam;
@@ -72,6 +74,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import static com.intel.mtwilson.core.flavor.common.FlavorPart.*;
@@ -101,7 +104,7 @@ public class FlavorResource {
     }
 
     @GET
-    @Produces({MediaType.APPLICATION_JSON,MediaType.APPLICATION_XML, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
+    @Produces({MediaType.APPLICATION_JSON, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
     @RequiresPermissions("flavors:search")
     public FlavorCollection searchFlavor(@BeanParam FlavorFilterCriteria criteria, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse) {
         ValidationUtil.validate(criteria); 
@@ -110,12 +113,35 @@ public class FlavorResource {
     }
 
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
+    @Produces({MediaType.APPLICATION_XML})
+    @RequiresPermissions("flavors:search")
+    public FlavorCollection searchFlavorXML(@BeanParam FlavorFilterCriteria criteria, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse) {
+        ValidationUtil.validate(criteria);
+        log.debug("target: {} - {}", httpServletRequest.getRequestURI(), httpServletRequest.getQueryString());
+        FlavorCollection flavorCollection =  repository.search(criteria);
+        return FlavorGroupUtils.updatePathSeparatorForXML(flavorCollection);
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_JSON, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
     @Path("/{id}")
     @RequiresPermissions("flavors:retrieve")
     public Flavor retrieveFlavor(@BeanParam FlavorLocator locator, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse) {
-        ValidationUtil.validate(locator); 
+        ValidationUtil.validate(locator);
         return repository.retrieve(locator);
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_XML})
+    @Path("/{id}")
+    @RequiresPermissions("flavors:retrieve")
+    public Flavor retrieveFlavorXML(@BeanParam FlavorLocator locator, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse) {
+        ValidationUtil.validate(locator);
+        Flavor flavor = repository.retrieve(locator);
+        if (flavor.getMeta().getDescription().getFlavorPart().equals("SOFTWARE")) {
+            flavor = FlavorUtils.updatePathSeparatorForXML(flavor);
+        }
+        return flavor;
     }
 
     /**
@@ -131,7 +157,7 @@ public class FlavorResource {
      */
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
+    @Produces({MediaType.APPLICATION_JSON, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
     public FlavorCollection createFlavors(FlavorCreateCriteria item) throws IOException, Exception {
         ValidationUtil.validate(item);
 
@@ -148,6 +174,8 @@ public class FlavorResource {
                     return createHostUniqueFlavors(item);
                 } else if (partialFlavorType.equalsIgnoreCase(ASSET_TAG.getValue())) {
                     return createAssetTagFlavors(item);
+                } else if (partialFlavorType.equalsIgnoreCase(FlavorPart.SOFTWARE.getValue())) {
+                    return createSoftwareFlavors(item);
                 } else {
                     return createNonHostUnique(item);
                 }
@@ -155,7 +183,29 @@ public class FlavorResource {
         }
         return null;
     }
-    
+
+    @POST
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
+    @Produces({MediaType.APPLICATION_XML})
+    public FlavorCollection createFlavorsXML(FlavorCreateCriteria item) throws IOException, Exception {
+        ValidationUtil.validate(item);
+        FlavorCollection flavorCollection = createFlavors(item);
+        return FlavorGroupUtils.updatePathSeparatorForXML(flavorCollection);
+    }
+
+    // TODO: Additional support for backward compatibility
+    private List<String> replaceBoisToPlatform(List<String> partialFlavorTypes) {
+        List<String> filteredFlavorTypes = new ArrayList<>();
+        for(String flavorType :  partialFlavorTypes) {
+            if(flavorType.equalsIgnoreCase("BIOS")) {
+                filteredFlavorTypes.add(FlavorPart.PLATFORM.getValue());
+            } else {
+                filteredFlavorTypes.add(flavorType);
+            }
+        }
+        return filteredFlavorTypes;
+    }
+
     @RequiresPermissions("tag_flavors:create")
     private FlavorCollection createAssetTagFlavors(FlavorCreateCriteria item) throws IOException, Exception {
         return createOne(item);
@@ -163,6 +213,11 @@ public class FlavorResource {
     
     @RequiresPermissions("host_unique_flavors:create")
     private FlavorCollection createHostUniqueFlavors(FlavorCreateCriteria item) throws IOException, Exception {
+        return createOne(item);
+    }
+
+    @RequiresPermissions("software_flavors:create")
+    private FlavorCollection createSoftwareFlavors(FlavorCreateCriteria item) throws IOException, Exception {
         return createOne(item);
     }
 
@@ -251,9 +306,7 @@ public class FlavorResource {
         if ((item.getFlavorgroupName() == null || item.getFlavorgroupName().isEmpty())
                 && (item.getPartialFlavorTypes() == null || item.getPartialFlavorTypes().isEmpty())
                 && partialFlavorTypes.isEmpty()) {
-            for (FlavorPart flavorPart : FlavorPart.values()) {
-                partialFlavorTypes.add(flavorPart.name());
-            }
+            partialFlavorTypes.addAll(FlavorPart.getValues());
         }
         
         // determine flavorgroup name
@@ -261,26 +314,14 @@ public class FlavorResource {
         if (item.getFlavorgroupName() != null && !item.getFlavorgroupName().isEmpty()) {
             flavorgroupName = item.getFlavorgroupName();
         } else {
-            flavorgroupName = "mtwilson_automatic";
+            flavorgroupName = Flavorgroup.AUTOMATIC_FLAVORGROUP;
         }
         
         // look for flavorgroup
-        FlavorgroupLocator flavorgroupLocator = new FlavorgroupLocator();
-        flavorgroupLocator.name = flavorgroupName;
-        Flavorgroup flavorgroup = new FlavorgroupRepository().retrieve(flavorgroupLocator);
-        
-        // create flavorgroup
-        if (flavorgroup == null) {
-            // automatic or host-based flavor match policy?
-            FlavorMatchPolicyCollection policy = new FlavorRepository().createAutomaticFlavorMatchPolicy();
-            
-            // create the new flavorgroup
-            Flavorgroup newFlavorgroup = new Flavorgroup();
-            newFlavorgroup.setName(flavorgroupName);
-            newFlavorgroup.setFlavorMatchPolicyCollection(policy);
-            flavorgroup = new FlavorgroupRepository().create(newFlavorgroup);
+        Flavorgroup flavorgroup = FlavorGroupUtils.getFlavorGroupByName(flavorgroupName);
+        if(flavorgroup == null) {
+            flavorgroup = FlavorGroupUtils.createFlavorGroupByName(flavorgroupName);
         }
-        
         // if host connector retrieved platform flavor, break it into the flavor part flavor map using the flavorgroup id
         if (platformFlavor != null) {
             flavorPartFlavorMap = retrieveFlavorCollection(platformFlavor, flavorgroup.getId().toString(), partialFlavorTypes);
@@ -387,8 +428,8 @@ public class FlavorResource {
     }
     
     /**
-     * This method associates the flavor/flavor parts with a particular flavor
-     * group by extracting the flavor parts specified the PlatformFlavor instance.
+     * This method associates the flavor/flavor parts specified from the PlatformFlavor instance
+     * with a particular flavor group.
      *
      * @param flavorObjCollection
      * @param flavorgroupId Flavorgroup ID to which the flavor needs to be
@@ -408,6 +449,9 @@ public class FlavorResource {
                 addFlavorToUniqueFlavorgroup(flavorPart, true);
             } else if (flavorObj.getKey().equalsIgnoreCase(HOST_UNIQUE.getValue())) {
                 addFlavorToUniqueFlavorgroup(flavorPart, false);
+            } else if (flavorObj.getKey().equalsIgnoreCase(FlavorPart.SOFTWARE.getValue()) &&
+                    flavorObj.getValue().getMeta().getDescription().getLabel().startsWith(DEFAULT_FLAVOR_PREFIX)) {
+                addFlavorToIseclSoftwareFlavorgroup(flavorPart);
             } else {
                 // For other flavor parts, we just store all the individual flavors first and finally do the association below.
                 // Other flavor parts include OS, PLATFORM, SOFTWARE
@@ -430,7 +474,7 @@ public class FlavorResource {
         }
 
         // Add hosts matching the flavorgroup to flavor verify queue in background
-        new Thread(new AddFlavorgroupHostsToFlavorVerifyQueue(flavorgroupId)).start();
+        new Thread(new AddFlavorgroupHostsToFlavorVerifyQueue(flavorgroupId, false)).start();
 
         return returnFlavors;
     }
@@ -449,10 +493,13 @@ public class FlavorResource {
         
         // find unique flavorgroup
         FlavorgroupLocator flavorgroupLocator = new FlavorgroupLocator();
-        flavorgroupLocator.name = "mtwilson_unique";
+        flavorgroupLocator.name = Flavorgroup.UNIQUE_FLAVORGROUP;
         Flavorgroup uniqueFlavorgroup = new FlavorgroupRepository().retrieve(flavorgroupLocator);
         if (uniqueFlavorgroup == null) {
-            throw new IllegalArgumentException("Flavorgroup 'mtwilson_unique' does not exist");
+            Flavorgroup newFlavorgroup = new Flavorgroup();
+            newFlavorgroup.setName(Flavorgroup.UNIQUE_FLAVORGROUP);
+            newFlavorgroup.setFlavorMatchPolicyCollection(null);
+            uniqueFlavorgroup = new FlavorgroupRepository().create(newFlavorgroup);
         }
         
         // create the flavor flavorgroup link association
@@ -497,7 +544,37 @@ public class FlavorResource {
         // add host to flavor-verify queue
         new HostResource().addHostToFlavorVerifyQueue(host.getId(), forceUpdate);
     }
-    
+
+    /**
+     * Associates the flavor with the default software flavor group created during the
+     * installation.
+     *
+     * @param flavor Complete flavor.
+     * report to be generated from the host directly
+     */
+    private void addFlavorToIseclSoftwareFlavorgroup(Flavor flavor) {
+        // get flavor ID
+        UUID flavorId = UUID.valueOf(flavor.getMeta().getId());
+
+        // find unique flavorgroup
+        Flavorgroup iseclSoftwareFlavorgroup = FlavorGroupUtils.getFlavorGroupByName(Flavorgroup.DEFAULT_SOFTWARE_FLAVORGROUP);
+        if (iseclSoftwareFlavorgroup == null) {
+            Flavorgroup newFlavorgroup = new Flavorgroup();
+            newFlavorgroup.setName(Flavorgroup.DEFAULT_SOFTWARE_FLAVORGROUP);
+            newFlavorgroup.setFlavorMatchPolicyCollection(Flavorgroup.getIseclSoftwareFlavorMatchPolicy());
+            iseclSoftwareFlavorgroup = new FlavorgroupRepository().create(newFlavorgroup);
+        }
+
+        // create the flavor flavorgroup link association
+        FlavorFlavorgroupLink flavorFlavorgroupLink = new FlavorFlavorgroupLink();
+        flavorFlavorgroupLink.setFlavorId(flavorId);
+        flavorFlavorgroupLink.setFlavorgroupId(iseclSoftwareFlavorgroup.getId());
+        new FlavorFlavorgroupLinkRepository().create(flavorFlavorgroupLink);
+
+        // Add hosts matching the default flavorgroup to flavor verify queue in background and get updated host manifest
+        new Thread(new AddFlavorgroupHostsToFlavorVerifyQueue(iseclSoftwareFlavorgroup.getId(), true)).start();
+    }
+
     /**
      * Retrieves the list of all the flavors requested and returns it back to the caller
      * @param platformFlavor 
@@ -512,6 +589,9 @@ public class FlavorResource {
             throw new IllegalArgumentException("Platform flavor and flavorgroup ID must be specified");
         }
         
+        if (flavorParts.isEmpty()) {
+            flavorParts.add(SOFTWARE.name());
+        }
         // User has specified the particular flavor part(s)
         for (String flavorPart : flavorParts) {
             try {

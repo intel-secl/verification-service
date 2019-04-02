@@ -8,7 +8,7 @@
 Background
 
     The Host Verification Service component of Intel® Security Libraries (ISecL) performs remote
-attestation of physical servers by comparing Intel® TXT measurements of BIOS,
+attestation of physical servers by comparing Intel® TXT measurements of PLATFORM,
 OS, Asset Tag, and other components against a database of known-good values.
 The attested trust status of each server is used to make policy decisions 
 for workload placement.
@@ -37,7 +37,7 @@ on the devices.  This assurance would then drive policy decisions for
 
     Here are some key aspects of the Attestation solution:
 
-	[[1]]The first generation solution would be targeted to 'Attest to' the trust of the platform (Firmware and BIOS)
+	[[1]]The first generation solution would be targeted to 'Attest to' the trust of the platform (Firmware and PLATFORM)
              and Hypervisor/OS, on Intel Architecture-based Servers that have a 'Measured Launch' of the OS/Hypervisor 
              using Intel TXT.  Future versions would support the attestation of IA-based Network and Storage devices
              (OpenFiler, OpenNFS running on IA-based Servers), and TXT-based clients
@@ -241,8 +241,8 @@ HostTlsPolicy createTlsPolicy = client.createTlsPolicy(tlsPolicy);
         Flavors are automatically matched to hosts based on the flavorgroup used by the host and the flavors, and the flavor match policies 
         of the flavorgroup.  The ISecL Host Verification Service creates a default flavorgroups during installation called “mtwilson_automatic”.
         This flavorgroup is configured to be used as a pool of all acceptable Flavors in a given environment, and will automatically match the 
-        appropriate Flavor parts[BIOS, OS, ASSET_TAG and HOST_UNIQUE] to the correct host.  This flavorgroup is used by default and is
-        expected to be useful for the majority of deployments. If no flavorgroup is specified when creating a flavor, it will be placed in the 
+        appropriate Flavor parts[PLATFORM, OS, ASSET_TAG, HOST_UNIQUE, SOFTWARE] to the correct host.  This flavorgroup is used by default and is
+        expected to be useful for the majority of deployments. If no flavorgroup is specified when creating a flavor, it will be placed in the
         mtwilson_automatic flavorgroup. 
 
         HOST_UNIQUE Flavor parts, used by Red Hat Enterprise Linux and VMWare ESXi host types, MUST be created for each registered host of that

@@ -59,10 +59,10 @@
         <appender-ref ref="ConsoleError"/>
         <appender-ref ref="ConsoleWarn"/>
     </logger>
-	<logger name="org.opensaml.xml" level="INFO"/>
-    
-    <!--
+
+    <logger name="org.opensaml.xml" level="INFO"/>
     <logger name="org.eclipse.jetty" level="INFO"/>
+    <!--
     <logger name="com.intel.dcsg.cpg" level="INFO"/>
     <logger name="com.intel.dcsg.cpg.console" level="INFO"/>
     <logger name="com.intel.dcsg.cpg.configuration" level="INFO"/>

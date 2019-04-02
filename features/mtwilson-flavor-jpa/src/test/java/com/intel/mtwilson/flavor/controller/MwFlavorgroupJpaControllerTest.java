@@ -10,6 +10,8 @@ import com.intel.mtwilson.flavor.data.MwFlavorgroup;
 import com.intel.mtwilson.flavor.model.FlavorMatchPolicy;
 import com.intel.mtwilson.flavor.model.FlavorMatchPolicyCollection;
 import com.intel.mtwilson.flavor.model.MatchPolicy;
+
+import static com.intel.mtwilson.core.flavor.common.FlavorPart.*;
 import static com.intel.mtwilson.flavor.model.MatchPolicy.MatchType.ANY_OF;
 import static com.intel.mtwilson.flavor.model.MatchPolicy.Required.REQUIRED;
 import static com.intel.mtwilson.flavor.model.MatchPolicy.Required.REQUIRED_IF_DEFINED;
@@ -20,6 +22,8 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.*;
+
+import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -84,16 +88,30 @@ public class MwFlavorgroupJpaControllerTest {
         
         MwFlavorgroup mwFlavorgroupAutomatic = new MwFlavorgroup();
         mwFlavorgroupAutomatic.setId(new UUID().toString());
-        mwFlavorgroupAutomatic.setName("mtwilson_automatic");
+        mwFlavorgroupAutomatic.setName(Flavorgroup.AUTOMATIC_FLAVORGROUP);
         mwFlavorgroupAutomatic.setFlavorTypeMatchPolicy(flavorMatchPolicyAutomatic);
         mwFlavorgroupJpaController.create(mwFlavorgroupAutomatic);
         System.out.println(String.format("Automatic flavorgroup [%s] created with name: %s", mwFlavorgroupAutomatic.getId(), mwFlavorgroupAutomatic.getName()));
         
         MwFlavorgroup mwFlavorgroupUnique = new MwFlavorgroup();
         mwFlavorgroupUnique.setId(new UUID().toString());
-        mwFlavorgroupUnique.setName("mtwilson_unique");
+        mwFlavorgroupUnique.setName(Flavorgroup.UNIQUE_FLAVORGROUP);
         mwFlavorgroupJpaController.create(mwFlavorgroupUnique);
         System.out.println(String.format("Unique flavorgroup [%s] created with name: %s", mwFlavorgroupUnique.getId(), mwFlavorgroupUnique.getName()));
+
+        for (int i = 1; i <= 10; i++) {
+            FlavorMatchPolicyCollection flavorMatchPolicyHostBased = new FlavorMatchPolicyCollection();
+            flavorMatchPolicyAutomatic.addFlavorMatchPolicy(new FlavorMatchPolicy(PLATFORM, new MatchPolicy(ANY_OF, REQUIRED)));
+            flavorMatchPolicyAutomatic.addFlavorMatchPolicy(new FlavorMatchPolicy(OS, new MatchPolicy(ANY_OF, REQUIRED)));
+            flavorMatchPolicyAutomatic.addFlavorMatchPolicy(new FlavorMatchPolicy(HOST_UNIQUE, new MatchPolicy(ANY_OF, REQUIRED_IF_DEFINED)));
+
+            MwFlavorgroup mwFlavorgroupHostBased = new MwFlavorgroup();
+            mwFlavorgroupHostBased.setId(new UUID().toString());
+            mwFlavorgroupHostBased.setName(String.format("host-%d", i));
+            mwFlavorgroupHostBased.setFlavorTypeMatchPolicy(flavorMatchPolicyHostBased);
+            mwFlavorgroupJpaController.create(mwFlavorgroupHostBased);
+            System.out.println(String.format("Host based flavorgroup [%s] created with name: %s", mwFlavorgroupHostBased.getId(), mwFlavorgroupHostBased.getName()));
+        }
     }
     
     @Test
@@ -127,7 +145,7 @@ public class MwFlavorgroupJpaControllerTest {
     
     @Test
     public void findFlavorgroupsByName() throws Exception {
-        String name = "mtwilson_automatic";
+        String name = Flavorgroup.AUTOMATIC_FLAVORGROUP;
         MwFlavorgroup mwFlavorgroup = mwFlavorgroupJpaController.findMwFlavorgroupByName(name);
         
         if (mwFlavorgroup == null) {

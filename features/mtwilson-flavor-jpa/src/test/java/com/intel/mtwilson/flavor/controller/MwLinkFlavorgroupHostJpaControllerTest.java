@@ -15,6 +15,8 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.*;
+
+import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -74,7 +76,7 @@ public class MwLinkFlavorgroupHostJpaControllerTest {
     
     @Test
     public void createTestData() throws Exception {
-        MwFlavorgroup mwFlavorgroupAutomatic = mwFlavorgroupJpaController.findMwFlavorgroupByName("mtwilson_automatic");
+        MwFlavorgroup mwFlavorgroupAutomatic = mwFlavorgroupJpaController.findMwFlavorgroupByName(Flavorgroup.AUTOMATIC_FLAVORGROUP);
         List<MwHost> mwHostEntries = mwHostJpaController.findMwHostEntities();
         for (MwHost mwHost : mwHostEntries) {
             MwLinkFlavorgroupHost mwLinkFlavorgroupHost

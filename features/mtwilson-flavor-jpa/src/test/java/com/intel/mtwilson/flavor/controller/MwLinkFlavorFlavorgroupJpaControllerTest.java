@@ -78,8 +78,8 @@ public class MwLinkFlavorFlavorgroupJpaControllerTest {
     
     @Test
     public void createTestData() throws Exception {
-        MwFlavorgroup mwFlavorgroupAutomatic = mwFlavorgroupJpaController.findMwFlavorgroupByName("mtwilson_automatic");
-        MwFlavorgroup mwFlavorgroupUnique = mwFlavorgroupJpaController.findMwFlavorgroupByName("mtwilson_unique");
+        MwFlavorgroup mwFlavorgroupAutomatic = mwFlavorgroupJpaController.findMwFlavorgroupByName(Flavorgroup.AUTOMATIC_FLAVORGROUP);
+        MwFlavorgroup mwFlavorgroupUnique = mwFlavorgroupJpaController.findMwFlavorgroupByName(Flavorgroup.UNIQUE_FLAVORGROUP);
         List<MwFlavor> mwFlavorEntries = mwFlavorJpaController.findMwFlavorEntities();
         for (MwFlavor mwFlavor : mwFlavorEntries) {
             String flavorgroupId = null;

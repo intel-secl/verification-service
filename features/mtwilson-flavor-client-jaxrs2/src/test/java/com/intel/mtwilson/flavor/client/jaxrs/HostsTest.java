@@ -15,6 +15,7 @@ import com.intel.mtwilson.tls.policy.creator.impl.InsecureTrustFirstPublicKeyTls
 import com.intel.mtwilson.tls.policy.creator.impl.PublicKeyDigestTlsPolicyCreator;
 import com.intel.mtwilson.tls.policy.factory.TlsPolicyCreator;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Properties;
 import org.junit.After;
 import org.junit.AfterClass;

@@ -15,7 +15,6 @@ import com.intel.mtwilson.tag.selection.xml.SelectionsType;
 import java.io.IOException;
 import javax.xml.bind.JAXBException;
 import javax.xml.stream.XMLStreamException;
-import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
 
@@ -74,7 +73,7 @@ public class Util {
      */
     public static X509AttrBuilder.Attribute toAttributeOidValue(AttributeType attribute) throws IOException {
         if (attribute.getDer() != null) {
-            ASN1Object asn1 = ASN1Primitive.fromByteArray(attribute.getDer().getValue()); // throws IOException
+            ASN1Primitive asn1 = ASN1Primitive.fromByteArray(attribute.getDer().getValue()); // throws IOException
             return new X509AttrBuilder.Attribute(new ASN1ObjectIdentifier(attribute.getOid()), asn1);
         } else if (attribute.getOid().equals("2.5.4.789.1") && attribute.getText() != null) {
             String[] parts = attribute.getText().getValue().split("=");  // name=value

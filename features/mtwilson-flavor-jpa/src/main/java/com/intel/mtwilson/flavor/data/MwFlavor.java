@@ -40,14 +40,17 @@ public class MwFlavor implements Serializable {
     @Basic(optional = false)
     @Column(name = "id")
     private String id;
+
     @Basic(optional = false)
     @Column(name = "label")
     private String label;
+
     @Basic(optional = false)
     @Lob
     @Column(name = "content", columnDefinition = "json")
     @Convert(converter = FlavorConverter.class)
     private Flavor content;
+
     @Basic(optional = false)
     @Column(name = "created")
     @Temporal(TemporalType.TIMESTAMP)

@@ -77,7 +77,9 @@ public class FlavorFlavorgroupLinkRepository {
 
     public FlavorFlavorgroupLink retrieve(FlavorFlavorgroupLinkLocator locator) {
         log.debug("flavor_flavorgroup_link:retrieve - got request to retrieve flavor flavorgroup link");
-        if (locator == null || (locator.id == null && locator.pathId == null)) { return null; }
+        if (locator == null
+                || ((locator.id == null && locator.pathId == null) && (locator.flavorId == null || locator.flavorgroupId == null)))
+        { return null; }
         
         try {
             MwLinkFlavorFlavorgroupJpaController mwLinkFlavorFlavorgroupJpaController = My.jpa().mwLinkFlavorFlavorgroup();
@@ -158,7 +160,9 @@ public class FlavorFlavorgroupLinkRepository {
     
     public void delete(FlavorFlavorgroupLinkLocator locator) {
         log.debug("FlavorFlavorgroupLinkRepository: Received request to delete link between flavor and flavorgroup");
-        if (locator == null || (locator.id == null && locator.pathId == null)) { return; }
+        if (locator == null
+                || ((locator.id == null && locator.pathId == null) && (locator.flavorId == null || locator.flavorgroupId == null)))
+        { return; }
         
         FlavorFlavorgroupLink flavorFlavorgroupLink = retrieve(locator);        
         if (flavorFlavorgroupLink != null) {

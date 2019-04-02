@@ -24,17 +24,19 @@ public class AddFlavorgroupHostsToFlavorVerifyQueue implements Runnable {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AddFlavorgroupHostsToFlavorVerifyQueue.class);
     private final UUID flavorgroupId;
+    private final boolean forceUpdate;
 
-    public AddFlavorgroupHostsToFlavorVerifyQueue(UUID flavorgroupId) {
+    public AddFlavorgroupHostsToFlavorVerifyQueue(UUID flavorgroupId, boolean forceUpdate) {
         this.flavorgroupId = flavorgroupId;
+        this.forceUpdate = forceUpdate;
     }
 
     @Override
     public void run() {
-        addFlavorgroupHostsToFlavorVerifyQueue(flavorgroupId);
+        addFlavorgroupHostsToFlavorVerifyQueue(flavorgroupId, forceUpdate);
     }
     
-    private static synchronized void addFlavorgroupHostsToFlavorVerifyQueue(UUID flavorgroupId) {
+    private static synchronized void addFlavorgroupHostsToFlavorVerifyQueue(UUID flavorgroupId, boolean forceUpdate) {
         // retrieve the list of hosts associated the flavor group
         FlavorgroupHostLinkFilterCriteria flavorgroupHostLinkFilterCriteria
                 = new FlavorgroupHostLinkFilterCriteria();
@@ -55,10 +57,10 @@ public class AddFlavorgroupHostsToFlavorVerifyQueue implements Runnable {
         }
         
         //Filter hosts already in the queue, update host statuses to queue and add the hosts to queue
-        List<String> hostListForFlavorVerifyQueue = new HostRepository().filterHostsAlreadyInQueue(hostIdList, false);
+        List<String> hostListForFlavorVerifyQueue = new HostRepository().filterHostsAlreadyInQueue(hostIdList, forceUpdate);
         if(hostListForFlavorVerifyQueue != null && !hostListForFlavorVerifyQueue.isEmpty()) {
             new HostResource().updateHostStatusList(hostListForFlavorVerifyQueue, QUEUE, null);
-            new HostResource().addHostsToFlavorVerifyQueue(hostListForFlavorVerifyQueue, false);            
+            new HostResource().addHostsToFlavorVerifyQueue(hostListForFlavorVerifyQueue, forceUpdate);
         }        
     }
 }

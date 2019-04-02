@@ -5,14 +5,19 @@
 
 package com.intel.mtwilson.flavor.rest.v2.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+
 /**
  *
  * @author hmgowda
  */
 public class FlavorgroupHostLinkCreateCriteria {
-    
-    private String flavorgroupName;
 
+   private String flavorgroupName;
+
+   @JsonProperty("flavorgroupName")
+   @JacksonXmlProperty(isAttribute = true, localName="flavorgroupName")
    public String getFlavorgroupName() {
         return flavorgroupName;
     }

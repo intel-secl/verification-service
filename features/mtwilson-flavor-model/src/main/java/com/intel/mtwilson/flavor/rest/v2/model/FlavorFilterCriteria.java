@@ -22,10 +22,6 @@ import javax.ws.rs.QueryParam;
 public class FlavorFilterCriteria extends DefaultFilterCriteria implements FilterCriteria<Flavor> {
     @QueryParam("id")
     public UUID id;
-//    @QueryParam("nameEqualTo")
-//    public String nameEqualTo;
-//    @QueryParam("nameContains")
-//    public String nameContains;
     @QueryParam("key")
     public String key;
     @QueryParam("value")

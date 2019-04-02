@@ -8,6 +8,7 @@ package com.intel.mtwilson.flavor.rest.v2.resource;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
 import com.intel.dcsg.cpg.tls.policy.impl.PublicKeyTlsPolicy;
+import com.intel.mtwilson.core.common.model.HostInfo;
 import com.intel.mtwilson.flavor.rest.v2.model.Host;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkCreateCriteria;
 import com.intel.dcsg.cpg.validation.ValidationUtil;
@@ -33,10 +34,12 @@ import com.intel.mtwilson.flavor.rest.v2.repository.FlavorgroupHostLinkRepositor
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorgroupRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.HostRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.HostStatusRepository;
+import com.intel.mtwilson.flavor.rest.v2.utils.FlavorGroupUtils;
 import com.intel.mtwilson.jaxrs2.mediatype.DataMediaType;
 import com.intel.mtwilson.launcher.ws.ext.V2;
 import com.intel.mtwilson.core.common.model.HostManifest;
 import com.intel.mtwilson.repository.RepositoryInvalidInputException;
+
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -54,6 +57,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+
 import com.intel.mtwilson.features.queue.model.Queue;
 import com.intel.mtwilson.features.queue.model.QueueCollection;
 import com.intel.mtwilson.features.queue.model.QueueFilterCriteria;
@@ -62,9 +66,13 @@ import com.intel.mtwilson.flavor.rest.v2.model.FlavorHostLinkFilterCriteria;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkFilterCriteria;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorHostLinkRepository;
 import com.intel.mtwilson.i18n.HostState;
+
 import static com.intel.mtwilson.i18n.HostState.QUEUE;
+
 import com.intel.mtwilson.core.common.datatypes.ConnectionString;
+
 import static com.intel.mtwilson.features.queue.model.QueueState.NEW;
+
 import com.intel.mtwilson.flavor.controller.MwHostStatusJpaController;
 import com.intel.mtwilson.flavor.controller.MwQueueJpaController;
 import com.intel.mtwilson.flavor.data.MwHostStatus;
@@ -79,6 +87,7 @@ import com.intel.mtwilson.tls.policy.model.HostTlsPolicy;
 import com.intel.mtwilson.tls.policy.model.HostTlsPolicyLocator;
 import com.intel.mtwilson.tls.policy.TlsPolicyDescriptor;
 import com.intel.mtwilson.tls.policy.TlsProtection;
+
 import java.net.MalformedURLException;
 import java.security.PublicKey;
 import java.util.ArrayList;
@@ -86,11 +95,11 @@ import java.util.HashSet;
 import java.util.List;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 /**
- *
  * @author hmgowda
  * @author purvades
  */
@@ -123,8 +132,7 @@ public class HostResource {
         ValidationUtil.validate(hostCreateCriteria);
         UUID hostId = new UUID();
         UUID hardwareUuid = null;
-        HostManifest hostManifest;
-        
+        HostInfo hostInfo = null;
         TlsPolicyDescriptor tlsPolicyDescriptor;
 
         try {
@@ -153,12 +161,12 @@ public class HostResource {
                 log.debug("Connecting to host to get the host manifest and the hardware UUID of the host : {}",
                         hostCreateCriteria.getHostName());
                 // connect to the host and retrieve the host manifest
-                hostManifest = getHostManifest(tlsPolicyDescriptor, connectionString, null);
-                if (hostManifest != null && hostManifest.getHostInfo() != null
-                        && hostManifest.getHostInfo().getHardwareUuid() != null
-                        && !hostManifest.getHostInfo().getHardwareUuid().isEmpty()
-                        && UUID.isValid(hostManifest.getHostInfo().getHardwareUuid())) {
-                    hardwareUuid = UUID.valueOf(hostManifest.getHostInfo().getHardwareUuid());
+                hostInfo = getHostInfo(tlsPolicyDescriptor, connectionString, null);
+                if (hostInfo != null
+                        && hostInfo.getHardwareUuid() != null
+                        && !hostInfo.getHardwareUuid().isEmpty()
+                        && UUID.isValid(hostInfo.getHardwareUuid())) {
+                    hardwareUuid = UUID.valueOf(hostInfo.getHardwareUuid());
                 }
             } catch (TlsPolicyAllowedException e) {
                 throw new WebApplicationException("TLS policy type is not allowed", e, 400);
@@ -167,30 +175,32 @@ public class HostResource {
                 log.warn("Could not connect to host, hardware UUID and host manifest will not be set: {}", hostState.getHostStateText());
             }
 
-            String flavorgroupName;
-            UUID flavorgroupId;
+            List<String> flavorgroupNames = new ArrayList<>();
+            List<UUID> flavorgroupIds = new ArrayList<>();
 
-            if (hostCreateCriteria.getFlavorgroupName() == null || hostCreateCriteria.getFlavorgroupName().isEmpty()) {
-                flavorgroupName = "mtwilson_automatic";
+            if ((hostCreateCriteria.getFlavorgroupName() == null || hostCreateCriteria.getFlavorgroupName().isEmpty())) {
+                flavorgroupNames.add(Flavorgroup.AUTOMATIC_FLAVORGROUP);
             } else {
-                flavorgroupName = hostCreateCriteria.getFlavorgroupName();
+                if(hostCreateCriteria.getFlavorgroupName() != null && !hostCreateCriteria.getFlavorgroupName().isEmpty()) {
+                    flavorgroupNames.add(hostCreateCriteria.getFlavorgroupName());
+                }
             }
 
-            FlavorgroupLocator flavorgroupLocator = new FlavorgroupLocator();
-            flavorgroupLocator.name = flavorgroupName;
-            Flavorgroup flavorgroup = new FlavorgroupRepository().retrieve(flavorgroupLocator);
+            // Link to default software group if host is linux
+            if (hostInfo != null && validateIseclSoftwareFlavor(hostInfo.getOsName()))
+                flavorgroupNames.add(Flavorgroup.DEFAULT_SOFTWARE_FLAVORGROUP);
 
-            if (flavorgroup != null) {
-                flavorgroupId = flavorgroup.getId();
-            } else {
-                flavorgroup = new Flavorgroup();
-                FlavorgroupRepository flavorgroupRepository = new FlavorgroupRepository();
-                flavorgroup.setId(new UUID());
-                flavorgroup.setName(flavorgroupName);
-                FlavorRepository flavorRepository = new FlavorRepository();
-                flavorgroup.setFlavorMatchPolicyCollection(flavorRepository.createAutomaticFlavorMatchPolicy());
-                flavorgroup = flavorgroupRepository.create(flavorgroup);
-                flavorgroupId = flavorgroup.getId();
+            FlavorgroupLocator flavorgroupLocator = new FlavorgroupLocator();
+            for (String flavorgroupName : flavorgroupNames) {
+                flavorgroupLocator.name = flavorgroupName;
+                Flavorgroup flavorgroup = new FlavorgroupRepository().retrieve(flavorgroupLocator);
+
+                if (flavorgroup != null) {
+                    flavorgroupIds.add(flavorgroup.getId());
+                } else {
+                    flavorgroup = createNewFlavorGroup(flavorgroupName);
+                    flavorgroupIds.add(flavorgroup.getId());
+                }
             }
 
             // set all host parameters and create the host
@@ -198,7 +208,7 @@ public class HostResource {
             Host host = new Host();
             host.setConnectionString(hostCreateCriteria.getConnectionString());
             host.setDescription(hostCreateCriteria.getDescription());
-            host.setFlavorgroupName(hostCreateCriteria.getFlavorgroupName());
+            host.setFlavorgroupNames(flavorgroupNames);
             host.setHostName(hostCreateCriteria.getHostName());
             host.setTlsPolicyId(hostCreateCriteria.getTlsPolicyId());
             host.setHardwareUuid(hardwareUuid);
@@ -212,12 +222,10 @@ public class HostResource {
                 createTlsPolicy(tlsPolicyDescriptor.getPolicyType(), hostId);
             }
 
-            log.debug("Linking host {} with flavorgroup {}", host.getHostName(), host.getFlavorgroupName());
-            FlavorgroupHostLinkRepository flavorgroupHostLinkRepository = new FlavorgroupHostLinkRepository();
-            FlavorgroupHostLink flavorgroupHostLink = new FlavorgroupHostLink();
-            flavorgroupHostLink.setFlavorgroupId(flavorgroupId);
-            flavorgroupHostLink.setHostId(hostId);
-            flavorgroupHostLinkRepository.create(flavorgroupHostLink);
+            for (UUID flavorgroupId : flavorgroupIds) {
+                log.debug("Linking host {} with flavorgroup {}", host.getHostName(), flavorgroupId);
+                linkFlavorGroupToHost(flavorgroupId, hostId);
+            }
 
             log.debug("Adding host to flavor-verify queue");
             // Since we are adding a new host, the forceUpdate flag should be set to true so that
@@ -234,13 +242,13 @@ public class HostResource {
     }
 
     @POST
-    @Path("/{hostId}/flavorgroupName")
+    @Path("/{hostId}/flavorgroups")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
     public FlavorgroupHostLink createFlavorgroupHostAssociation(@PathParam("hostId") String hostId, FlavorgroupHostLinkCreateCriteria flavorgroupHostCreateCriteria) {
         ValidationUtil.validate(hostId);
         ValidationUtil.validate(flavorgroupHostCreateCriteria);
-
+    
         HostRepository hostRepository = new HostRepository();
         HostLocator locator = new HostLocator();
         locator.id = UUID.valueOf(hostId);
@@ -254,7 +262,8 @@ public class HostResource {
         UUID flavorgroupId;
 
         if (flavorgroupHostCreateCriteria.getFlavorgroupName() == null || flavorgroupHostCreateCriteria.getFlavorgroupName().isEmpty()) {
-            flavorgroupName = "mtwilson_automatic";
+            log.error("The flavorgroup name is empty");
+            throw new RepositoryInvalidInputException(locator); 
         } else {
             flavorgroupName = flavorgroupHostCreateCriteria.getFlavorgroupName();
         }
@@ -266,17 +275,11 @@ public class HostResource {
         if (flavorgroup != null) {
             flavorgroupId = flavorgroup.getId();
         } else {
-            flavorgroup = new Flavorgroup();
-            FlavorgroupRepository flavorgroupRepository = new FlavorgroupRepository();
-            flavorgroup.setId(new UUID());
-            flavorgroup.setName(flavorgroupName);
-            FlavorRepository flavorRepository = new FlavorRepository();
-            flavorgroup.setFlavorMatchPolicyCollection(flavorRepository.createAutomaticFlavorMatchPolicy());
-            flavorgroup = flavorgroupRepository.create(flavorgroup);
-            flavorgroupId = flavorgroup.getId();
+            log.error("The flavorgroup with name {} does not exist", flavorgroupName);
+            throw new RepositoryInvalidInputException(locator);
         }
 
-        log.debug("Linking host {} with flavorgroup {}", host.getHostName(), host.getFlavorgroupName());
+        log.debug("Linking host {} with flavorgroup {}", host.getHostName(), flavorgroupId);
         FlavorgroupHostLinkRepository flavorgroupHostLinkRepository = new FlavorgroupHostLinkRepository();
         FlavorgroupHostLink flavorgroupHostLink = new FlavorgroupHostLink();
         flavorgroupHostLink.setFlavorgroupId(flavorgroupId);
@@ -291,43 +294,17 @@ public class HostResource {
     }
 
     @DELETE
-    @Path("/{hostId}/flavorgroupName/{id}")
-    public void deleteFlavorgroupHostAssociation(@PathParam("hostId") String hostId, @BeanParam FlavorgroupHostLinkLocator flavorgroupHostLocator) {
+    @Path("/{hostId}/flavorgroups/{flavorgroupId}")
+    public void deleteFlavorgroupHostAssociation(@PathParam("hostId") UUID hostId, @PathParam("flavorgroupId") UUID flavorgroupId) {
+
         ValidationUtil.validate(hostId);
+        FlavorgroupHostLinkLocator flavorgroupHostLocator = new FlavorgroupHostLinkLocator(flavorgroupId, hostId);
         ValidationUtil.validate(flavorgroupHostLocator);
 
         FlavorgroupHostLinkRepository flavorgroupHostLinkRepository = new FlavorgroupHostLinkRepository();
         //delete the flavorgroup-host link
-        log.debug("HostFlavorgroupLink : delete - deleting the host flavorgroup link with id {}", flavorgroupHostLocator.id);
+        log.debug("HostFlavorgroupLink : delete - deleting the host flavorgroup link with flavorgroupid {} and hostId {}", flavorgroupHostLocator.flavorgroupId, flavorgroupHostLocator.hostId);
         flavorgroupHostLinkRepository.delete(flavorgroupHostLocator);
-        //link the host with default flavorgroup:mtwilson_automatic
-        FlavorgroupFilterCriteria flavorgroupFilterCriteria = new FlavorgroupFilterCriteria();
-        flavorgroupFilterCriteria.nameEqualTo = "mtwilson_automatic";
-        FlavorgroupCollection flavorgroupCollection = new FlavorgroupRepository().search(flavorgroupFilterCriteria);
-        Flavorgroup flavorgroup = new Flavorgroup();
-        UUID flavorgroupId;
-        FlavorRepository flavorRepository = new FlavorRepository();
-        log.debug("Creating a link for host {} with the flavorgroup mtwilson_automatic", hostId);
-        if (flavorgroupCollection != null
-                && flavorgroupCollection.getFlavorgroups() != null && !flavorgroupCollection.getFlavorgroups().isEmpty()
-                && flavorgroupCollection.getFlavorgroups().get(0) != null) {
-            flavorgroup = flavorgroupCollection.getFlavorgroups().get(0);
-            flavorgroupId = flavorgroup.getId();
-        } else {
-            FlavorgroupRepository flavorgroupRepository = new FlavorgroupRepository();
-            flavorgroup.setId(new UUID());
-            flavorgroup.setName("mtwilson_automatic");
-            flavorgroup.setFlavorMatchPolicyCollection(flavorRepository.createAutomaticFlavorMatchPolicy());
-            flavorgroup = flavorgroupRepository.create(flavorgroup);
-            flavorgroupId = flavorgroup.getId();
-        }
-
-        //link the host with the automatic flavorgroup
-        FlavorgroupHostLink flavorgroupHostLink = new FlavorgroupHostLink();
-        flavorgroupHostLink.setFlavorgroupId(flavorgroupId);
-        flavorgroupHostLink.setHostId(UUID.valueOf(hostId));
-        flavorgroupHostLink.setId(new UUID());
-        flavorgroupHostLinkRepository.create(flavorgroupHostLink);
     }
 
     @GET
@@ -362,26 +339,11 @@ public class HostResource {
         item = getRepository().store(item);
 
         if (item != null && item.getFlavorgroupName() != null && !item.getFlavorgroupName().isEmpty()) {
-            // if flavorgroup is specified, retrieve it
-            FlavorgroupLocator flavorgroupLocator = new FlavorgroupLocator();
-            flavorgroupLocator.name = item.getFlavorgroupName();
-            Flavorgroup flavorgroup = new FlavorgroupRepository().retrieve(flavorgroupLocator);
-
-            // if the flavorgroup doesn't exist, create it with a host based policy
-            if (flavorgroup == null) {
-                Flavorgroup newFlavorgroup = new Flavorgroup();
-                newFlavorgroup.setName(item.getFlavorgroupName());
-                newFlavorgroup.setFlavorMatchPolicyCollection(new FlavorRepository().createAutomaticFlavorMatchPolicy());
-                flavorgroup = new FlavorgroupRepository().create(newFlavorgroup);
+            createFlavorgroupHostLink(item, item.getFlavorgroupName());
+        } else if (item != null && item.getFlavorgroupNames() != null && !item.getFlavorgroupNames().isEmpty()) {
+            for (String flavorGroupName : item.getFlavorgroupNames()) {
+                createFlavorgroupHostLink(item, flavorGroupName);
             }
-
-            // create flavorgroup host link
-            FlavorgroupHostLinkRepository flavorgroupHostLinkRepository = new FlavorgroupHostLinkRepository();
-            FlavorgroupHostLink flavorgroupHostLink = new FlavorgroupHostLink();
-            flavorgroupHostLink.setFlavorgroupId(flavorgroup.getId());
-            flavorgroupHostLink.setHostId(item.getId());
-            flavorgroupHostLinkRepository.create(flavorgroupHostLink);
-
         }
 
         if (item != null) {
@@ -389,13 +351,31 @@ public class HostResource {
             addHostToFlavorVerifyQueue(item.getId(), true);
             item.setConnectionString(HostRepository.getConnectionStringWithoutCredentials(item.getConnectionString()));
         }
-        
+
         return item;
+    }
+
+    private void createFlavorgroupHostLink(Host item, String flavorGroupName) {
+        // if flavorgroup is specified, retrieve it
+        FlavorgroupLocator flavorgroupLocator = new FlavorgroupLocator();
+        flavorgroupLocator.name = flavorGroupName;
+        Flavorgroup flavorgroup = new FlavorgroupRepository().retrieve(flavorgroupLocator);
+
+        // if the flavorgroup doesn't exist, create it with a host based policy
+        if (flavorgroup == null) {
+            flavorgroup = FlavorGroupUtils.createFlavorGroupByName(flavorGroupName);
+        }
+        // create flavorgroup host link
+        FlavorgroupHostLinkRepository flavorgroupHostLinkRepository = new FlavorgroupHostLinkRepository();
+        FlavorgroupHostLink flavorgroupHostLink = new FlavorgroupHostLink();
+        flavorgroupHostLink.setFlavorgroupId(flavorgroup.getId());
+        flavorgroupHostLink.setHostId(item.getId());
+        flavorgroupHostLinkRepository.create(flavorgroupHostLink);
     }
 
     @DELETE
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
-    @Path("{hostId}")
+    @Path("/{hostId}")
     @RequiresPermissions("hosts:delete")
     public void deleteHost(@PathParam("hostId") String hostId) {
         ValidationUtil.validate(hostId);
@@ -482,9 +462,9 @@ public class HostResource {
         queue.setQueueAction("flavor-verify");
         new QueueRepository().create(queue);
     }
-    
+
     //returns true if host already in queue else returns false
-    public boolean checkHostAlreadyInQueue(String hostId, boolean forceUpdate){
+    public boolean checkHostAlreadyInQueue(String hostId, boolean forceUpdate) {
         // get flavor-verify queue entries for host ID
         QueueFilterCriteria queueFilterCriteria = new QueueFilterCriteria();
         queueFilterCriteria.action = "flavor-verify";
@@ -513,8 +493,8 @@ public class HostResource {
         }
         return false;
     }
-    
-    
+
+
     public void addHostsToFlavorVerifyQueue(List<String> hostIds, boolean forceUpdate) {
         try {
             MwQueueJpaController queueJpa = My.jpa().mwQueue();
@@ -530,7 +510,7 @@ public class HostResource {
                 queue.setStatus(NEW);
                 MwQueue mwQueue = new QueueRepository().convertToMwQueue(queue);
                 mwQueueList.add(mwQueue);
-            }            
+            }
             queueJpa.createQueueList(mwQueueList);
         } catch (Exception ex) {
             log.error("Error adding host to flavor verify queue", ex);
@@ -554,7 +534,7 @@ public class HostResource {
         hostStatus.setHostManifest(hostManifest);
         new HostStatusRepository().store(hostStatus);
     }
-    
+
     public void updateHostStatusList(List<String> hostIds, HostState hostState, HostManifest hostManifest) {
         try {
             MwHostStatusJpaController hostStatusJpa = My.jpa().mwHostStatus();
@@ -573,7 +553,7 @@ public class HostResource {
                 hostStatus.setStatus(hostStatusInformation);
                 hostStatus.setHostManifest(hostManifest);
                 MwHostStatus mwHostStatus = new HostStatusRepository().convertToMwHostStatus(hostStatus);
-                mwHostStatusList.add(mwHostStatus);                
+                mwHostStatusList.add(mwHostStatus);
             }
             hostStatusJpa.editHostStatusList(mwHostStatusList);
         } catch (Exception ex) {
@@ -671,18 +651,6 @@ public class HostResource {
         }
     }
 
-    public HostManifest getHostManifest(UUID hostId, ConnectionString connectionString) throws IOException {
-        // try to find host based on host ID first, then connection string
-        HostLocator hostLocator = new HostLocator();
-        if (hostId != null) {
-            hostLocator.id = hostId;
-        } else {
-            hostLocator.name = connectionString.getManagementServerName();
-        }
-        Host host = new HostRepository().retrieve(hostLocator);
-        return getHostManifest(host, connectionString);
-    }
-
     public HostManifest getHostManifest(Host host, ConnectionString connectionString) throws IOException {
         // set host TLS policy ID if host found
         UUID tlsPolicyId = null;
@@ -709,32 +677,21 @@ public class HostResource {
     }
 
     public HostManifest getHostManifest(TlsPolicyDescriptor tlsPolicyDescriptor, ConnectionString connectionString, UUID tlsPolicyId) throws IOException {
-        HostTlsPolicy hostTlsPolicy = null;
-        if (tlsPolicyId != null) {
-            // get the TLS policy record from the database and assign the descriptor
-            HostTlsPolicyLocator hostTlsPolicyLocator = new HostTlsPolicyLocator();
-            hostTlsPolicyLocator.id = tlsPolicyId;
-            hostTlsPolicy = new HostTlsPolicyRepository().retrieve(hostTlsPolicyLocator);
-        }
-
-        if (tlsPolicyDescriptor == null) {
-            if (hostTlsPolicy == null || hostTlsPolicy.getDescriptor() == null) {
-                throw new IllegalArgumentException("Cannot determine appropriate TLS policy for host");
-            }
-            tlsPolicyDescriptor = hostTlsPolicy.getDescriptor();
-        }
-
+        HostTlsPolicy hostTlsPolicy = getHostTlsPolicy(tlsPolicyId);
+        tlsPolicyDescriptor = getTlsPolicyDescriptor(tlsPolicyDescriptor, hostTlsPolicy);
         // check if the tlsPolicyDescriptor is allowed. Throw error if not allowed.
-        if (!HostTlsPolicyFilter.isTlsPolicyAllowed(tlsPolicyDescriptor.getPolicyType())) {
-            log.error("TLS policy {} is not allowed", tlsPolicyDescriptor.getPolicyType());
-            throw new TlsPolicyAllowedException("TLS policy is not allowed");
-        }
+        validateTlsPolicyDescriptor(tlsPolicyDescriptor);
 
         // get the host manifest
         TlsPolicy tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(tlsPolicyDescriptor);
         HostConnector hostConnector = new HostConnectorFactory().getHostConnector(connectionString, tlsPolicy);
         HostManifest hostManifest = hostConnector.getHostManifest();
 
+        storeTlsPolicyDescriptor(hostTlsPolicy, tlsPolicy);
+        return hostManifest;
+    }
+
+    private void storeTlsPolicyDescriptor(HostTlsPolicy hostTlsPolicy, TlsPolicy tlsPolicy) {
         if (hostTlsPolicy != null && hostTlsPolicy.getDescriptor() != null
                 && hostTlsPolicy.getDescriptor().getPolicyType() != null
                 && hostTlsPolicy.getDescriptor().getPolicyType().equalsIgnoreCase(TRUST_FIRST_CERTIFICATE)) {
@@ -747,7 +704,67 @@ public class HostResource {
             updatedHostTlsPolicy.setDescriptor(convert(publicKeyTlsPolicy.getRepository()));
             new HostTlsPolicyRepository().store(updatedHostTlsPolicy);
         }
-        return hostManifest;
+    }
+
+    private TlsPolicyDescriptor getTlsPolicyDescriptor(TlsPolicyDescriptor tlsPolicyDescriptor, HostTlsPolicy hostTlsPolicy) {
+        if (tlsPolicyDescriptor == null) {
+            if (hostTlsPolicy == null || hostTlsPolicy.getDescriptor() == null) {
+                throw new IllegalArgumentException("Cannot determine appropriate TLS policy for host");
+            }
+            tlsPolicyDescriptor = hostTlsPolicy.getDescriptor();
+        }
+        return tlsPolicyDescriptor;
+    }
+
+    private HostInfo getHostInfo(TlsPolicyDescriptor tlsPolicyDescriptor, ConnectionString connectionString, UUID tlsPolicyId) throws IOException {
+        HostTlsPolicy hostTlsPolicy = getHostTlsPolicy(tlsPolicyId);
+        tlsPolicyDescriptor = getTlsPolicyDescriptor(tlsPolicyDescriptor, hostTlsPolicy);
+
+        // check if the tlsPolicyDescriptor is allowed. Throw error if not allowed.
+        validateTlsPolicyDescriptor(tlsPolicyDescriptor);
+
+        // get the host info
+        TlsPolicy tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(tlsPolicyDescriptor);
+        HostConnector hostConnector = new HostConnectorFactory().getHostConnector(connectionString, tlsPolicy);
+        HostInfo hostInfo = hostConnector.getHostDetails();
+
+        storeTlsPolicyDescriptor(hostTlsPolicy, tlsPolicy);
+        return hostInfo;
+    }
+
+    private void validateTlsPolicyDescriptor(TlsPolicyDescriptor tlsPolicyDescriptor) {
+        if (!HostTlsPolicyFilter.isTlsPolicyAllowed(tlsPolicyDescriptor.getPolicyType())) {
+            log.error("TLS policy {} is not allowed", tlsPolicyDescriptor.getPolicyType());
+            throw new TlsPolicyAllowedException("TLS policy is not allowed");
+        }
+    }
+
+    private HostTlsPolicy getHostTlsPolicy(UUID tlsPolicyId) {
+        HostTlsPolicy hostTlsPolicy = null;
+        if (tlsPolicyId != null) {
+            // get the TLS policy record from the database and assign the descriptor
+            HostTlsPolicyLocator hostTlsPolicyLocator = new HostTlsPolicyLocator();
+            hostTlsPolicyLocator.id = tlsPolicyId;
+            hostTlsPolicy = new HostTlsPolicyRepository().retrieve(hostTlsPolicyLocator);
+        }
+        return hostTlsPolicy;
+    }
+
+    private boolean validateIseclSoftwareFlavor(String osName) {
+        String formattedOsName = osName.trim().toUpperCase();
+        return (formattedOsName.equals("RHEL") || formattedOsName.equals("REDHATENTERPRISESERVER"));
+    }
+
+    private Flavorgroup createNewFlavorGroup(String flavorgroupName) {
+        return FlavorGroupUtils.createFlavorGroupByName(flavorgroupName);
+    }
+
+    private void linkFlavorGroupToHost(UUID flavorgroupId, UUID hostId) {
+        FlavorgroupHostLinkRepository flavorgroupHostLinkRepository = new FlavorgroupHostLinkRepository();
+        FlavorgroupHostLink flavorgroupHostLink = new FlavorgroupHostLink();
+        flavorgroupHostLink.setFlavorgroupId(flavorgroupId);
+        flavorgroupHostLink.setHostId(hostId);
+        flavorgroupHostLinkRepository.create(flavorgroupHostLink);
     }
 
     private TlsPolicyDescriptor convert(PublicKeyRepository repository) {

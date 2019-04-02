@@ -12,6 +12,7 @@ import com.intel.dcsg.cpg.tls.policy.impl.CertificateDigestTlsPolicy;
 import com.intel.dcsg.cpg.tls.policy.impl.InsecureTlsPolicy;
 import com.intel.dcsg.cpg.tls.policy.impl.PublicKeyDigestTlsPolicy;
 import com.intel.dcsg.cpg.tls.policy.impl.PublicKeyTlsPolicy;
+import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.core.flavor.model.Flavor;
 import com.intel.mtwilson.core.host.connector.HostConnector;
 import com.intel.mtwilson.core.host.connector.HostConnectorFactory;

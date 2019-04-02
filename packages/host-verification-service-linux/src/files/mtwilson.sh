@@ -123,6 +123,10 @@ MTWILSON_SETUP_TASKS=${MTWILSON_SETUP_TASKS:-"create-certificate-authority-key c
 MTWILSON_PID_FILE=$MTWILSON_HOME/mtwilson.pid
 
 
+# RHEL 7.6 needs PID file for systemd startup service
+# The location is identified as below in mtwilson.sh
+MTWILSON_PID_FILE=$MTWILSON_HOME/mtwilson.pid
+
 ####################################################################################################
 # java command
 if [ -z "$JAVA_CMD" ]; then

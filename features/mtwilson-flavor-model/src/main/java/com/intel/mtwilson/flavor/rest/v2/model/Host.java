@@ -11,6 +11,8 @@ import com.intel.dcsg.cpg.validation.Validator;
 import com.intel.mtwilson.jaxrs2.Document;
 import com.intel.mtwilson.validators.ConnectionStringValidator;
 
+import java.util.List;
+
 /**
  *
  * @author hmgowda
@@ -23,7 +25,8 @@ public class Host extends Document {
     private UUID hardwareUuid;
     private String tlsPolicyId;
     private String flavorgroupName;
-    
+    private List<String> flavorgroupNames;
+
     public String getHostName() {
         return hostName;
     }
@@ -64,13 +67,21 @@ public class Host extends Document {
     public void setTlsPolicyId(String tlsPolicyId) {
         this.tlsPolicyId = tlsPolicyId;
     }
-    
+
     public String getFlavorgroupName() {
         return flavorgroupName;
     }
-    
+
     public void setFlavorgroupName(String flavorgroupName) {
         this.flavorgroupName = flavorgroupName;
+    }
+
+    public List<String> getFlavorgroupNames() {
+        return flavorgroupNames;
+    }
+    
+    public void setFlavorgroupNames(List<String> flavorgroupNames) {
+        this.flavorgroupNames = flavorgroupNames;
     }
     
 }

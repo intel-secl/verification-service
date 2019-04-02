@@ -15,6 +15,7 @@ import com.intel.mtwilson.flavor.model.MatchPolicy.Required;
 import com.intel.mtwilson.jaxrs2.DocumentCollection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  *
@@ -67,5 +68,25 @@ public class FlavorMatchPolicyCollection extends DocumentCollection<FlavorMatchP
             }
         }
         return flavorPart;
+    }
+
+    @Override
+    public String toString() {
+        return "FlavorMatchPolicyCollection{" +
+                "flavorMatchPolicies=" + flavorMatchPolicies +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FlavorMatchPolicyCollection that = (FlavorMatchPolicyCollection) o;
+        return Objects.equals(flavorMatchPolicies, that.flavorMatchPolicies);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(flavorMatchPolicies);
     }
 }
