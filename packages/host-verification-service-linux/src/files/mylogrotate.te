@@ -1,0 +1,18 @@
+
+module mylogrotate 1.0;
+
+require {
+	type logrotate_t;
+	type usr_t;
+	class dir { add_name remove_name write };
+	class file { create rename setattr unlink write };
+}
+
+#============= logrotate_t ==============
+
+#!!!! This avc is allowed in the current policy
+allow logrotate_t usr_t:dir { add_name remove_name write };
+allow logrotate_t usr_t:file { rename unlink };
+
+#!!!! This avc is allowed in the current policy
+allow logrotate_t usr_t:file { create setattr write };

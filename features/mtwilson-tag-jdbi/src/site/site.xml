@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (C) 2019 Intel Corporation
+SPDX-License-Identifier: BSD-3-Clause
+
+Reference:
+http://maven.apache.org/plugins/maven-site-plugin/examples/sitedescriptor.html
+-->
+<project>
+    <body>
+		<menu ref="parent"/>
+        <menu ref="reports"/>
+        <menu ref="modules"/>
+    </body>
+</project>

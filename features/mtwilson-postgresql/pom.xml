@@ -1,0 +1,26 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <groupId>com.intel.mtwilson.features</groupId>
+    <artifactId>mtwilson-postgresql</artifactId>
+    
+    <packaging>jar</packaging>
+    <description>SQL and Java code to support PostgresQL storage</description>
+    
+    <parent>
+        <groupId>com.intel.mtwilson.features</groupId>
+        <artifactId>mtwilson-features</artifactId>
+        <version>4.4-SNAPSHOT</version>
+    </parent>
+    
+    <!--
+    <dependencies>
+        <dependency>
+            <groupId>postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>8.2-507.jdbc4</version>
+        </dependency>
+    </dependencies>
+    -->
+    
+</project>

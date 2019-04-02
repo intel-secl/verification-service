@@ -1,0 +1,27 @@
+**/target/
+**/nbproject/
+.settings
+.project
+.classpath
+.idea
+pom.xml.versionsBackup
+pom.xml.releaseBackup
+*.iml
+/services/asset-tag-service/derby.log
+/services/asset-tag-model/src/main/resources/html5/nbproject/private/
+/services/asset-tag-dao/src/main/resources/html5/nbproject/private/
+derby.log
+/services/asset-tag-service/src/main/resources/html5/nbproject/private/retriever
+/services/asset-tag-service/derby
+/portals/mtwilson-portal/src/main/webapp/tag/nbproject/private/
+/nb-configuration.xml
+~*
+*.tmp
+/services/mtwilson-privacyca-niarl/nbproject/
+.idea/
+*.iml
+/features/mtwilson-telemetry/mtwilson-telemetry-jpa/nbproject/
+/features/mtwilson-esxi-cluster-client-jaxrs2/nbproject/
+/features/mtwilson-esxi-cluster-client-jaxrs2 - Copy/nbproject/
+/features/mtwilson-telemetry-client-jaxrs2/nbproject/
+/features/mtwilson-flavor-client-jaxrs2/nbproject/

@@ -1,0 +1,90 @@
+#!/bin/bash 
+
+# https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
+#set -e
+#set -x
+#set -o pipefail
+
+# Check if VErification service is already configured
+function check_mtwilson_status() {
+    if [ "`mtwilson status`" != "Host Verification Service is running" ]; then
+        return 0
+    fi
+
+    return 1
+}
+
+generate_password() {
+    echo $(cat /dev/urandom |  tr -dc _A-Za-z0-9- | head -c${1:-32})
+}
+
+export JAVA_CMD=$(type -p java | xargs readlink -f)
+export JAVA_HOME=$(dirname $JAVA_CMD | xargs dirname | xargs dirname)
+
+# Start mtwilson and check if it works. Mtwilson status does not reflect the right status
+# So, sleep 5 seconds (workaround)
+# mtwilson start && sleep 5
+
+export MTWILSON_HOME=/opt/mtwilson
+export MTWILSON_CONFIGURATION=$MTWILSON_HOME/configuration
+export MTWILSON_SERVER="127.0.0.1"
+export MTWILSON_API_BASEURL="https://127.0.0.1:8443/mtwilson/v1"
+
+while read -r line; do export $line; done < /run/secrets/mtwilson.env &> /dev/null
+export POSTGRES_PASSWORD=$(cat /run/secrets/db.password)
+
+# Delete the copied secrets
+rm -f /run/secrets/mtwilson.env &> /dev/null
+rm -f /run/secrets/db.password &> /dev/null
+#tail -f /opt/mtwilson/logs/mtwilson.log
+
+if [ ! -f $MTWILSON_CONFIGURATION/.setup_done ]; then
+
+    # Backup the logs from the build process and start logs afresh
+    mv /opt/mtwilson/logs/mtwilson.log ~/mtwilson-install.log &> /dev/null
+    touch /opt/mtwilson/logs/mtwilson.log &> /dev/null
+    chown mtwilson:mtwilson /opt/mtwilson/logs/mtwilson.log &> /dev/null
+
+    if [ -z $POSTGRES_PASSWORD ] || [ -z $MC_FIRST_PASSWORD ]; then
+        echo -e "\033[0;31m Missing configuration: MC_FIRST_PASSWORD POSTGRES_PASSWORD are mandatory"
+        exit
+    fi 
+
+    # Setup DB params
+    mtwilson config "mtwilson.db.host" "${DATABASE_HOSTNAME}" >/dev/null
+    mtwilson config "mtwilson.db.port" "${DATABASE_PORTNUM}" >/dev/null
+    mtwilson config "mtwilson.db.schema" "${POSTGRES_DB}" >/dev/null
+    mtwilson config "mtwilson.db.user" "${POSTGRES_USER}" >/dev/null
+    mtwilson config "mtwilson.db.password" "${POSTGRES_PASSWORD}" >/dev/null
+
+    # API params
+    mtwilson config "mtwilson.api.url" $MTWILSON_API_BASEURL >/dev/null
+    mtwilson config mtwilson.host $MTWILSON_SERVER >/dev/null
+
+    export POSTGRES_HOSTNAME=$DATABASE_HOSTNAME
+    export POSTGRES_PORTNUM=$DATABASE_PORTNUM
+    export POSTGRES_DATABASE=$POSTGRES_DB
+    export POSTGRES_USERNAME=$POSTGRES_USER
+    export POSTGRES_PASSWORD
+
+    # load linux utility
+    . $MTWILSON_HOME/bin/functions.sh
+    setup_pgpass
+
+    mtwilson setup
+fi
+
+# Revert the backed up .pgpass file to root
+cp $MTWILSON_CONFIGURATION/.pgpass ~/
+
+# Create Symlink. Remove the file if it exists before creating the link
+ln -sf $MTWILSON_CONFIGURATION/.pgpass $MTWILSON_HOME
+
+mtwilson restart
+
+if check_mtwilson_status; then
+   exit
+fi
+touch $MTWILSON_CONFIGURATION/.setup_done
+
+tail -f /opt/mtwilson/logs/mtwilson.log

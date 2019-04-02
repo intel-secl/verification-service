@@ -1,0 +1,315 @@
+                        ------------------------
+                 Host Verification Service API Quickstart
+                        ------------------------
+                        ------------------------
+                        06-08-2018
+                        ------------------------
+
+Background
+
+    The Host Verification Service component of Intel® Security Libraries (ISecL) performs remote
+attestation of physical servers by comparing Intel® TXT measurements of BIOS,
+OS, Asset Tag, and other components against a database of known-good values.
+The attested trust status of each server is used to make policy decisions 
+for workload placement.
+
+    The Host Verification Service(HVS) is Remote Trust Attestation Solution
+that would provide a secure mechanism in a Data Center to attest trust
+of different hypervisors and operating systems on multiple devices including 
+servers, clients, network and storage components.  The primary purpose of this 
+attestation is for Trust Verification, Remediation, Reporting, and Compliance 
+in a Data Center and Cloud environments.
+
+	Whether it is public cloud, private cloud, hybrid or Enterprise cloud,  
+the Attestation Solution would be used by Cloud/Virtualization  Resource Schedulers,  
+SIEMs, Policy Engines and  GRC tools, to assess and provide an assurance that the
+security components on the devices are protecting the assets executing or stored 
+on the devices.  This assurance would then drive policy decisions for
+
+	[[1]]On boarding virtual machines
+	
+	[[2]]Launching virtual machines on trusted hardware
+	
+	[[3]]Secure/trusted migrations
+	
+	[[4]]Meeting compliance and regulatory requirements
+	
+
+    Here are some key aspects of the Attestation solution:
+
+	[[1]]The first generation solution would be targeted to 'Attest to' the trust of the platform (Firmware and BIOS)
+             and Hypervisor/OS, on Intel Architecture-based Servers that have a 'Measured Launch' of the OS/Hypervisor 
+             using Intel TXT.  Future versions would support the attestation of IA-based Network and Storage devices
+             (OpenFiler, OpenNFS running on IA-based Servers), and TXT-based clients
+	
+	[[2]]The Attestation Architecture would be capable of handling hardware or software-based based Root-of-Trust for
+             Measurement (RTM) mechanisms, as long as a TPM (Trusted Platform Module) is used for Root-of-Trust for Storage
+             and Reporting (RTS and RTR)
+	
+	[[3]]Future generations of the Attestation solution would be capable of attesting to the Trust of Virtual Machines(VMs),
+             applications, identity, and geo-location compliance of workloads and data
+	
+	[[4]]Architecture is flexible to support additional Cloud security use-cases with Data confidentiality and integrity
+	
+	[[5]]Supports certificate based and password based basic authentication. HMAC would be included in upcoming versions
+
+    
+    HVS is delivered as a Virtual Appliance (VM) for ESX or KVM formats. All HVS APIs are REST-based. There are two options for
+    the users to call into the REST APIs of HVS:
+
+	[[1]]Directly call REST APIs
+	
+	[[2]]Use API Client Toolkit
+	
+	
+*Directly call REST APIs
+
+	If the user directly calls into REST APIs or wants to skip the security (probably all the components would be
+        integrated into a single host/virtual machine), then the user has to ensure that the IP address of the client is 
+        added to the trusted IP list on HVS. IP address can be whitelisted by updating the contents of the shiro.ini
+        file under /etc/intel/cloudsecurity with shiro.localhost file. If in case the user wants to trust any other host
+        other than the local host, then the following configuration needs to be added after the
+        "iniHostRealm=com.intel.mtwilson.shiro.authc.host.IniHostRealm" to the shiro.ini file. 
+	
+	iniHostRealm.allow=192.168.0.1,192.168.0.2
+
+	When the HVS sees that the API call is being made from a client that is trusted, then further authentication is skipped.
+        If the trusted IP is not configured then the user has to implement either basic authentication or certificate based authentication. 
+	
+*Use API Client Toolkit
+
+	In order to simplify the invocation of the HVS APIs, HVS also provides an APIClient Toolkit which encapsulates multiple API calls,
+        creation and handling of RSA keys and certificates,  authentication and processing of API responses 
+        (which are SAML signed assertions). The toolkit provides following two options:
+
+	[[1]]Zip file containing the client and related dependent jar files
+	
+	[[2]]Single jar-with-dependencies.
+	
+Getting started with the SDK 
+
+	Below diagram shows the high level steps that are needed to get the HVS system up and running in your environment.
+	
+[images/mtw_sdk_step.png] Installation-Configuration steps
+
+	
+* Import HVS jars
+
+	After the installation of HVS and trust agent on the hosts (required only for KVM hosts) is completed, users can call
+        into the APIs for performing various different functions. The sample code below shows how the users can request
+        for access, create flavors, register hosts and finally retrieve the attestation result of the registered hosts.
+        Refer to the full API Documentation for details on all the available methods. To start with, user need to
+        include the HVS Jar files in their project and import the following packages:
+	
++---
+import com.intel.dcsg.cpg.crypto.CryptographyException;
+import com.intel.dcsg.cpg.crypto.SimpleKeystore;
+import com.intel.dcsg.cpg.extensions.Extensions;
+import com.intel.mtwilson.api.ApiException;
+import com.intel.mtwilson.api.ClientException;
+import com.intel.mtwilson.flavor.client.jaxrs.Hosts;
+import com.intel.mtwilson.flavor.client.jaxrs.Flavors;
+import com.intel.mtwilson.flavor.client.jaxrs.Reports;
+import com.intel.mtwilson.flavor.rest.v2.model.HostCreateCriteria;
+import com.intel.mtwilson.flavor.rest.v2.model.Host;
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorCreateCriteria;
+import com.intel.mtwilson.flavor.rest.v2.model.Flavor;
+import com.intel.mtwilson.flavor.rest.v2.model.Report;
+import com.intel.mtwilson.tls.policy.client.jaxrs.TlsPolicies;
+import com.intel.mtwilson.tls.policy.model.HostTlsPolicy;
+import com.intel.mtwilson.TrustAssertion;
+import com.intel.mtwilson.ApiClient;
++---
+
+
+* Client registration
+
+    Before you can make any API calls to the HVS, you need to register and obtain access. Below steps will show how to make registration with HVS and
+    make API calls after the registration is approved. The following code will create a keystore with the username in the specified directory. The keystore contains an RSA keypair that is used to authenticate your API calls to Host Verification Service. It also contains the Host Verification Service SSL certificate and SAML signing certificate, which are downloaded from the server.
+	
+	In order for the API client library to communicate with the Host Verification Service, the TLS policy has to be specified. Users can either choose Certificate,
+	Certificate-digest (SHA1 of the certificate), Public-key, Public-key-digest, TRUST_FIRST_CERTIFICATE or INSECURE. In the INSECURE option even though SSL would still be used, this option would not verify the authenticity of the server with which the connection is established. Whichever TLS policy is chosen, the required details for verifying that TLS policy should be provided to any call made to the HVS.
+	
+	Based on the TLS policy chosen, the corresponding implementation extension has to be registered. In the below example we will be using the Certificate-digest option.
+	
+	Note that the main difference between the Certificate TLS policies and the Public-key TLS policies is that the Certificate policy also enforces strict host name verification.
+
++---
+Extensions.register(TlsPolicyCreator.class, com.intel.mtwilson.tls.policy.creator.impl.CertificateDigestTlsPolicyCreator.class);
+
+Properties properties = new Properties();        
+properties.setProperty("mtwilson.api.tls.policy.certificate.sha1", "54 7c d2 1b a9 aa 38 4b 97 22 45 37 67 0e f6 9e d8 a1 4d b4");
+
+String userName = "testuser";
+String password = "password";
+URL server = new URL("https://mtw.server.com:8181/mtwilson/v2/");
+SimpleKeystore keystore = MwClientUtil.createUserInDirectoryV2(new java.io.File("c:\\mtwilson"), userName, password, server, "comments", properties);
++---
+
+
+*Access Approval
+
+    After the request is created, because of security reasons, the access cannot be approved via API call. 
+    The access has to be approved offline by the administrator. The access can be approved via the command 
+    line utility to be run locally on the HVS. Syntax for running the tool is shown below. 
+    The administrator can provide a list  of pre-defined role(s), which needs to be assigned to the user along 
+    with optional specific permissions that the user needs on the system resources such as flavors, reports, hosts etc. 
+    If in case the administrator provides additional permissions, then a custom role would be automatically created (Userrole:username)
+    and would be assigned to the user.
+
++---
+mtwilson approve-user-login-certificate-request username --roles administrator
+mtwilson approve-user-login-certificate-request username --roles host_manager --permissions hosts:*
+mtwilson approve-user-login-certificate-request username --roles flavor_manager --permissions flavors:*
+mtwilson approve-user-login-certificate-request username --roles reports_manager --permissions reports:*
++---
+
+*Set up required properties
+	
+        After the user creation request is approved, the APIs can be used to create flavors, register hosts, generate reports etc. The TlsPolicy creator
+        classes must be registered before calling the client methods with the basic authentication properties of the host verification service.  
+
++---
+        Extensions.register(TlsPolicyCreator.class, PublicKeyDigestTlsPolicyCreator.class); // required for public key digest tlsPolicy
+        Extensions.register(TlsPolicyCreator.class, InsecureTrustFirstPublicKeyTlsPolicyCreator.class); // required for trust first public key tlsPolicy
+        Extensions.register(TlsPolicyCreator.class, CertificateDigestTlsPolicyCreator.class); // required for certificate digest tlsPolicy
+        Extensions.register(TlsPolicyCreator.class, CertificateTlsPolicyCreator.class); // required for certificate tlsPolicy
+
++---
+        
+        To use the API, the client object needs to be configured with the credentials of the HVS. Notice that the variables directory,
+        username, password and servers are the same as what was used during registration. The tls policy certificate sha256 value can be used 
+        to set the tls policy property to communicate with the HVS as shown below.
+
++---
+private static Properties getClientProperties() {
+	Properties properties = new Properties();
+	properties.setProperty("mtwilson.api.url", "https://server.com:8443/mtwilson/v2");
+	properties.setProperty("mtwilson.api.username", "testuser");
+	properties.setProperty("mtwilson.api.password", "password");
+        properties.setProperty("mtwilson.api.tls.policy.certificate.sha256", "ae8b50d9a45d1941d5486df204b9e05a433e3a5bc13445f48774af686d18dcfc");       
+	return properties;	
+}
++---
+
+        A more secured way of initiating the client methods to communicate with the HVS would be to set the policy type as a certificate itself instead of the 
+        sha256 value of the certificate. 
+
++---
+private static Properties getClientProperties() {
+
+        String keystorePath = Folders.configuration() + File.separator + "keystore.jks";
+        File keyStoreFile = new File(keystorePath);
+	Properties properties = new Properties();
+	properties.setProperty("mtwilson.api.url", "https://server.com:8443/mtwilson/v2");
+	properties.setProperty("mtwilson.api.username", "testuser");
+	properties.setProperty("mtwilson.api.password", "password");
+        properties.setProperty("mtwilson.api.tls.policy.certificate.keystore.file", keyStoreFile.getAbsolutePath());
+        properties.setProperty("mtwilson.api.tls.policy.certificate.keystore.password", "password");       
+	return properties;	
+}
++---
+
+*TLS policy Creation Using API
+	
+	Note that the user needs to specify the TLS policy that the HVS can use to communicate with the host either for the purpose of flavor creation,
+        host registration/updates and report creation. For ESXi hosts, there would be one shared TLS policy per vCenter. Alternatively, users can add
+        all the vCenter certificates into a single shared TLS policy as well.
+	
+	For Open source hosts(KVM), either we can configure individual policies for each or we can create a shared TLS policy using the CA that would 
+        sign all the SSL certificates for these hosts.
+	
++---
+HostTlsPolicy tlsPolicy = new HostTlsPolicy();
+tlsPolicy.setName("vCenter_shared_policy");
+tlsPolicy.setPrivate(false); // This is a shared policy
+TlsPolicyDescriptor tlsPolicyDescriptor = new TlsPolicyDescriptor();
+tlsPolicyDescriptor.setPolicyType("certificate-digest");
+tlsPolicyDescriptor.setData(Arrays.asList("d0 8f 07 b0 5c 6d 78 62 b9 27 48 ff 35 da 27 bf f2 03 b3 c1")); // Sha1 digest of the vCenter's SSL certificate
+Map<String, String> metaData = new HashMap<>();
+metaData.put("digest_algorithm","SHA-256");
+tlsPolicyDescriptor.setMeta(metaData);
+tlsPolicy.setDescriptor(tlsPolicyDescriptor);
+HostTlsPolicy createTlsPolicy = client.createTlsPolicy(tlsPolicy);
++---
+
+*Flavor Creation
+        
+        Flavor creation is the process of adding one or more sets of acceptable measurements to the Host Verification Service database.  
+        These measurements correspond to specific system components, and are used as the basis of comparison to generate trust attestations.
+        
+        Flavors are automatically matched to hosts based on the flavorgroup used by the host and the flavors, and the flavor match policies 
+        of the flavorgroup.  The ISecL Host Verification Service creates a default flavorgroups during installation called “mtwilson_automatic”.
+        This flavorgroup is configured to be used as a pool of all acceptable Flavors in a given environment, and will automatically match the 
+        appropriate Flavor parts[BIOS, OS, ASSET_TAG and HOST_UNIQUE] to the correct host.  This flavorgroup is used by default and is
+        expected to be useful for the majority of deployments. If no flavorgroup is specified when creating a flavor, it will be placed in the 
+        mtwilson_automatic flavorgroup. 
+
+        HOST_UNIQUE Flavor parts, used by Red Hat Enterprise Linux and VMWare ESXi host types, MUST be created for each registered host of that
+        type, and should in general be imported from that host.  This means that importing the HOST_UNIQUE flavor should always be done for each
+        host registered (except for Windows hosts, which do not have HOST_UNIQUE measurements).
+
+        Each flavorgroup is a collection of flavor match polices which contains the match type policy and the flavor part. The match type policy 
+        defines how the verification engine should handle each of the partial flavor types during the host trust evaluation.    
+        Please refer to the Flavors javaDocs for calling the FlavorCreate REST API directly. 
+
++---
+// Instantiate the api client object for flavor creation with the specified properties
+Flavors client = new Flavors(getClientProperties());
+FlavorCreateCriteria obj = new FlavorCreateCriteria();
+obj.connection_string = "intel:https://trustagent.server.com:1443;u=trustagentUsername;p=trustagentPassword";
+obj.partial_flavor_types = ["HOST_UNIQUE"];
+obj.tls_policy_id = "TRUST_FIRST_CERTIFICATE";
+FlavorCollection objCollection = client.createFlavor(obj);
++---
+
+*Host Creation
+
+    The host registration creates a host record with connectivity details and other host information in the Host Verification Service database. 
+    This host record will be used by the Host Verification Service to retrieve TPM attestation quotes from the Trust Agent to generate an attestation report.
+    If a flavorgroup for the host is not specified during the registration, the host is assigned to a the default flavorgroup "mtwilson_automatic". 
+
++---
+// Instantiate the api client object for host creation with the specified properties
+Hosts client = new Hosts(getClientProperties());
+HostCreateCriteria criteria = new HostCreateCriteria();
+criteria.hostName = "RHEL-Host";
+criteria.tlsPolicyId = "TRUST_FIRST_CERTIFICATE";
+criteria.connectionString = "intel:https://trustagent.server.com:1443;u=trustagentUsername;p=trustagentPassword";
+criteria.description = "a new rhel host has been created";
+Host objCollection = client.createHost(criteria);
++---
+
+*Attestation Report Creation
+    
+    Attestation results are delivered in the form of Host Reports.  A Report can delivered in several different formats, which can change
+    the type of data returned. The preferred format for Host Reports is a SAML attestation.  A SAML-formatted report includes a chain or
+    signatures that provides auditability for the Report. Attestation Reports can also be retrieved in JSON or XML format.  
+
++---
+//Instantiate the api client object for report creation with the specified properties
+Reports client = new Reports(getClientProperties());
+Report criteria = new Report();
+criteria.hostName("RHEL-Host");
+Report result = client.createReport(criteria);
++---
+
+*Trust verification
+
+    This extracts trust information from a SAML assertion. Before using the assertions contained within a TrustAssertion object, you must call isValid() to find out if the provided assertion is valid.
+    If it is, you can call getSubject(), getIssuer(), getAttributeNames(), and getStringAttribute(), etc.
+    If isValid() returns false, you can call error() to get the Exception object that describes the validation error.
+    Trusted SAML-signing certificates in the argument must be marked for this trusted purpose with the tag "(saml)" or "(SAML)" at the end of their alias.
+    Also check http://ws.apache.org/wss4j/config.html more details.
+
++---
+//Instantiate the api client object for saml with the specified properties
+ApiClient client = new ApiClient(getClientProperties());
+String saml = client.getSamlForHost(new Hostname("server"));
+//Provide trusted saml certificates
+TrustAssertion trustAssertion = new TrustAssertion(new X509Certificate[] { getSamlCertificate() }, saml);
+if(trustAssertion.isValid()) {
+    for(String attr : trustAssertion.getAttributeNames())
+	  System.out.println("Attr: " + attr + " : " + trustAssertion.getStringAttribute(attr));
+}
++---

@@ -1,0 +1,76 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <groupId>com.intel.mtwilson.features</groupId>
+    <artifactId>mtwilson-features</artifactId>
+    <version>4.4-SNAPSHOT</version>
+    
+    <packaging>pom</packaging>
+    <name>mtwilson-features</name>
+    
+    <parent>
+        <groupId>com.intel.mtwilson.maven</groupId>
+        <artifactId>mtwilson-dist-feature</artifactId>
+        <version>4.4-SNAPSHOT</version>
+        <relativePath />
+    </parent>
+    
+    <properties>
+        <license.copyright>2019 Intel Corporation. SPDX-License-Identifier: BSD-3-Clause</license.copyright>
+        <license.url>http://cscenter.intel.com/portal/</license.url>
+    </properties>
+    
+    <modules>
+        <module>mtwilson-audit-api</module>
+        <module>mtwilson-audit-handler</module>
+        <module>mtwilson-audit-data</module>
+        <module>mtwilson-auto-refresh-telemetry</module>
+        <module>mtwilson-auto-refresh-trust</module>
+        <module>mtwilson-certificate-client-jaxrs2</module>
+        <module>mtwilson-certificate-model</module>
+        <module>mtwilson-certificate-ws-v2</module>
+        <module>mtwilson-esxi-cluster-autoupdate</module>
+        <module>mtwilson-esxi-cluster-client-jaxrs2</module>
+        <module>mtwilson-esxi-cluster-jdbi</module>
+        <module>mtwilson-esxi-cluster-model</module>
+        <module>mtwilson-esxi-cluster-ws-v2</module>
+        <module>mtwilson-esxi-host-jdbi</module>
+        <module>mtwilson-file-client-jaxrs2</module>
+        <module>mtwilson-file-model</module>
+        <module>mtwilson-file-ws-v2</module>
+        <module>mtwilson-flavor-client-jaxrs2</module>
+        <module>mtwilson-flavor-jpa</module>
+        <module>mtwilson-flavor-model</module>
+        <module>mtwilson-flavor-ws-v2</module>
+        <module>mtwilson-my</module>
+        <module>mtwilson-postgresql</module>
+        <module>mtwilson-privacyca-setup</module>
+        <module>mtwilson-privacyca-ws-v2</module>
+        <module>mtwilson-queue</module>
+        <module>mtwilson-setup</module>
+        <module>mtwilson-shiro-jdbi</module>
+        <module>mtwilson-shiro-setup</module>
+        <module>mtwilson-tag-client-jaxrs2</module>
+        <module>mtwilson-tag-dao-jooq</module>
+        <module>mtwilson-tag-jdbi</module>
+        <module>mtwilson-tag-model</module>
+        <module>mtwilson-tag-selection-json</module>
+        <module>mtwilson-tag-selection-xml</module>
+        <module>mtwilson-tag-setup</module>
+        <module>mtwilson-tag-ws-v2</module>
+        <module>mtwilson-telemetry-client-jaxrs2</module>
+        <module>mtwilson-telemetry-jpa</module>		
+        <module>mtwilson-telemetry-ws-v2</module>
+        <module>mtwilson-tls-policy-client-jaxrs2</module>
+        <module>mtwilson-tls-policy-jdbi</module>
+        <module>mtwilson-tls-policy-model</module>
+        <module>mtwilson-tls-policy-ws-v2</module>
+        <module>mtwilson-tpm-endorsement-jdbi</module>
+        <module>mtwilson-tpm-endorsement-ws-v2</module>
+        <module>mtwilson-user-management-client-jaxrs2</module>
+        <module>mtwilson-user-management-model</module>
+        <module>mtwilson-user-management-ws-v2</module>
+        <module>mtwilson-version</module>
+    </modules>
+    
+</project>

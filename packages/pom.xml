@@ -1,0 +1,25 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <groupId>com.intel.mtwilson.packages</groupId>
+    <artifactId>mtwilson-packages</artifactId>
+    
+    <packaging>pom</packaging>
+    
+    <parent>
+        <groupId>com.intel.mtwilson.maven</groupId>
+        <artifactId>mtwilson-dist-feature</artifactId>
+        <version>4.4-SNAPSHOT</version>
+        <relativePath />
+    </parent>
+    
+    <modules>
+        <module>host-verification-service-client-java8</module>
+        <module>host-verification-service-linux</module>
+        <module>host-verification-service-zip</module>
+        <module>log-rotate-linux</module>
+        <module>monit-linux</module>
+        <module>host-verification-service-docker</module>
+    </modules>
+    
+</project>

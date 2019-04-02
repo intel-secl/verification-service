@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="mtwilson" default="all" basedir=".">
+    <description>
+        Run "ant ready" to ensure you have all pre-requisites to build
+        Run "ant" or "ant build" to build the entire project
+        Run "ant ready build packages" to clean build and generate packages
+        Run "ant build packages" to rebuild only and generate packages
+        Run "ant packages" to generate packages (requires prior build)
+    </description>
+    
+    <target name="info">
+        <echoproperties/>
+    </target>
+    
+    <target name="init">
+        <!-- maven 3.3.3 has mvn.cmd instead of mvn.bat -->
+        <condition property="cmd.maven" value="mvn.cmd">
+            <os family="windows"/>
+        </condition>
+        <condition property="cmd.maven" value="mvn">
+            <os family="unix"/>
+        </condition>
+        <condition property="env.LINUX_TARGET" value="generic">
+            <not><isset property="env.LINUX_TARGET"/></not>
+        </condition>
+    </target>
+    
+    <target name="ready" depends="init">
+    </target>
+    
+    <target name="clean" depends="init">
+        <!-- features -->
+        <exec executable="${cmd.maven}" dir="features" resultproperty="mavenExitCleanFeatures">
+            <env key="LINUX_TARGET" value="${env.LINUX_TARGET}"/>
+            <arg value="clean"/>
+        </exec>
+        <fail message="Cannot clean project features" status="${mavenExitCleanFeatures}">
+            <condition><not><equals arg1="${mavenExitCleanFeatures}" arg2="0"/></not></condition>
+        </fail>
+        <!-- packages -->
+        <exec executable="${cmd.maven}" dir="packages" resultproperty="mavenExitCleanPackages">
+            <env key="LINUX_TARGET" value="${env.LINUX_TARGET}"/>
+            <arg value="clean"/>
+        </exec>
+        <fail message="Cannot clean project packages" status="${mavenExitCleanPackages}">
+            <condition><not><equals arg1="${mavenExitCleanPackages}" arg2="0"/></not></condition>
+        </fail>
+    </target>
+    
+    <target name="build" depends="init">
+        <exec executable="${cmd.maven}" dir="features" resultproperty="mavenExitBuildFeatures">
+            <env key="LINUX_TARGET" value="${env.LINUX_TARGET}"/>
+            <arg value="-DskipTests=true"/>
+            <arg value="install"/>
+        </exec>
+        <fail message="Cannot build project features" status="${mavenExitBuildFeatures}">
+            <condition><not><equals arg1="${mavenExitBuildFeatures}" arg2="0"/></not></condition>
+        </fail>
+    </target>
+    
+    <target name="packages" depends="init">
+        <exec executable="${cmd.maven}" dir="packages" resultproperty="mavenExitBuildPackages">
+            <env key="LINUX_TARGET" value="${env.LINUX_TARGET}"/>
+            <arg value="-DskipTests=true"/>
+            <arg value="install"/>
+        </exec>
+        <fail message="Cannot build project packages" status="${mavenExitBuildPackages}">
+            <condition><not><equals arg1="${mavenExitBuildPackages}" arg2="0"/></not></condition>
+        </fail>
+    </target>
+    
+    <target name="javadoc" depends="init">
+        <!-- the root pom and all projects -->
+        <exec executable="${cmd.maven}" dir="packages/host-verification-service-client-java8" resultproperty="mavenExitJavadoc">
+            <env key="LINUX_TARGET" value="${env.LINUX_TARGET}"/>
+            <arg value="-Ddependency.locations.enabled=false"/>
+            <arg value="-Drelease"/>
+            <arg value="-DskipTests=true"/>
+            <arg value="javadoc:javadoc"/>
+            <arg value="site:site"/>
+            <arg value="install"/>
+        </exec>
+        <fail message="Failed to build javadoc" status="${mavenExitJavadoc}">
+            <condition><not><equals arg1="${mavenExitJavadoc}" arg2="0"/></not></condition>
+        </fail>
+    </target>
+    
+    <target name="all" depends="ready,clean,build,packages,javadoc"/>
+    
+    <target name="klocwork" depends="init,ready">
+        <exec executable="klocwork.sh" resultproperty="mavenExitKlocwork"/>
+        <fail message="Failed to run klocwork scan" status="${mavenExitKlocwork}">
+            <condition><not><equals arg1="${mavenExitKlocwork}" arg2="0"/></not></condition>
+        </fail>
+    </target>
+    
+    <target name="banned" depends="init,ready">
+        <exec executable="banned.sh"/>		      
+    </target>
+    
+    <target name="build-with-scans">
+        <parallel>
+            <exec executable="ant">
+                <arg value="all"/>
+            </exec>
+            <exec executable="ant">
+                <arg value="klocwork"/>
+            </exec>
+            <exec executable="ant">
+                <arg value="banned"/>
+            </exec>
+        </parallel>
+    </target>
+</project>

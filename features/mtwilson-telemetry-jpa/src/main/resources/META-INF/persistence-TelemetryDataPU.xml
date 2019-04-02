@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+  <persistence-unit name="TelemetryDataPU" transaction-type="RESOURCE_LOCAL">
+    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+    <class>com.intel.mtwilson.telemetry.data.MwTelemetry</class>
+    <!--  
+    <properties>
+      <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://192.168.0.1:5432/mw_as"/>
+      <property name="javax.persistence.jdbc.user" value="root"/>
+      <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+      <property name="javax.persistence.jdbc.password" value="A8+UZaKONGWV3emoXcvMug"/>
+    </properties>
+    -->
+    <shared-cache-mode>NONE</shared-cache-mode>
+  </persistence-unit>
+</persistence>

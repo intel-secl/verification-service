@@ -1,0 +1,182 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <groupId>com.intel.mtwilson.features</groupId>
+    <artifactId>mtwilson-user-management-client-jaxrs2</artifactId>
+    
+    <packaging>jar</packaging>
+    
+    <parent>
+        <groupId>com.intel.mtwilson.features</groupId>
+        <artifactId>mtwilson-features</artifactId>
+        <version>4.4-SNAPSHOT</version>
+    </parent>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <configuration>
+                    <excludePackageNames>com.intel.mtwilson.client.jaxrs.common</excludePackageNames>
+                    <noqualifier>all</noqualifier>
+                    <tags>
+                        <tag>
+                            <name>mtwRequiresPermissions</name>
+                            <placement>aoptcmf</placement>
+                            <head>Requires permissions:</head>
+                        </tag>
+                        <tag>
+                            <name>mtwContentTypeReturned</name>
+                            <placement>aoptcmf</placement>
+                            <head>Content type returned:</head>
+                        </tag>
+                        <tag>
+                            <name>mtwMethodType</name>
+                            <placement>aoptcmf</placement>
+                            <head>Method Type:</head>
+                        </tag>
+                        <tag>
+                            <name>mtwSampleRestCall</name>
+                            <placement>aoptcmf</placement>
+                            <head>Sample REST call:</head>
+                        </tag>
+                        <tag>
+                            <name>mtwSampleApiCall</name>
+                            <placement>aoptcmf</placement>
+                            <head>Sample API call:</head>
+                        </tag>
+                        <tag>
+                            <name>mtwPreRequisite</name>
+                            <placement>aoptcmf</placement>
+                            <head>Pre-requisite:</head>
+                        </tag>                                
+                    </tags>
+                </configuration>
+            </plugin>
+            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemProperties>
+                        <property>
+                            <name>java.util.logging.config.file</name>
+                            <value>${project.build.directory}/test-classes/logging.properties</value> <!-- copied there by the <resources> tag above, it's in src/test/env -->
+                        </property>
+                    </systemProperties>
+                </configuration>
+            </plugin>
+            
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>aspectj-maven-plugin</artifactId>
+                <version>1.9</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <complianceLevel>1.7</complianceLevel>
+                    <showWeaveInfo>true</showWeaveInfo>
+                    <aspectLibraries>
+                        <!-- security framework -->
+                        <aspectLibrary>
+                            <groupId>org.apache.shiro</groupId>
+                            <artifactId>shiro-aspectj</artifactId>
+                        </aspectLibrary>
+                    </aspectLibraries>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>aspectj-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>                
+                <dependencies>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjrt</artifactId>
+                        <version>1.8.9</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjtools</artifactId>
+                        <version>1.8.9</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+    
+    <dependencies>
+        <!-- common-java -->
+        <dependency>
+            <groupId>com.intel.mtwilson.util</groupId>
+            <artifactId>mtwilson-util-jaxrs2-client</artifactId>        
+        </dependency>
+        
+        <!-- mtwilson -->
+        <dependency>
+            <groupId>com.intel.mtwilson.features</groupId>
+            <artifactId>mtwilson-my</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.features</groupId>
+            <artifactId>mtwilson-user-management-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <!-- external -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    
+    <profiles>
+        <profile>
+            <activation>
+                <property>
+                    <name>release</name>  <!-- activate this profile with  -Drelease on the command line -->
+                </property>
+            </activation>
+            <properties>
+                <additionalparam>-Xdoclint:none</additionalparam>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>2.9</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                    <goal>javadoc</goal>
+                                </goals>
+                                <configuration>
+                                    <attach>true</attach>
+                                    <includeDependencySources>true</includeDependencySources>
+                                    <includeTransitiveDependencySources>true</includeTransitiveDependencySources>
+                                    <dependencySourceIncludes>
+                                        <dependencySourceInclude>com.intel.mtwilson.integration:mtwilson-api</dependencySourceInclude>
+                                        <dependencySourceInclude>com.intel.dcsg.cpg:cpg-validation</dependencySourceInclude>
+                                    </dependencySourceIncludes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    
+</project>

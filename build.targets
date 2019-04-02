@@ -1,0 +1,10 @@
+# A successful build produces the following files:
+packages/host-verification-service-linux/target/host-verification-service-linux-*.bin
+packages/host-verification-service-linux/target/host-verification-service-linux-*.bin.README
+packages/host-verification-service-linux/target/host-verification-service-linux-*.bin.README.sig
+packages/host-verification-service-client-java8/target/host-verification-service-client-*.jar
+packages/host-verification-service-client-java8/target/host-verification-service-client-java8-*.zip
+packages/host-verification-service-client-java8/target/host-verification-service-client-java8-*-javadoc.zip
+packages/host-verification-service-docker/target/host-verification-service-docker-*.zip
+packages/host-verification-service-docker/target/host-verification-service-docker-*.zip.README
+packages/host-verification-service-docker/target/host-verification-service-docker-*.zip.README.sig

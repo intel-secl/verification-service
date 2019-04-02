@@ -1,0 +1,11 @@
+{
+ "flavor_match_policies" : [
+     {
+  "flavor_part": "PLATFORM",
+  "match_policy": {
+  "match_type" : "ALL_OF",
+  "required" : "REQUIRED"
+  }
+     }
+ ]
+}

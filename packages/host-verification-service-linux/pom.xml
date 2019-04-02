@@ -1,0 +1,429 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <groupId>com.intel.mtwilson.packages</groupId>
+    <artifactId>host-verification-service-linux</artifactId>
+    
+    <packaging>pom</packaging>
+    
+    <parent>
+        <groupId>com.intel.mtwilson.packages</groupId>
+        <artifactId>mtwilson-packages</artifactId>
+        <version>4.4-SNAPSHOT</version>
+    </parent>
+    
+    <properties>
+        <makeself.hvs>${project.build.directory}/${project.artifactId}-${project.version}</makeself.hvs>
+    </properties>
+    
+    <build>
+        <resources>
+            <resource>
+                <directory>src/files</directory>
+            </resource>
+        </resources>
+    </build>
+    
+    <profiles>
+        <profile>
+            <activation>
+                <os>
+                    <family>unix</family>
+                </os>
+            </activation>
+            
+            <!-- these dependencies are only for including the api client, they are not needed for the core shell script functions. the maven-dependency-plugin copies these dependencies and all their dependencies into a folder for distribution -->
+            <dependencies>
+                <!-- Monit -->
+                <dependency>
+                    <groupId>com.intel.mtwilson.packages</groupId>
+                    <artifactId>monit-linux</artifactId>
+                    <version>5.5</version>
+                    <type>bin</type>
+                </dependency>
+                <dependency>
+                    <groupId>com.intel.mtwilson.packages</groupId>
+                    <artifactId>log-rotate-linux</artifactId>
+                    <version>1.0</version>
+                    <type>bin</type>
+                </dependency>
+                <dependency>
+                    <groupId>com.intel.mtwilson.packages</groupId>
+                    <artifactId>host-verification-service-zip</artifactId>
+                    <classifier>application</classifier>
+                    <version>${project.version}</version>
+                    <type>zip</type>
+                </dependency>
+                
+                <!-- Web Services -->
+                <dependency>
+                    <groupId>com.intel.mtwilson.core</groupId>
+                    <artifactId>mtwilson-core-jetty9</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.intel.mtwilson.integration</groupId>
+                    <artifactId>mtwilson-configuration</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.intel.mtwilson.integration</groupId>
+                    <artifactId>mtwilson-launcher</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.intel.mtwilson.integration</groupId>
+                    <artifactId>mtwilson-password-vault</artifactId>
+                </dependency>
+                
+                <!-- API Client and Linux Utils -->
+                <dependency>
+                    <groupId>com.intel.mtwilson.linux</groupId>
+                    <artifactId>mtwilson-linux-util</artifactId>
+                    <version>${project.version}</version>
+                    <type>sh</type>
+                </dependency>
+            </dependencies>
+            
+            <build>
+                <plugins>
+                    <!-- begin copy artifacts plugin -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>2.4</version>
+                        <executions>
+                            <execution>
+                                <id>copy-all-with-hvs</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <!-- Monit -->
+                                        <artifactItem>
+                                            <groupId>com.intel.mtwilson.packages</groupId>
+                                            <artifactId>monit-linux</artifactId>
+                                            <version>5.5</version>
+                                            <type>bin</type>
+                                        </artifactItem>
+                                        <!-- other -->
+                                        <artifactItem>
+                                            <groupId>com.intel.mtwilson.linux</groupId>
+                                            <artifactId>mtwilson-linux-util</artifactId>
+                                            <version>${project.version}</version>
+                                            <type>sh</type>
+                                            <destFileName>functions</destFileName>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>com.intel.mtwilson.packages</groupId>
+                                            <artifactId>log-rotate-linux</artifactId>
+                                            <version>1.0</version>
+                                            <type>bin</type>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>com.intel.mtwilson.packages</groupId>
+                                            <artifactId>host-verification-service-zip</artifactId>
+                                            <classifier>application</classifier>
+                                            <version>${project.version}</version>
+                                            <type>zip</type>
+                                        </artifactItem>
+                                    </artifactItems>
+                                    <outputDirectory>${makeself.hvs}</outputDirectory>
+                                    <overWriteReleases>false</overWriteReleases>
+                                    <overWriteSnapshots>true</overWriteSnapshots>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- end copy artifacts plugin -->
+                    
+                    <!-- begin copy other resources plugin -->
+                    <plugin>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>2.5</version>
+                        <executions>
+                            <execution>
+                                <id>copy-resources-hvs</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${makeself.hvs}</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>src/etc</directory>
+                                            <includes>
+                                                <include>version</include>
+                                            </includes>
+                                            <filtering>true</filtering>
+                                        </resource>
+                                        <resource>
+                                            <directory>src/files</directory>
+                                            <includes>
+                                                <include>**/*</include>
+                                            </includes>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
+                                </configuration>            
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- end copy other resources plugin -->
+                    
+                    <!-- begin create self-extracting installer plugin -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.2.1</version>
+                        <executions>
+                            <execution>
+                                <id>create-single-installer-hvs</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>bash</executable>
+                                    <arguments>
+                                        <argument>makebin-auto.sh</argument>
+                                        <argument>${makeself.hvs}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- end create self-extracting installer plugin -->
+                    
+                    <!-- begin deploy installers to repository -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                    </plugin>
+                    <!-- end deploy installers to repository -->
+                    
+                    <!-- also defined in top level pom.xml but appears to not take effect if someoen runs just this pom -->
+                    <plugin>
+                        <groupId>pl.project13.maven</groupId>
+                        <artifactId>git-commit-id-plugin</artifactId>
+                        <version>2.1.15</version>
+                        <executions>
+                            <execution>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>revision</goal>
+                                </goals>
+                                <inherited>true</inherited>
+                                <configuration>
+                                    <skipPoms>false</skipPoms>
+                                    <prefix>git</prefix>
+                                    <dateFormat>EEE, d MMM yyyy HH:mm:ss z</dateFormat>
+                                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+                
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>build-helper-maven-plugin</artifactId>
+                            <version>1.5</version>
+                            <executions>
+                                <execution>
+                                    <id>attach-artifacts</id>
+                                    <phase>package</phase>
+                                    <goals>
+                                        <goal>attach-artifact</goal>
+                                    </goals>
+                                    <configuration>
+                                        <artifacts>
+                                            <artifact>
+                                                <file>${makeself.hvs}.bin</file>
+                                                <type>bin</type>
+                                            </artifact>
+                                        </artifacts>
+                                    </configuration>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+        
+        <profile>
+            <id>rpm</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>rpm-maven-plugin</artifactId>
+                        <version>2.0.1</version>
+                        <executions>
+                            <execution>
+                                <inherited>false</inherited>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>rpm</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <group>System Environment/Base</group>
+                            <filemode>777</filemode>
+                            <copyright>intel</copyright>
+                            <name>${project.artifactId}</name>
+                            <version>${project.version}</version>
+                            <classifier>noarch</classifier>
+                            <packaging>rpm</packaging>
+                            <description>${description}</description>
+                            <requires>
+                                <require>java-1.8.0-openjdk-devel >= 1.8.0.131</require>
+                                <require>unzip >= 6.0</require>
+                                <require>zip >= 0.3</require>
+                                <require>wget >= 1.14</require>
+                                <require>xmlstarlet >= 1.6</require>
+                                <require>logrotate >= 3.7</require>
+                                <require>monit</require>
+                                <require>openssl-devel</require>
+                                <require>make</require>
+                                <require>gcc</require>
+                            </requires>
+                            <mappings>
+                                <mapping>
+                                    <directory>/etc/sh/</directory>
+                                    <directoryIncluded>false</directoryIncluded>
+                                    <sources>
+                                        <source>
+                                            <location>${project.build.directory}/${project.artifactId}-${project.version}.bin</location>
+                                        </source>
+                                    </sources>
+                                </mapping>
+                            </mappings>
+                            <postinstallScriptlet>
+                                <script>export IS_RPM=true; cd /etc/sh; chmod +x host-verification-service-*.bin; sleep 1; pwd; ./host-verification-service-*.bin</script>
+                                <fileEncoding>utf-8</fileEncoding>
+                            </postinstallScriptlet>
+                        </configuration>
+                    </plugin>               
+                </plugins>
+            </build>
+        </profile>
+	
+        <profile>
+            <id>yum</id>
+            <build>
+                <plugins>               
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.8</version>
+                        <executions>
+                            <execution>
+                                <inherited>false</inherited>
+                                <id>attach-artifact</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <!-- <attachartifact file="${project.build.directory}/rpm/${artifactId}/RPMS/noarch/${artifactId}-1.0-1.noarch.rpm" type="rpm" />-->
+                                        <scp trust="yes" todir="${user}@${url}:/var/ftp/pub/" password="${password}" verbose="true">
+                                            <fileset dir="${project.build.directory}/rpm/${artifactId}/RPMS/noarch/">
+                                                <include name="**/*.rpm" />
+                                            </fileset>
+                                        </scp>
+                                        <sshexec trust="true" failonerror="true" host="${url}" username="${user}" password="${password}" command="cd /var/ftp; createrepo pub " timeout="12000" />
+                                        <taskdef name="scp" classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp">
+                                            <classpath refid="maven.plugin.classpath" />
+                                        </taskdef>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.ant</groupId>
+                                <artifactId>ant</artifactId>
+                                <version>1.8.4</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>com.jcraft</groupId>
+                                <artifactId>jsch</artifactId>
+                                <version>0.1.53</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>ant</groupId>
+                                <artifactId>ant-jsch</artifactId>
+                                <version>1.6.5</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>ant-contrib</groupId>
+                                <artifactId>ant-contrib</artifactId>
+                                <version>1.0b3</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
+        <profile>
+            <id>signing</id>         
+            <activation>
+                <property>
+                    <name>signing</name>
+                </property>
+                <os>
+                    <family>unix</family>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.8</version>
+                        <executions>
+                            <execution>
+                                <id>code-signing</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <chmod perm="a+rwx" file="${project.build.directory}/${project.artifactId}-${project.version}.bin"/>
+                                        <exec executable="/bin/bash" failonerror="true">
+                                            <redirector output="${project.build.directory}/intel-signfile.log" alwayslog="true"/>
+                                            <arg value="intel-signfile.sh"/>
+                                            <arg value="${project.build.directory}/${project.artifactId}-${project.version}.bin"/>
+                                        </exec>
+                                    </target>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>attach-artifacts-code-signing</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <attachartifact file="${project.build.directory}/${project.artifactId}-${project.version}.bin.README.sig" type="bin.README.sig"/>
+                                        <attachartifact file="${project.build.directory}/${project.artifactId}-${project.version}.bin.README"  type="bin.README"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    
+</project>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<saml2:Assertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" ID="MapAssertion" IssueInstant="2017-11-05T07:06:22.515Z" Version="2.0">
+    <saml2:Issuer>https://192.168.0.1:8443</saml2:Issuer>
+    <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+        <SignedInfo>
+            <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments"/>
+            <SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+            <Reference URI="#MapAssertion">
+                <Transforms>
+                    <Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+                </Transforms>
+                <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                <DigestValue>UoyCReq8Erd7Z8VDAD4pMC2SlFtxYICdCAsn4g9xqNg=</DigestValue>
+            </Reference>
+        </SignedInfo>
+        <SignatureValue>TqzW9BJkzvJsrLubjoJmDeFS7HDXMxFNdoxPPsQrdq/PjBOTP1PrS8n6mQ7Z9XfD1lqdb5Mm8bFb
+            quIofkjotCdfu7Kxvz9xMBX/L0Fv60TsBA3EpDkzXFBww+GdHy/k6Rz5Zr+XOnOf5fsnNyyAmT1X
+            0G0XxvuH035yMi/RLHhJ92YoaZ61dTdEhq+PmQ1cnDavfNZDVhxRqhT0o7Kix3Ohp1Icc2dNk3rW
+            S69XIyoKbcpkIvYOEyKiO46B6iH+xfPeeNgSyKPljDNJRmBQ1zcCgngnQj+QF78SyAHFgNouiwnr
+            /NL3MaGPtcDUCqRysyHETFDFF7qnQp65unKBXg==</SignatureValue>
+        <KeyInfo>
+            <X509Data>
+                <X509Certificate>MIIDYzCCAkugAwIBAgIEejtxszANBgkqhkiG9w0BAQsFADBiMQswCQYDVQQGEwJVUzELMAkGA1UE
+                    CBMCQ0ExDzANBgNVBAcTBkZvbHNvbTEOMAwGA1UEChMFSW50ZWwxEjAQBgNVBAsTCU10IFdpbHNv
+                    bjERMA8GA1UEAxMIbXR3aWxzb24wHhcNMTcxMTA1MDYzOTM0WhcNMjcxMTAzMDYzOTM0WjBiMQsw
+                    CQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExDzANBgNVBAcTBkZvbHNvbTEOMAwGA1UEChMFSW50ZWwx
+                    EjAQBgNVBAsTCU10IFdpbHNvbjERMA8GA1UEAxMIbXR3aWxzb24wggEiMA0GCSqGSIb3DQEBAQUA
+                    A4IBDwAwggEKAoIBAQCGSHuUW9NGaMhTF/Bh3P7IPFtFhm/pegK/RW9A2Uxdgxa25QgwCGJ7RIuq
+                    MNo1BPV5mTUg4xuSkCcVioCSgeN5NInHOWff6rQZrpGFmAg1oZn39BXwP6UCijha0BfbaYVbbpuu
+                    v0//IGc1NgscrirbthfP2gnS1hvsNf/9kXWzrcwyxLnaWhwhax6NRlFczjXciS7lDBtRreNVz+qR
+                    xO2XY3OCwojnL+64cedxbxqflhPyf/E16PHFrkJSx2K8i+c3aeAqYcB+M/VuFW8SIQjMRwL3iB90
+                    t4JHOLlWsBfPrDraYLGed86rf72aweBKie715WmRa9ddUx4dfcTPmr17AgMBAAGjITAfMB0GA1Ud
+                    DgQWBBTF55KbAEJ7jL21+cpVNEzHhgjxIzANBgkqhkiG9w0BAQsFAAOCAQEABfSgrk1mf+/R2mah
+                    hph/+EoJi9XEh7bTxvGnDt6aIkEtB4CbyhEwtkmuOzPJtyVNxmIECdskCJLN4o1rZUrIgX8nC8Lq
+                    SpQWgRMhQ31wIYT8xXAzUFWBkGtI8/m81Xv3zozvQhgjDjYn4FMjBaYDTD281mZrk3C1aoTVv8YF
+                    fCQophQ+yEtFfEML0IULN0Wznk5pzj/7WVPT9Ao+6jAC0ApYd7GDlMaKyejC2/3TExhRJcl/eXDT
+                    zridqHTad/Cl7sfsHWusaXpkpt/JGIpXL4DOPUk8MCu6Nmscdm68TnpwwU2tv/oL9+LqxV2Gfdbe
+                    Vbi8N+M+1nGuiKQ8ifJXNg==</X509Certificate>
+            </X509Data>
+        </KeyInfo>
+    </Signature>
+    <saml2:Subject>
+        <saml2:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified">Q16RU23</saml2:NameID>
+        <saml2:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:sender-vouches">
+            <saml2:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified">Intel Security Libraries</saml2:NameID>
+            <saml2:SubjectConfirmationData NotBefore="2017-11-05T07:06:22.536Z" NotOnOrAfter="2017-11-05T08:06:22.536Z"/>
+        </saml2:SubjectConfirmation>
+    </saml2:Subject>
+    <saml2:AttributeStatement>
+        <saml2:Attribute Name="biosVersion">
+            <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">SE5C610.86B.01.01.0021.032120170601</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute Name="hostName">
+            <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">Q16RU23</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute Name="tpmVersion">
+            <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">2.0</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute Name="biosName">
+            <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">Intel Corporation</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute Name="osVersion">
+            <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">7.3</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute Name="processorInfo">
+            <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">F1 06 04 00 FF FB EB BF</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute Name="vmmName">
+            <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string"/>
+        </saml2:Attribute>
+        <saml2:Attribute Name="processorFlags">
+            <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch ida arat epb pln pts dtherm intel_pt tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm cqm rdseed adx smap xsaveopt cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute Name="hardwareUuid">
+            <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">00083153-D529-E511-906E-0012795D96DD</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute Name="vmmVersion">
+            <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string"/>
+        </saml2:Attribute>
+        <saml2:Attribute Name="osName">
+            <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">RedHatEnterpriseServer</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute Name="pcrBanks">
+            <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">[SHA1, SHA256]</saml2:AttributeValue>
+        </saml2:Attribute>
+    </saml2:AttributeStatement>
+</saml2:Assertion>

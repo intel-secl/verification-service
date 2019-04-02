@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+         version="2.4">
+
+    <display-name>Mt Wilson</display-name>
+
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file> 
+    </welcome-file-list>
+
+    <context-param>
+        <param-name>shiroEnvironmentClass</param-name>
+        <param-value>com.intel.mtwilson.shiro.env.LocalIniWebEnvironment</param-value>
+    </context-param>
+
+    <listener>
+        <listener-class>org.apache.shiro.web.env.EnvironmentLoaderListener</listener-class>
+    </listener>
+    <listener>
+        <listener-class>com.intel.mtwilson.features.queue.QueueExecutionLoader</listener-class>
+    </listener>
+	<listener>
+        <listener-class>com.intel.mtwilson.plugins.telemetry.TelemetryLoader</listener-class>
+    </listener>
+	<listener>
+        <listener-class>com.intel.mtwilson.esxicluster.autoupdate.EsxiHostsAutoUpdateLoader</listener-class>
+    </listener>
+	<listener>
+        <listener-class>com.intel.mtwilson.plugin.AutoRefreshTrustLoader</listener-class>
+    </listener>
+<!--
+    <listener>
+        <listener-class>com.intel.mtwilson.servlet.listener.BackgroundTaskRunner</listener-class>
+    </listener>
+-->
+    <filter>
+        <filter-name>RepeatableRequestFilter</filter-name>
+        <filter-class>com.intel.mtwilson.servlet.RepeatableRequestFilter</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>ShiroFilter</filter-name>
+        <filter-class>com.intel.mtwilson.shiro.LoggingShiroFilter</filter-class>
+    </filter>
+    
+    <filter>
+        <filter-name>RateLimitFilter</filter-name>
+        <filter-class>com.intel.mtwilson.servlet.RateLimitFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>RepeatableRequestFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    
+    <filter-mapping>
+        <filter-name>RateLimitFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>ShiroFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher>
+        <dispatcher>INCLUDE</dispatcher>
+        <dispatcher>ERROR</dispatcher>
+    </filter-mapping>
+
+    <servlet>
+        <servlet-name>Jersey</servlet-name>
+        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+        <init-param>
+            <param-name>javax.ws.rs.Application</param-name>
+            <param-value>com.intel.mtwilson.jersey2.ExtensibleResourceConfig</param-value>
+        </init-param>
+        <!--
+        <init-param>
+            <param-name>jersey.config.server.provider.packages</param-name>
+            <param-value>com.intel.kms.keystore.jaxrs,com.intel.kms.keystore.html5.jaxrs,com.intel.mtwilson.jaxrs2.provider,com.fasterxml.jackson.jaxrs.json,com.fasterxml.jackson.jaxrs.base</param-value>
+        </init-param>
+        -->
+        <init-param>
+            <param-name>jersey.config.disableMoxyJson</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>jersey.config.server.mediaTypeMappings</param-name>
+            <param-value>txt:text/plain, xml:application/xml, json:application/json, jsonapi:application/vnd.api+json, html:text/html, css:text/css, bin:application/octet-stream, yaml:text/yaml, pem:application/x-pem-file, crt:application/pkix-cert, saml:application/samlassertion+xml, tgz:archive/tar+gzip</param-value>
+        </init-param>
+    </servlet>
+ 
+    <servlet>
+        <servlet-name>Default</servlet-name>
+        <servlet-class>org.eclipse.jetty.servlet.DefaultServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>Default</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>  
+    
+    <servlet-mapping>
+        <servlet-name>Jersey</servlet-name>
+        <url-pattern>/mtwilson/v2/*</url-pattern>
+    </servlet-mapping>  
+    
+    <session-config>
+       <cookie-config>
+           <http-only>true</http-only>
+       </cookie-config>
+    </session-config> 
+    
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>restricted methods</web-resource-name>
+                <url-pattern>/*</url-pattern>
+                <http-method>OPTIONS</http-method>
+                <http-method>HEAD</http-method>
+        </web-resource-collection>
+        <auth-constraint/>
+    </security-constraint>
+    
+</web-app> 

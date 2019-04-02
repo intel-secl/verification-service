@@ -1,0 +1,51 @@
+version: "3.6"
+
+services:
+   hvs-pg-db:
+      image: postgres:9.4
+      command: postgres -c 'max_connections=400' -c 'shared_buffers=400MB'
+
+      secrets:
+           - db.password
+      volumes:
+         - hvs-pgdata-volume:/var/lib/postgresql/data
+      environment:
+         POSTGRES_DB: hvs_db
+         POSTGRES_USER: hvs_user
+         POSTGRES_PASSWORD_FILE: /run/secrets/db.password
+
+   verification-service:
+      image: isecl-verification-service:latest
+      build: .
+      hostname: verification-service
+      depends_on:
+         - "hvs-pg-db"
+      ports:
+         - 8443:8443
+
+      secrets:
+         - source: mtwilson_env
+           target: mtwilson.env
+         - db.password
+
+      environment:
+         DATABASE_HOSTNAME: hvs-pg-db
+         DATABASE_PORTNUM: 5432
+         POSTGRES_DB: hvs_db
+         POSTGRES_USER: hvs_user
+
+      volumes:
+         - hvs-config-volume:/opt/mtwilson/configuration
+         - hvs-logs-volume:/opt/mtwilson/logs
+
+volumes:
+   hvs-pgdata-volume:
+   hvs-config-volume:
+   hvs-logs-volume:
+
+secrets:
+   mtwilson_env:
+      file: ./mtwilson.env
+
+   db.password:
+      file: ./db.password
