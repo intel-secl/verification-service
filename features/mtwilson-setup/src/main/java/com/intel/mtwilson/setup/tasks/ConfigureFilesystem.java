@@ -8,14 +8,8 @@ import com.intel.dcsg.cpg.io.Platform;
 import com.intel.dcsg.cpg.validation.ObjectModel;
 import com.intel.mtwilson.Folders;
 import com.intel.mtwilson.My;
-import com.intel.mtwilson.setup.AbstractSetupTask;
-import com.intel.mtwilson.setup.ConfigurationException;
 import com.intel.mtwilson.setup.LocalSetupTask;
-import com.intel.mtwilson.setup.SetupTask;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import org.apache.commons.io.IOUtils;
 
 /**
  * This task checks that required paths are known such as MTWILSON_HOME, and

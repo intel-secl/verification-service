@@ -193,8 +193,6 @@ public class JdbcCertificateRealm extends AuthorizingRealm {
                 if(userLoginCertificate != null && userLoginCertificate.isEnabled() ) {
                     user = dao.findUserById(userLoginCertificate.getUserId());
                 }
-    //            xToken.
-    //            userLoginCertificate = dao.findUserLoginCertificateByUsername(username);
             } catch (Exception e) {
                 log.debug("doGetAuthenticationInfo error", e);
                 throw new AuthenticationException("Internal server error", e); 

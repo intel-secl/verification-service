@@ -32,11 +32,7 @@ mtwilson.atag.mtwilson.baseurl=https://192.168.0.1:8181/mtwilson/v1   ;  REMOVE 
  * @author jbuhacoff
  */
 public class TagConfiguration {
-//    public static final String TAG_KEYSTORE_FILE = "tag.keystore.file";
-//    public static final String TAG_KEYSTORE_PASSWORD = "tag.keystore.password";
-//    public static final String TAG_KEY_ALIAS = "tag.key.alias";
-//    public static final String TAG_KEY_PASSWORD = "tag.key.password";
-    public static final String TAG_ISSUER = "tag.issuer.dn"; // tag.certificate.dn 
+    public static final String TAG_ISSUER = "tag.issuer.dn"; // tag.certificate.dn
     public static final String TAG_VALIDITY_SECONDS = "tag.validity.seconds";
     public static final String TAG_AUTO_IMPORT_TO_MTWILSON = "tag.provision.autoimport";
     public static final String TAG_PROVISION_EXTERNAL_CA = "tag.provision.external";

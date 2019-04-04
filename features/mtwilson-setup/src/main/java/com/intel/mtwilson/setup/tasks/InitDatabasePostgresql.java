@@ -139,8 +139,7 @@ public class InitDatabasePostgresql extends LocalSetupTask {
             unknownChanges.removeAll(sql.keySet()); // remove what we have in this installer
             if( unknownChanges.isEmpty() ) {
                 System.out.println("Database is compatible");
-//                System.exit(0); // not yet -- after this block we'll print out if there are any changes to apply
-            } else { // if( !unknownChanges.isEmpty() ) {
+            } else {
                 // Database has new schema changes we dont' know about
                 System.out.println("WARNING: Database schema is newer than this version of Mt Wilson");
                 ArrayList<Long> unknownChangesInOrder = new ArrayList(unknownChanges);
@@ -175,7 +174,7 @@ public class InitDatabasePostgresql extends LocalSetupTask {
         
         ResourceDatabasePopulator rdp = new ResourceDatabasePopulator();
         for(Long id : changesToApplyInOrder) {
-            rdp.addScript(sql.get(id)); // new ClassPathResource("/com/intel/mtwilson/database/mysql/bootstrap.sql")); // must specify full path to resource
+            rdp.addScript(sql.get(id));
         }
         
         rdp.setContinueOnError(true);

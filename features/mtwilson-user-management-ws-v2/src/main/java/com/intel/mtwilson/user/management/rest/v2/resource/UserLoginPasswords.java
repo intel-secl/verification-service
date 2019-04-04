@@ -16,7 +16,6 @@ import com.intel.mtwilson.launcher.ws.ext.V2;
 import com.intel.mtwilson.user.management.rest.v2.model.RoleCollection;
 import com.intel.mtwilson.user.management.rest.v2.model.RoleFilterCriteria;
 import com.intel.mtwilson.user.management.rest.v2.repository.RoleRepository;
-import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.PUT;

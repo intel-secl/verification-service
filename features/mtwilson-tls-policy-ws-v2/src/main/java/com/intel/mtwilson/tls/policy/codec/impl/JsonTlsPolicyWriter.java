@@ -4,10 +4,7 @@
  */
 package com.intel.mtwilson.tls.policy.codec.impl;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.intel.mtwilson.jaxrs2.provider.JacksonObjectMapperProvider;
 import com.intel.mtwilson.tls.policy.TlsPolicyDescriptor;
 import java.io.IOException;

@@ -29,34 +29,20 @@ import com.intel.mtwilson.jdbi.util.UUIDArgument;
 @RegisterArgumentFactory({UUIDArgument.class,DateArgument.class})
 @RegisterMapper(TagCertificateResultMapper.class)
 public interface TagCertificateDAO extends Closeable{
-//    @SqlUpdate("create table mw_tag_certificate (id char(36) primary key, certificate blob, sha1 char(40), sha256 char(64), subject varchar(255), issuer varchar(255), notBefore timestamp, notAfter timestamp, revoked boolean)")
     @SqlUpdate("create table mw_tag_certificate (id char(36) primary key, certificate blob, subject varchar(255), issuer varchar(255), notBefore timestamp, notAfter timestamp, hardware_uuid char(36))")
     void create();
     
     @SqlUpdate("insert into mw_tag_certificate (id, certificate, subject, issuer, notBefore, notAfter, hardware_uuid) "
             + "values (:id, :certificate, :subject, :issuer, :notBefore, :notAfter, :hardware_uuid)")
-//    @GetGeneratedKeys
-    void insert(@Bind("id") UUID id, @Bind("certificate") byte[] certificate, @Bind("subject") String subject, @Bind("issuer") String issuer, 
+    void insert(@Bind("id") UUID id, @Bind("certificate") byte[] certificate, @Bind("subject") String subject, @Bind("issuer") String issuer,
             @Bind("notBefore") Date notBefore, @Bind("notAfter") Date notAfter, @Bind("hardware_uuid") UUID hardwareUuid);
 
-//    @SqlUpdate("update mw_tag_certificate set revoked=:revoked where id=:id")
-//    void updateRevoked(@Bind("id") UUID id, @Bind("revoked") boolean revoked);
-    
     @SqlQuery("select id,certificate,subject,issuer,notBefore,notAfter,hardware_uuid from mw_tag_certificate where id=:id")
     TagCertificate findById(@Bind("id") UUID id);
     
     @SqlQuery("select * from mw_tag_certificate where LOWER(subject)=LOWER(:subject) order by notbefore desc limit 1")
     TagCertificate findLatestBySubject(@Bind("subject") String subject);
 
-//    @SqlQuery("select id,uuid,certificate,sha1,sha256,subject,issuer,notBefore,notAfter,revoked from mw_tag_certificate where uuid=:uuid")
-//    Certificate findByUuid(@Bind("uuid") UUID uuid);
-
-//    @SqlQuery("select id,certificate,sha1,sha256,subject,issuer,notBefore,notAfter,revoked from mw_tag_certificate where sha1=:sha1")
-//    Certificate findBySha1(@Bind("sha1") String sha1);
-
-//    @SqlQuery("select id,certificate,subject,issuer,notBefore,notAfter from mw_tag_certificate where sha256=:sha256")
-//    Certificate findBySha256(@Bind("sha256") String sha256);
-    
     @SqlUpdate("delete from mw_tag_certificate where id=:id")
     void delete(@Bind("id") UUID id);
     

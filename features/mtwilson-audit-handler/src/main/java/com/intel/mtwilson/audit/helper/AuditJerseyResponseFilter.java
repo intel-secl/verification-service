@@ -5,9 +5,6 @@
 package com.intel.mtwilson.audit.helper;
 
 import com.intel.mtwilson.audit.data.AuditContext;
-//import com.sun.jersey.spi.container.ContainerRequest;
-//import com.sun.jersey.spi.container.ContainerResponse;
-//import com.sun.jersey.spi.container.ContainerResponseFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerRequestContext;

@@ -32,19 +32,11 @@ public interface SelectionKvAttributeDAO extends Closeable{
     void create();
     
     @SqlUpdate("insert into mw_tag_selection_kvattribute (id, selectionId, kvAttributeId) values (:id, :selectionId, :kvAttributeId)")
-//    @GetGeneratedKeys
     void insert(@Bind("id") UUID id, @Bind("selectionId") UUID selectionId, @Bind("kvAttributeId") UUID kvAttributeId);
 
-//    @SqlBatch("insert into mw_tag_selection_kvattribute (selectionId, kvAttributeId) values (:selectionId, :kvAttributeId)")
-//    @BatchChunkSize(1000)
-//    SelectionKvAttribute insert(@Bind("selectionId") UUID selectionId, @Bind("attributeId") List<UUID> attributeId, @Bind("attributeValueId") List<UUID> attributeValueId); // return value is same size as input list;  each element in the int[] array is the number of rows modified by the corresponding insert.. which would either be 1 or 0.   so you can just tally up the 1s to see if all the rows were inserted or not.   unfortunately, the api does not have a mechanism for us to get the auto-generated id's for the batch-inserted rows. 
-    
     @SqlQuery("select id, selectionId, kvAttributeId from mw_tag_selection_kvattribute where id=:id")
     SelectionKvAttribute findById(@Bind("id") UUID id);
 
-//    @SqlQuery("select id, selectionId, kvAttributeId from mw_tag_selection_kvattribute where id=:id")
-//    SelectionKvAttribute findById(@Bind("id") UUID id);
-    
     // this one returns the records but they are purely relational... you'd have to make separate queries to find the tags and tag values being referenced
     @SqlQuery("select id, selectionId, kvAttributeId from mw_tag_selection_kvattribute where selectionId=:selectionId")
     List<SelectionKvAttribute> findBySelectionId(@Bind("selectionId") UUID selectionId);
@@ -53,7 +45,6 @@ public interface SelectionKvAttributeDAO extends Closeable{
     @SqlQuery("select mw_tag_selection_kvattribute.id, "
             + "mw_tag_selection_kvattribute.selectionId, "
             + "mw_tag_selection_kvattribute.kvAttributeId, "
-//            + "mw_tag_kvattribute.id, " // not needed and will conflict with "id" from mw_tag_selection_kvattribute
             + "mw_tag_kvattribute.name,"
             + "mw_tag_kvattribute.value "
             + "from mw_tag_selection_kvattribute, mw_tag_kvattribute "
@@ -63,9 +54,6 @@ public interface SelectionKvAttributeDAO extends Closeable{
     
     @SqlQuery("select id, selectionId, kvAttributeId from mw_tag_selection_kvattribute where kvAttributeId=:kvAttributeId")
     List<SelectionKvAttribute> findByTagId(@Bind("kvAttributeId") UUID kvAttributeId);
-    
-//    @SqlQuery("select id,selectionId,attributeId,attributeValueId from mw_tag_selection_tag_value where attributeValueId=:attributeValueId")
-//    SelectionKvAttribute findByTagValueId(@Bind("attributeValueId") String attributeValueId);
 
     @SqlUpdate("delete from mw_tag_selection_kvattribute where selectionId=:selectionId")
     void deleteAll(@Bind("selectionId") UUID selectionId);

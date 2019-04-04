@@ -103,24 +103,7 @@ public class ReportResource {
         try { log.debug("retrieveOne: {}", mapper.writeValueAsString(locator)); } catch(JsonProcessingException e) { log.debug("retrieveOne: cannot serialize locator: {}", e.getMessage()); }
         return getRepository().retrieve(locator); // subclass is responsible for validating the id in whatever manner it needs to;  most will return null if !UUID.isValid(id)  but we don't do it here because a resource might want to allow using something other than uuid as the url key, for example uuid OR hostname for hosts
     }
-    
-//    /**
-//     * Retrieve an item from the collection. Input Content-Type is not
-//     * applicable. Output Content-Type is any of application/json,
-//     * application/xml, application/yaml, or text/yaml
-//     *
-//     * The output represents a single item NOT wrapped in a collection.
-//     *
-//     * @param id
-//     * @param hostId
-//     * @return
-//     */
-//    @GET
-//    public Report retrieveOne(@BeanParam ReportLocator locator) {
-//        try { log.debug("retrieveOne: {}", mapper.writeValueAsString(locator)); } catch(JsonProcessingException e) { log.debug("retrieveOne: cannot serialize locator: {}", e.getMessage()); }
-//        return getRepository().retrieve(locator); // subclass is responsible for validating the id in whatever manner it needs to;  most will return null if !UUID.isValid(id)  but we don't do it here because a resource might want to allow using something other than uuid as the url key, for example uuid OR hostname for hosts
-//    }
-    
+
     /**
      * Retrieve an item from the collection. Input Content-Type is not
      * applicable. Output Content-Type is application/vnd.api+json

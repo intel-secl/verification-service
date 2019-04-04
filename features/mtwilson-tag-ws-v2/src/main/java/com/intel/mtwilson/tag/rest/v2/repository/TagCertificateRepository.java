@@ -61,12 +61,6 @@ public class TagCertificateRepository implements DocumentRepository<TagCertifica
                 if( criteria.issuerContains != null  && criteria.issuerContains.length() > 0  ) {
                     sql.addConditions(MW_TAG_CERTIFICATE.ISSUER.lower().contains(criteria.issuerContains.toLowerCase()));
                 }
-//                if( criteria.sha1 != null  ) {
-//                    sql.addConditions(MW_TAG_CERTIFICATE.SHA1.equalIgnoreCase(criteria.sha1.toHexString()));
-//                }
-//                if( criteria.sha256 != null  ) {
-//                    sql.addConditions(MW_TAG_CERTIFICATE.SHA256.equalIgnoreCase(criteria.sha256.toHexString()));
-//                }
                 if( criteria.validOn != null ) {
                     sql.addConditions(MW_TAG_CERTIFICATE.NOTBEFORE.lessOrEqual(new Timestamp(criteria.validOn.getTime())));
                     sql.addConditions(MW_TAG_CERTIFICATE.NOTAFTER.greaterOrEqual(new Timestamp(criteria.validOn.getTime())));
@@ -80,9 +74,6 @@ public class TagCertificateRepository implements DocumentRepository<TagCertifica
                 if( criteria.hardwareUuid != null ) {
                     sql.addConditions(MW_TAG_CERTIFICATE.HARDWARE_UUID.equalIgnoreCase(criteria.hardwareUuid.toString()));
                 }
-//                if( criteria.revoked != null   ) {
-//                    sql.addConditions(MW_TAG_CERTIFICATE.REVOKED.equal(criteria.revoked));
-//                }
             }
             sql.addOrderBy(MW_TAG_CERTIFICATE.SUBJECT);
             Result<Record> result = sql.fetch();
@@ -96,10 +87,7 @@ public class TagCertificateRepository implements DocumentRepository<TagCertifica
                     certObj.setSubject(r.getValue(MW_TAG_CERTIFICATE.SUBJECT));
                     certObj.setNotBefore(r.getValue(MW_TAG_CERTIFICATE.NOTBEFORE));
                     certObj.setNotAfter(r.getValue(MW_TAG_CERTIFICATE.NOTAFTER));
-//                    certObj.setSha1(Sha1Digest.valueOf(r.getValue(MW_TAG_CERTIFICATE.SHA1)));
-//                    certObj.setSha256(Sha256Digest.valueOf(r.getValue(MW_TAG_CERTIFICATE.SHA256)));
                     certObj.setHardwareUuid(UUID.valueOf(r.getValue(MW_TAG_CERTIFICATE.HARDWARE_UUID)));
-//                    certObj.setRevoked(r.getValue(MW_TAG_CERTIFICATE.REVOKED));
                     log.debug("Certificate:Search - Created certificate record in search result {}", certObj.getId().toString());
                     objCollection.getTagCertificates().add(certObj);
                 }
@@ -148,26 +136,6 @@ public class TagCertificateRepository implements DocumentRepository<TagCertifica
 
     @Override
     public void store(TagCertificate item) {
-//        log.debug("Certificate:Store - Got request to update Certificate with id {}.", item.getId().toString());        
-//        CertificateLocator locator = new CertificateLocator(); // will be used if we need to throw an exception
-//        locator.id = item.getId();
-//        try (CertificateDAO dao = TagJdbi.certificateDao()) {
-//            
-//            Certificate obj = dao.findById(item.getId());
-//            // Allowing the user to only edit the revoked field.
-//            if (obj != null) {
-//                dao.updateRevoked(item.getId(), item.isRevoked());
-//                log.debug("Certificate:Store - Updated the Certificate {} successfully.", item.getId().toString());                
-//            } else {
-//                log.error("Certificate:Store - Certificate will not be updated since it does not exist.");
-//                throw new RepositoryStoreConflictException(locator);
-//            }                                    
-//        } catch (RepositoryException re) {
-//            throw re;            
-//        } catch (Exception ex) {
-//            log.error("Certificate:Store - Error during Certificate update.", ex);
-//            throw new RepositoryStoreException(ex, locator);
-//        }        
     }
 
     @Override

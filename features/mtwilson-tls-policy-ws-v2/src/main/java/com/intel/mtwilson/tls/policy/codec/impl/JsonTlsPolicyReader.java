@@ -22,8 +22,6 @@ public class JsonTlsPolicyReader implements TlsPolicyReader {
     public boolean accept(String contentType) {
         MediaType mediaType = MediaType.valueOf(contentType);
         return mediaType.getType().equals("application") && mediaType.getSubtype().equals("json");
-//        return mediaType.isCompatible(MediaType.APPLICATION_JSON_TYPE);
-//        return contentType.startsWith("application/json"); // could also be application/json; charset=utf-8
     }
 
     @Override

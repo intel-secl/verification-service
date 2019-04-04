@@ -43,7 +43,6 @@ public class TagCreateCaKey extends TagCommand {
     
     @Override
     public void execute(String[] args) throws Exception {
-        // file name, and either outfile or stdout
         String dn;
         if( args.length > 0 ) { 
             dn = args[0];
@@ -57,11 +56,9 @@ public class TagCreateCaKey extends TagCommand {
         X509Builder builder = X509Builder.factory();
         X509Certificate cacert = builder.selfSigned(dn, cakey).expires(3650, TimeUnit.DAYS).build();
         if( cacert == null ) {
-//            log.error("Failed to create certificate"); // no need to print this, if the build failed there are guaranteed to be faults to print...
             List<Fault> faults = builder.getFaults();
             for(Fault fault : faults) {
                 log.error(String.format("%s: %s", fault.getClass().getName(), fault.toString()));
-//                log.error(String.format("%s%s", fault.toString(), fault.getCause() == null ? "" : ": "+fault.getCause().getMessage()));
             }
             return;
             

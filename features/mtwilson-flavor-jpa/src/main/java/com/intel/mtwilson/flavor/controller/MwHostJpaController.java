@@ -9,8 +9,6 @@ import com.intel.mtwilson.flavor.controller.exceptions.NonexistentEntityExceptio
 import com.intel.mtwilson.flavor.controller.exceptions.PreexistingEntityException;
 import com.intel.mtwilson.flavor.data.MwHost;
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

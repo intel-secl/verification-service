@@ -4,7 +4,6 @@
  */
 package com.intel.mtwilson.tpm.endorsement.jaxrs.resource;
 
-import com.intel.mtwilson.tpm.endorsement.model.TpmEndorsement;
 import com.intel.mtwilson.tpm.endorsement.model.TpmEndorsementCollection;
 import com.intel.mtwilson.tpm.endorsement.model.TpmEndorsementFilterCriteria;
 import com.intel.mtwilson.tpm.endorsement.model.TpmEndorsementLocator;

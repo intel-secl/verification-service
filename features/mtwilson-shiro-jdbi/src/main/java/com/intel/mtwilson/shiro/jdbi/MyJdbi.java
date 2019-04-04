@@ -35,14 +35,6 @@ public class MyJdbi {
         }
     }
 
-    /*
-     public static <T> T openDAO(T clazz) {
-     DBI dbi = new DBI(getDataSource());
-     T dao = dbi.open(clazz.getClass());
-     return null;
-     }*/
-    // issue #4978: removing static instance
-//    private static DBI dbi = null;
     /**
      * Must close connection when done! for example: try(LoginDAO loginDAO =
      * MyJdbi.authz()) { // do things... java7 will automatically call close()
@@ -52,19 +44,10 @@ public class MyJdbi {
      * @throws SQLException
      */
     public static LoginDAO authz() throws SQLException, IOException {
-//     createTables();
         return getDBI().open(LoginDAO.class);
     }
 
     private static DBI getDBI() throws IOException {
-        /*
-         log.debug("MyJdbi (mtwilson-shiro-jdbi) static DBI instance: {}", dbi);
-         if( dbi == null ) {
-         dbi = new DBI(new ExistingConnectionFactory());
-         log.debug("MyJdbi (mtwilson-shiro-jdbi) created new DBI instance: {}", dbi);
-         }
-         return dbi;
-         */
         // issue #4978: creating new DBI instance for each request using connection pool
         log.debug("MyJdbi (mtwilson-shiro-jdbi) created new DBI instance");
         return new DBI(new DataSourceConnectionFactory(DataSourceHolder.ds));

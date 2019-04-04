@@ -39,12 +39,7 @@ public class RuleAllOfFlavors extends BaseRule {
         this.tagCaCert = tagCaCert;
     }
 
-    //public FlavorCollection getRuleAllOfFlavors() {
-    //    return allOfFlavors;
-    //}
     private VendorTrustPolicyReader getVendorTrustPolicyReader(Flavor flavor) {
-        //String privacyCaCert = My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath();
-        //String tagCaCert = My.configuration().getAssetTagCaCertificateFile().getAbsolutePath();
         HostTrustPolicyManager policymanager = new HostTrustPolicyManager(flavor, null, privacyCaCert, tagCaCert);
         VendorTrustPolicyReader trustPolicy = policymanager.getVendorTrustPolicyReader();
         return trustPolicy;

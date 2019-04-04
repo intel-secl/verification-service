@@ -28,13 +28,10 @@ public class My {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(My.class);
     private static final Object init = new Object();
     private static MyConfiguration config = null;
-//    private static MtWilson client = null;
-//    private static MyClient client = null;
     private static MyPersistenceManager pm = null;
     private static MyJdbc jdbc = null;
     private static MyJpa jpa = null;
     private static MyEnvironment env = null;
-//    private static MyLocale locale = null;
     private static MyRepository repository = null;
 
     private static class DataCipherHolder {
@@ -56,7 +53,6 @@ public class My {
 
     public static void initDataEncryptionKey() {
         log.debug("Initializing encryption key");        
-//        ASDataCipher.cipher = DataCipherHolder.dataCipher;
         try {
                 String dekBase64 = My.configuration().getDataEncryptionKeyBase64();
                 if (dekBase64 == null || dekBase64.isEmpty()) {
@@ -69,16 +65,6 @@ public class My {
          }              
         
         log.debug("Initialized encryption key: {}", ASDataCipher.cipher.getClass().getName());
-        /*
-         try {
-         //log.info("DEK = {}", dekBase64);
-         ASDataCipher.cipher = new Aes128DataCipher(new Aes128(Base64.decodeBase64(dekBase64)));
-         //log.info("My ASDataCipher ref = {}", ASDataCipher.cipher.hashCode());
-         }
-         catch(CryptographyException e) {
-         throw new IllegalArgumentException("Cannot initialize data encryption cipher", e);
-         }              
-         */
     }
 
     public static void init() throws IOException {
@@ -96,13 +82,6 @@ public class My {
         }
         return config;
     }
-
-//    public static MtWilson client() throws MalformedURLException, IOException {
-//        if (client == null) {
-//            client = new MyClient();
-//        }
-//        return client.v1();
-//    }
 
     public static MyPersistenceManager persistenceManager() throws IOException {
         if (pm == null) {
@@ -136,14 +115,6 @@ public class My {
         return env;
     }
 
-    /*
-     public static MyLocale locale() throws IOException {
-     if( locale == null ) {
-     locale = new MyLocale(configuration().getLocale());
-     }
-     return locale;
-     }
-     */
     public static MyRepository repository() throws IOException {
         if (repository == null) {
             repository = new MyRepository(new File(Folders.application()));

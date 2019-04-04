@@ -9,7 +9,6 @@ import com.intel.dcsg.cpg.crypto.Sha1Digest;
 import com.intel.dcsg.cpg.crypto.Sha256Digest;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.x509.X509Builder;
-import com.intel.mtwilson.user.management.rest.v2.model.RegisterUserWithCertificate;
 import com.intel.mtwilson.user.management.rest.v2.model.User;
 import com.intel.mtwilson.user.management.rest.v2.model.UserLoginCertificate;
 import com.intel.mtwilson.user.management.rest.v2.rpc.RegisterUserWithCertificateRunnable;

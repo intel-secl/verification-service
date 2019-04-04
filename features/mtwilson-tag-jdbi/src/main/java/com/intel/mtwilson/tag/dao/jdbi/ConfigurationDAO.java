@@ -39,7 +39,6 @@ public interface ConfigurationDAO extends Closeable{
     void create();
     
     @SqlUpdate("insert into mw_configuration (id,name,content) values (:id, :name, :content)")
-//    @GetGeneratedKeys
     long insert(@Bind("id") UUID id, @Bind("name") String name, @Bind("content") String content);
 
     @SqlUpdate("update mw_configuration set name=:name, content=:content where id=:id")

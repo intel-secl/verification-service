@@ -492,12 +492,6 @@ public class Reports extends MtWilsonClient {
         return obj;      
     }
 
-//    NOT SUPPORTED FOR NOW    
-//    public Report updateReport(Report obj) {
-//        log.debug("target: {}", getTarget().getUri().toString());
-//        return null;
-//    }
-
     /**
      * Searches attestation reports for hosts.
      * @param filterCriteria The content models of the ReportFilterCriteria java model object can be used as query parameters.

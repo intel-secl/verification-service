@@ -32,7 +32,6 @@ import static com.intel.mtwilson.core.flavor.common.FlavorPart.*;
 import static com.intel.mtwilson.flavor.model.MatchPolicy.MatchType.LATEST;
 import com.intel.mtwilson.repository.RepositoryDeleteException;
 
-import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,21 +65,6 @@ public class FlavorRepository {
                 if (mwFlavor != null) {
                     flavorCollection.getFlavors().add(mwFlavor.getContent());
                 }
-//            } else if (criteria.nameEqualTo != null && !criteria.nameEqualTo.isEmpty()) {
-//                // re-arranged slightly to look more like the nameContains case below
-//                List<MwFlavor> mwFlavorList = mwFlavorJpaController.findMwFlavorByName(criteria.nameEqualTo);
-//                if (mwFlavorList != null && !mwFlavorList.isEmpty()) {
-//                    for (MwFlavor mwFlavor : mwFlavorList) {
-//                        flavorCollection.getFlavors().add(mwFlavor.getContent());
-//                    }
-//                }
-//            } else if (criteria.nameContains != null && !criteria.nameContains.isEmpty()) {
-//                List<MwFlavor> mwFlavorList = mwFlavorJpaController.findMwFlavorByNameLike(criteria.nameContains);
-//                if (mwFlavorList != null && !mwFlavorList.isEmpty()) {
-//                    for (MwFlavor mwFlavor : mwFlavorList) {
-//                        flavorCollection.getFlavors().add(mwFlavor.getContent());
-//                    }
-//                }
             } else if (criteria.key != null && !criteria.key.isEmpty() && criteria.value != null && !criteria.value.isEmpty()) {
                 List<MwFlavor> mwFlavorList = mwFlavorJpaController.findMwFlavorByKeyValue(criteria.key, criteria.value);
                 if (mwFlavorList != null && !mwFlavorList.isEmpty()) {

@@ -6,12 +6,7 @@ package com.intel.mtwilson.tag.dao;
 
 import com.intel.dcsg.cpg.jpa.PersistenceManager;
 import com.intel.mtwilson.tag.dao.jdbi.CertificateRequestDAO;
-import com.intel.mtwilson.tag.dao.jdbi.CertificateDAO;
 import com.intel.mtwilson.tag.dao.jdbi.TpmPasswordDAO;
-import com.intel.mtwilson.tag.dao.jdbi.KvAttributeDAO;
-import com.intel.mtwilson.tag.dao.jdbi.SelectionDAO;
-import com.intel.mtwilson.tag.dao.jdbi.SelectionKvAttributeDAO;
-import com.intel.mtwilson.tag.dao.jdbi.ConfigurationDAO;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.tag.dao.jdbi.FileDAO;
 import com.intel.mtwilson.MyPersistenceManager;

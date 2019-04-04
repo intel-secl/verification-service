@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.util.logging.Level;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.config.Ini;
@@ -126,12 +125,6 @@ public class TelemetryExecution implements Runnable {
                     HostCollection hCollection = repository.search(criteria);
                     // update telmetry db
                     updateDb(hCollection.getHosts().size());
-                    /* write to log file
-                    DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                    Date date = new Date();
-                    String newLog = dateFormat.format(date) + " Number_Of_Hosts: " + hCollection.getHosts().size();
-                    updateLog(newLog); 
-                    */
                 } catch (Exception e) {
                     log.warn("Error while calling ESXi auto update operation: {}", e.getMessage(), e);
                 }  finally {

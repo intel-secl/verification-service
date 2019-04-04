@@ -47,7 +47,6 @@ public class X509AttributeCertificate {
     private String issuer;
     private BigInteger serialNumber = null;
     private String subject = null;
-//    private UUID subjectUuid = null;
     private Date notBefore;
     private Date notAfter;
     private ArrayList<Attribute> attributes = new ArrayList<>();
@@ -155,9 +154,6 @@ public class X509AttributeCertificate {
             log.debug("attr {} is {}", attr.hashCode(), attr.toString());
             result.attributes.add(attr);
             for (ASN1Encodable value : attr.getAttributeValues()) {
-//                log.trace("encoded value: {}", Base64.encodeBase64String(value.getEncoded())); // throws IOException
-//                log.debug("attribute: {} is {}", attr.getAttrType().toString(), DERUTF8String.getInstance(value).getString()); // our values are just UTF-8 strings  but if you use new String(value.getEncoded())  you will get two extra spaces at the beginning of the string
-//                result.tags.add(new AttributeOidAndValue(attr.getAttrType().toString(), DERUTF8String.getInstance(value).getString()));
                 if( attr.getAttrType().toString().equals(UTF8NameValueMicroformat.OID)) {
                     log.debug("name-value microformat attribute: {}",  DERUTF8String.getInstance(value).getString()); // our values are just UTF-8 strings  but if you use new String(value.getEncoded())  you will get two extra spaces at the beginning of the string                    
                     UTF8NameValueMicroformat microformat = new UTF8NameValueMicroformat(DERUTF8String.getInstance(value));

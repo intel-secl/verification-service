@@ -16,7 +16,6 @@ import java.security.GeneralSecurityException;
  */
 public abstract class TagCommand implements Command {
     private Configuration options = null;
-//    private MHServerConfig config = null;
 
     @Override
     public void setOptions(Configuration options) {
@@ -26,13 +25,6 @@ public abstract class TagCommand implements Command {
     public Configuration getOptions() { 
         return options; 
     }
-    /*
-    public MHServerConfig getConfig() {
-        if( config == null ) {
-            config = new MHServerConfig(options);   
-        }
-        return config;
-    }*/
 
     @Override
     public abstract void execute(String[] args) throws Exception;

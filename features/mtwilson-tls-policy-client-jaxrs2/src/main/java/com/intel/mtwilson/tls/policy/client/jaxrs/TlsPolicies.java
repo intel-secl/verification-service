@@ -225,14 +225,6 @@ public class TlsPolicies extends MtWilsonClient {
         }
     }
 
-//    public void delete(HostTlsPolicyFilterCriteria criteria) {
-//        log.debug("target: {}", getTarget().getUri().toString());
-//        Response obj = getTargetPathWithQueryParams("tls-policies", criteria).request(MediaType.APPLICATION_JSON).delete();
-//        if( !obj.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)) {
-//            throw new WebApplicationException("Delete TlsPolicy by search criteria failed");
-//        }
-//    }
-    
     /**
      * Updates a TLS policy.
      * @param tlsPolicy The serialized HostTlsPolicy java model object represents the content of the request body.

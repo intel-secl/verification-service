@@ -10,7 +10,6 @@ import com.intel.mtwilson.flavor.controller.exceptions.PreexistingEntityExceptio
 import com.intel.mtwilson.flavor.data.MwLinkFlavorgroupHost;
 import java.io.Serializable;
 import java.util.List;
-import java.util.ArrayList;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;

@@ -6,7 +6,6 @@ package com.intel.mtwilson.tag.setup;
 
 import com.intel.dcsg.cpg.crypto.RandomUtil;
 import com.intel.mtwilson.setup.AbstractSetupTask;
-import com.intel.mtwilson.setup.LocalSetupTask;
 import com.intel.mtwilson.tag.TagConfiguration;
 
 /**

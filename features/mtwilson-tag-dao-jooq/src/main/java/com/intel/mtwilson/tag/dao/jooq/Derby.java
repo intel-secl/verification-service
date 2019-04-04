@@ -4,7 +4,6 @@
  */
 package com.intel.mtwilson.tag.dao.jooq;
 
-import com.intel.mtwilson.tag.dao.jdbi.*;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -16,11 +15,6 @@ import java.util.Properties;
 import java.util.Set;
 import javax.sql.DataSource;
 import org.apache.commons.dbcp.BasicDataSource;
-import org.jooq.DSLContext;
-import org.jooq.SQLDialect;
-import org.jooq.conf.Settings;
-import org.jooq.impl.DSL;
-import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +27,7 @@ import org.slf4j.LoggerFactory;
 public class Derby {
     private static Logger log = LoggerFactory.getLogger(Derby.class);
     public static String driver = "org.apache.derby.jdbc.EmbeddedDriver";
-    //public static String protocol = "jdbc:derby:";
-    
+
     /**
      * NOTE: this url is repeated in the pom.xml where jooq needs it to connect
      * to the database to grab the schema and automatically generate sources
@@ -54,10 +47,6 @@ public class Derby {
         
         if( !isLoaded ) {
             try {
-            // find the temporary directory
-//            File temp = File.createTempFile("derby", ".tmp");
-//            System.out.println("temp file in: "+temp.getAbsolutePath()+" ; parent in "+temp.getParent());
-//            System.setProperty("derby.system.home", temp.getParent()); // System.getProperty("user.home")+File.separator+".derby");
             Class.forName(driver).newInstance();
             isLoaded = true;
             }
@@ -68,7 +57,6 @@ public class Derby {
     }
     
     public static void stopDatabase() {
-//        DriverManager.getConnection("jdbc:derby:MyDbTest;shutdown=true");  // shut down a specific database
         try {
             // shut down all databaes and the derby engine  ; throws SQLException "Derby system shutdown."
             DriverManager.getConnection(protocol+";shutdown=true"); // same as the protocol above but with create=true replaced with shutdown=true
@@ -87,9 +75,6 @@ public class Derby {
         BasicDataSource dataSource = new BasicDataSource();
 
         dataSource.setDriverClassName(driver); // or com.mysql.jdbc.Driver  for mysql
-//        dataSource.setUsername("username");
-//        dataSource.setPassword("password");
-        //dataSource.setUrl("jdbc:derby:mytestdb;create=true"); // automatically creates derby in-memory db,   or use "jdbc:mysql://<host>:<port>/<database>"  for a mysql db
         dataSource.setUrl(protocol+";create=true"); // creates it in the "target/derby" folder which is for temporary files, good for junit tests
         dataSource.setMaxActive(10);
         dataSource.setMaxIdle(5);
@@ -104,8 +89,6 @@ public class Derby {
             c = getDataSource().getConnection(); // also a username/password option is available
         }
         return c;
-        //return DriverManager.getConnection(protocol + "derbyDB;create=true", new Properties());
-//        return getDataSource().getConnection(); 
     }
     
     public static void testDatabaseConnection() throws SQLException {

@@ -14,7 +14,6 @@ import java.io.IOException;
 import org.bouncycastle.asn1.ASN1Encodable;
 import java.math.BigInteger;
 import java.security.PrivateKey;
-import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -115,11 +114,6 @@ public class X509AttrBuilder extends BuilderModel {
         return this;
     }
 
-    /*
-     public X509AttrBuilder subjectName(sun.security.x509.X500Name subjectName) {
-     return subjectName(subjectName.getRFC2253Name());
-     }
-     */
     public X509AttrBuilder subjectUuid(UUID uuid) {
         DEROctetString uuidText = new DEROctetString(uuid.toByteArray().getBytes());
         ASN1ObjectIdentifier oid = new ASN1ObjectIdentifier(OID.HOST_UUID);
@@ -131,18 +125,8 @@ public class X509AttrBuilder extends BuilderModel {
 
     /**
      *
-     * @param dn like "CN=Dave, OU=JavaSoft, O=Sun Microsystems, C=US"
+     * @param principal
      * @return
-     */
-    /*
-     public X509AttrBuilder subjectName(String dn) {
-     try {
-     }
-     catch(Exception e) {
-     fault(e, "subjectName(%s)", dn);
-     }
-     return this;        
-     }
      */
     public X509AttrBuilder issuerName(X500Principal principal) {
         issuerName = new X500Name(principal.getName()); // principal.getName() produces RFC 2253 output which we hope is compatible wtih X500Name directory name input
