@@ -28,9 +28,6 @@ public class IdentityRequestSubmitChallengeResponseResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public byte[] identityChallengeResponse(byte[] challengeResponse) throws Exception {
         throw new UnsupportedOperationException("Cannot use Octet Stream");
-        /*IdentityRequestSubmitResponse rpc = new  IdentityRequestSubmitResponse();
-        rpc.setChallengeResponse(challengeResponse);        
-        return rpc.call().getIdentityBlob();*/
     }
 
     @POST

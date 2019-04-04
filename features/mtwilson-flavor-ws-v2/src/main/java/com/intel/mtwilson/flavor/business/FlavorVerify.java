@@ -260,8 +260,7 @@ public class FlavorVerify extends QueueOperation {
             HostStatusInformation hostStatusInfo = new HostStatusInformation();
             hostStatusInfo.setLastTimeConnected(Calendar.getInstance().getTime());
             hostStatusInfo.setHostState(hostState);
-            //hostStatusInfo.setFaults(hostConnector.getFaults());
-            
+
             // store host status
             HostStatus hostStatus = new HostStatus();
             hostStatus.setHostId(hostId);

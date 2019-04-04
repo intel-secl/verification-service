@@ -19,7 +19,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -69,75 +68,4 @@ public class CacheTest {
         selectionType.getAttribute().add(state);
         return selectionType;
     }
-    
-//    @Test
-//    public void testMatchCertificateAndSelectionAttributes() throws NoSuchAlgorithmException, IOException {
-//        // create a certificate
-//        X509AttributeCertificate certificate = createCertificate(); // throws NoSuchAlgorithmException
-//        // create a selection that should match
-//        SelectionType sameSelection = createSelectionSame();
-//        // test it
-////        TagCertificateAuthority ca = new TagCertificateAuthority(new TagConfiguration(My.configuration().getConfiguration()));
-//        ProvisionTagCertificate provisioner = new ProvisionTagCertificate();
-//        assertTrue(provisioner.certificateAttributesEqual(certificate, sameSelection)); // throws IOException
-//        
-//    }
-//
-//    @Test
-//    public void testNonMatchCertificateAndSelectionAttributesExtraAttribute() throws NoSuchAlgorithmException, IOException {
-//        // create a certificate
-//        X509AttributeCertificate certificate = createCertificate(); // throws NoSuchAlgorithmException
-//        // create a selection that should match
-//        SelectionType differentSelection = createSelectionSame();
-//        // now add a new attribute to it so it does not match
-//        // city = Folsom
-//        DerAttributeType cityValue = new DerAttributeType();
-//        cityValue.setValue(new UTF8NameValueSequence("City", "Folsom").getDEREncoded());
-//        AttributeType city = new AttributeType();
-//        city.setOid("2.5.4.789.2");
-//        city.setDer(cityValue);
-//        differentSelection.getAttribute().add(city);
-//        // test it
-////        TagCertificateAuthority ca = new TagCertificateAuthority(new TagConfiguration(My.configuration().getConfiguration()));
-//        ProvisionTagCertificate provisioner = new ProvisionTagCertificate();
-//        assertFalse(provisioner.certificateAttributesEqual(certificate, differentSelection)); // throws IOException
-//        
-//    }
-//
-//    @Test
-//    public void testNonMatchCertificateAndSelectionAttributesMissingAttribute() throws NoSuchAlgorithmException, IOException {
-//        // create a certificate
-//        X509AttributeCertificate certificate = createCertificate(); // throws NoSuchAlgorithmException
-//        // create a selection that should match
-//        SelectionType differentSelection = createSelectionSame();
-//        // now remove an new attribute to it so it does not match
-//        differentSelection.getAttribute().remove(0);
-//        // test it
-////        TagCertificateAuthority ca = new TagCertificateAuthority(new TagConfiguration(My.configuration().getConfiguration()));
-//        ProvisionTagCertificate provisioner = new ProvisionTagCertificate();
-//        assertFalse(provisioner.certificateAttributesEqual(certificate, differentSelection)); // throws IOException
-//        
-//    }
-//
-//    @Test
-//    public void testNonMatchCertificateAndSelectionAttributesNonequalAttribute() throws NoSuchAlgorithmException, IOException {
-//        // create a certificate
-//        X509AttributeCertificate certificate = createCertificate(); // throws NoSuchAlgorithmException
-//        // create a selection that should match
-//        SelectionType differentSelection = createSelectionSame();
-//        // now replace an new attribute with a new value to it so it does not match
-//        DerAttributeType stateValueModified = new DerAttributeType();
-//        stateValueModified.setValue(new UTF8NameValueSequence("State", "CA", "NY").getDEREncoded()); // NY instead of TX
-//        AttributeType state = new AttributeType();
-//        state.setOid("2.5.4.789.2");
-//        state.setDer(stateValueModified);
-//        differentSelection.getAttribute().remove(1);
-//        differentSelection.getAttribute().add(state);
-//        // test it
-////        TagCertificateAuthority ca = new TagCertificateAuthority(new TagConfiguration(My.configuration().getConfiguration()));
-//        ProvisionTagCertificate provisioner = new ProvisionTagCertificate();
-//        assertFalse(provisioner.certificateAttributesEqual(certificate, differentSelection)); // throws IOException
-//        
-//    }
-    
 }

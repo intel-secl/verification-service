@@ -34,7 +34,6 @@ public class FlavorsTest {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FlavorsTest.class);
     
-    //@Test
     public void testSearchForFlavor() throws Exception {
         FlavorFilterCriteria searchCriteria = new FlavorFilterCriteria();
         searchCriteria.key = "flavor_part";

@@ -20,7 +20,6 @@ import org.apache.shiro.config.Ini;
 public class UpdateSslPort extends LocalSetupTask {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UpdateSslPort.class);
-//    private static final Pattern sslPortPattern = Pattern.compile("^ssl.port\\s*=\\s*(\\d+)\\s*$");
     private File shiroIniFile;
     private int port = 443;
     
@@ -45,17 +44,6 @@ public class UpdateSslPort extends LocalSetupTask {
     
     @Override
     protected void validate() throws Exception {
-        // read shiro.ini and look for ssl.port={port}
-        /*
-        String shiroIniContent = FileUtils.readFileToString(shiroIniFile);
-        Matcher matcher = sslPortPattern.matcher(shiroIniContent);
-        if (matcher.matches() && matcher.groupCount() > 0) {
-            int configuredSslPort = Integer.valueOf(matcher.group(1));
-            if (configuredSslPort != port) {
-                validation("ssl.port in shiro.ini is not up to date");
-            }
-        }
-        */
         Ini shiroIni = new Ini();
         shiroIni.load(FileUtils.readFileToString(shiroIniFile));
         String portNumber = shiroIni.getSectionProperty("main","ssl.port",null);
@@ -70,19 +58,6 @@ public class UpdateSslPort extends LocalSetupTask {
     
     @Override
     protected void execute() throws Exception {
-        // read shiro.ini file, find existing ssl.port setting and update it
-        /*
-        List<String> lines = FileUtils.readLines(shiroIniFile);
-        for (int i=0; i<lines.size(); i++) {
-            String line = lines.get(i);
-            Matcher matcher = sslPortPattern.matcher(line);
-            if (matcher.matches() && matcher.groupCount() > 0) {
-                lines.set(i, String.format("ssl.port=%d", port));
-                break;
-            }
-        }
-        FileUtils.writeLines(shiroIniFile, lines);
-        */
         Ini shiroIni = new Ini();
         shiroIni.load(FileUtils.readFileToString(shiroIniFile));
         shiroIni.setSectionProperty("main","ssl.port",String.valueOf(port));

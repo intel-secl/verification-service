@@ -38,7 +38,6 @@ public class UserLoginPasswordTest {
         loginPasswordInfo.setIterations(1);
         loginPasswordInfo.setSalt("password".getBytes(Charset.forName("UTF-8")));
         loginPasswordInfo.setPasswordHash(PasswordUtil.hash(("password".getBytes(Charset.forName("UTF-8"))), loginPasswordInfo));
-        //loginPasswordInfo.setPasswordHash(RandomUtil.randomByteArray(8)); //"password".getBytes(Charset.forName("UTF-8"));
         loginPasswordInfo.setEnabled(false);
         repo.create(loginPasswordInfo);
         

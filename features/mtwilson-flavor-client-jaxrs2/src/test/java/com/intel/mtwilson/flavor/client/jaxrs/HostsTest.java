@@ -76,8 +76,6 @@ public class HostsTest {
         properties.setProperty("mtwilson.api.username", "admin");
         properties.setProperty("mtwilson.api.password", "password");
         properties.setProperty("mtwilson.api.tls.policy.certificate.sha256", "ed0f7eb43c1ed7fc4f6e09cf80d2f7439a03fcf2068a26aac3d22c0c722c7f4e");
-        //properties.setProperty("mtwilson.api.tls.policy.certificate.keystore.file", keyStoreFile.getAbsolutePath());
-        //properties.setProperty("mtwilson.api.tls.policy.certificate.keystore.password", "password");
 
         Hosts client = new Hosts(properties);
         HostCreateCriteria host = new HostCreateCriteria();

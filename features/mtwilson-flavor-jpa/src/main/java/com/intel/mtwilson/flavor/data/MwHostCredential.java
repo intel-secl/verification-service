@@ -100,8 +100,6 @@ public class MwHostCredential implements Serializable {
         if (credentialInPlain == null && credential != null) {
             try {
                 credentialInPlain = ASDataCipher.cipher.decryptString(credential);
-                //do not log senstive info
-                //log.debug("MwHostCredential ASDataCipher plainText = {}", passwordInPlain);
                 log.debug("MwHostCredential ASDataCipher cipherText = {}", credential);
             } catch (Exception e) {
                 log.error("Cannot decrypt host pre-registration credentials", e);

@@ -96,7 +96,6 @@ public class DeployTagCertificate implements Runnable{
                 
                 //Search host by hardware uuid and get connection string and tls policy id
                 HostLocator hostLocator = new HostLocator();
-//                hostFilterCriteria.nameEqualTo = host;
                 hostLocator.hardwareUuid = obj.getHardwareUuid();
                 Host hostObj = new HostRepository().retrieve(hostLocator);
                 
@@ -151,7 +150,6 @@ public class DeployTagCertificate implements Runnable{
     private void deployAssetTagToHost(Sha256Digest tagSha256, Host host, TlsPolicy tlsPolicy) throws IOException, Exception {
         String certSha256 = tagSha256.toHexString();
         try {
-            //TlsPolicy tlsPolicy = tlsPolicyFactory.getTlsPolicy();                
             //Assettag provisioner core library method call
             ProvisionAssetTag provisionTag = new ProvisionAssetTag();
             MwHostCredential  credential = My.jpa().mwHostCredential().findByHostId(host.getId().toString());

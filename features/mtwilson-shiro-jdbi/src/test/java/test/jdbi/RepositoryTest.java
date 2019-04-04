@@ -79,7 +79,6 @@ public class RepositoryTest {
         UserLoginPassword userLoginPassword = new UserLoginPassword();
         userLoginPassword.setId(new UUID());
         userLoginPassword.setUserId(user.getId());
-//        userLoginPassword.setUserId(UUID.valueOf("84ff12f4-6a68-495c-a70d-174cb07e45ce"));
         userLoginPassword.setSalt(RandomUtil.randomByteArray(8));
         userLoginPassword.setIterations(1000);
         userLoginPassword.setAlgorithm("SHA256");

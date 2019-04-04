@@ -122,8 +122,6 @@ public class Certificate extends CertificateDocument{
         certificate.setCertificate(data);
         certificate.setSha1(Sha1Digest.digestOf(data)); // throws UnsupportedEncodingException
         certificate.setSha256(Sha256Digest.digestOf(data)); // throws UnsupportedEncodingException
-//        certificate.setPcrEventSha256(Sha256Digest.digestOf(certificate.getSha256().toByteArray()));
-//        certificate.setPcrEventSha1(Sha1Digest.digestOf(certificate.getSha1().toByteArray()));
         X509AttributeCertificate attrcert = X509AttributeCertificate.valueOf(data);
         certificate.setIssuer(attrcert.getIssuer());
         certificate.setSubject(attrcert.getSubject());
@@ -143,8 +141,6 @@ public class Certificate extends CertificateDocument{
             return X509Util.decodeDerCertificate(certificate);
         }
         catch(CertificateException e) {
-            //throw new IllegalArgumentException("Cannot decode certificate", e); 
-//            throw new ASException(ce, ErrorCode.MS_CERTIFICATE_ENCODING_ERROR, ce.getClass().getSimpleName()); 
             throw new X509CertificateFormatException(e, certificate);
         }
     }
@@ -161,8 +157,6 @@ public class Certificate extends CertificateDocument{
         }
         catch(CertificateEncodingException e) {
             log.error("Error decoding certificate.", e);
-            //throw new IllegalArgumentException("Cannot decode certificate", e); 
-//            throw new ASException(ErrorCode.MS_CERTIFICATE_ENCODING_ERROR, ce.getClass().getSimpleName());
             throw new X509CertificateEncodingException(e, certificate);
         }
     }

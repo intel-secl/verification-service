@@ -44,11 +44,8 @@ public class FileRepository implements DocumentRepository<File,FileCollection,Fi
     @Override
     @RequiresPermissions("files:retrieve")    
     public File retrieve(FileLocator locator) {
-//        String id = locator.id;
         log.debug("File retrieve: {}", locator.id);
-//        if( !UUID.isValid(id) ) { return null; } 
         File file = new File();
-//        file.setId(UUID.valueOf(id));
         file.setId(locator.id);
         file.setName("testfile");
         file.setContentType("text/plain");
@@ -59,11 +56,8 @@ public class FileRepository implements DocumentRepository<File,FileCollection,Fi
     
     @RequiresPermissions("files:retrieve")    
     public File retrieveWithContent(FileLocator locator) {
-//        String id = locator.id;
         log.debug("File retrieve: {}", locator.id);
-//        if( !UUID.isValid(id) ) { return null; } 
         File file = new File();
-//        file.setId(UUID.valueOf(id));
         file.setId(locator.id);
         file.setName("testfile");
         file.setContentType("text/plain");

@@ -16,7 +16,6 @@ import com.intel.mtwilson.jackson.validation.ValidationModule;
 import com.intel.mtwilson.jaxrs2.provider.JacksonObjectMapperProvider;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.logging.Level;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 import org.postgresql.util.PGobject;

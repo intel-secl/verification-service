@@ -83,7 +83,6 @@ public class MwFlavorgroupJpaControllerTest {
         FlavorMatchPolicyCollection flavorMatchPolicyAutomatic = new FlavorMatchPolicyCollection();
         flavorMatchPolicyAutomatic.addFlavorMatchPolicy(new FlavorMatchPolicy(PLATFORM, new MatchPolicy(ANY_OF, REQUIRED)));
         flavorMatchPolicyAutomatic.addFlavorMatchPolicy(new FlavorMatchPolicy(OS, new MatchPolicy(ANY_OF, REQUIRED)));
-//        flavorMatchPolicyAutomatic.addFlavorMatchPolicy(new FlavorMatchPolicy(ASSET_TAG, new MatchPolicy(ALL_OF, REQUIRED_IF_DEFINED)));
         flavorMatchPolicyAutomatic.addFlavorMatchPolicy(new FlavorMatchPolicy(HOST_UNIQUE, new MatchPolicy(ANY_OF, REQUIRED_IF_DEFINED)));
         
         MwFlavorgroup mwFlavorgroupAutomatic = new MwFlavorgroup();

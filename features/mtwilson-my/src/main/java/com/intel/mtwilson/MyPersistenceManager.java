@@ -48,11 +48,9 @@ public class MyPersistenceManager extends PersistenceManager {
     public EntityManagerFactory getTelemetryData() {
         return getEntityManagerFactory("TelemetryDataPU");
     }
-    
+
     // mtwilson-launcher calls setJpaClassLoader with the application classloader as parameter so that ASPersistenceManager can pass it o PersistenceManager as the classlaoder to use for loading persistence.xml files (because they are under /opt/mtwilson/java not in the .war)
-//    public static ClassLoader getJpaClassLoader() { return jpaClassLoader; }
-//    public static void setJpaClassLoader(ClassLoader cl) { jpaClassLoader = cl; }
-    
+
     public static Properties getJpaProperties(MyConfiguration config) {
         Properties prop = new Properties();
         prop.put("javax.persistence.jdbc.driver", config.getDatabaseDriver());
@@ -114,7 +112,6 @@ public class MyPersistenceManager extends PersistenceManager {
                 myConfig.getString("mtwilson.db.password", "password")));
         prop.put("eclipselink.jdbc.batch-writing", "JDBC");
         log.debug("FlavorData javax.persistence.jdbc.url={}", prop.getProperty("javax.persistence.jdbc.url"));
-        //System.err.println("getJpaProps FlavorData url == " + prop.getProperty("javax.persistence.jdbc.url"));
         copyDbcpProperties(myConfig, prop);
         return prop;
     }
@@ -210,7 +207,6 @@ public class MyPersistenceManager extends PersistenceManager {
                 myConfig.getString("mtwilson.db.password", 
                 "password")));
         log.debug("AuditData javax.persistence.jdbc.url={}", prop.getProperty("javax.persistence.jdbc.url"));
-        //System.err.println("getJpaProps audit url == " + prop.getProperty("javax.persistence.jdbc.url"));
         copyDbcpProperties(myConfig, prop);
         return prop;
     }

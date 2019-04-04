@@ -226,7 +226,6 @@ public class MwFlavorJpaController implements Serializable {
             for(String flavorType : flavorTypesWithLatestStatus.keySet()){
                 switch (FlavorPart.valueOf(flavorType)) {
                     case PLATFORM:
-                        //jsonBiosQueryText = null;
                         jsonBiosQueryText = buildFlavorPartQueryStringWithFlavorParts(flavorType, flavorgroupId);
                         if (hostManifest != null && hostManifest.getHostInfo() != null && hostManifest.getHostInfo().getTbootInstalled() != null) {
                             jsonBiosQueryText = String.format("%s\nAND ( %s 'tboot_installed' = '%s'",
@@ -280,7 +279,6 @@ public class MwFlavorJpaController implements Serializable {
                         }
                         break;
                     case OS:
-                        //jsonOsQueryText = null;
                         jsonOsQueryText = buildFlavorPartQueryStringWithFlavorParts(flavorType, flavorgroupId);
                         if (hostManifest != null && hostManifest.getHostInfo() != null && hostManifest.getHostInfo().getTbootInstalled() != null) {
                             jsonOsQueryText = String.format("%s\nAND ( %s 'tboot_installed' = '%s'",
@@ -321,10 +319,6 @@ public class MwFlavorJpaController implements Serializable {
                         break;
                     case ASSET_TAG:
                         jsonAssetTagQueryText = String.format("SELECT f.id FROM mw_flavor AS f\nWHERE %s ",buildFlavorPartQueryString(FlavorPart.ASSET_TAG.getValue()));
-//                        if (hostManifest != null && hostManifest.getHostInfo() != null && hostManifest.getHostInfo().getHostName() != null && !hostManifest.getHostInfo().getHostName().isEmpty()) {
-//                            jsonAssetTagQueryText = String.format("%s AND %s 'label' = '%s'",
-//                                    jsonAssetTagQueryText, jsonDescriptionQueryTemplate, hostManifest.getHostInfo().getHostName());
-//                        }
                         if (hostManifest != null && hostManifest.getHostInfo() != null && hostManifest.getHostInfo().getHardwareUuid() != null && !hostManifest.getHostInfo().getHardwareUuid().isEmpty()) {
                             jsonAssetTagQueryText = String.format("%s\nAND LOWER(%s 'hardware_uuid') = '%s'",
                                     jsonAssetTagQueryText, jsonDescriptionQueryTemplate, hostManifest.getHostInfo().getHardwareUuid().toLowerCase());
@@ -345,10 +339,6 @@ public class MwFlavorJpaController implements Serializable {
                                 jsonHostUniqueQueryText = String.format("%s )", jsonHostUniqueQueryText);
                             }
                         }
-//                        if (hostManifest != null && hostManifest.getHostInfo() != null && hostManifest.getHostInfo().getHostName() != null && !hostManifest.getHostInfo().getHostName().isEmpty()) {
-//                            jsonHostUniqueQueryText = String.format("%s AND %s 'label' = '%s'",
-//                                    jsonHostUniqueQueryText, jsonDescriptionQueryTemplate, hostManifest.getHostInfo().getHostName());
-//                        }
                         if (hostManifest != null && hostManifest.getHostInfo() != null && hostManifest.getHostInfo().getHardwareUuid() != null && !hostManifest.getHostInfo().getHardwareUuid().isEmpty()) {
                             jsonHostUniqueQueryText = String.format("%s\nAND LOWER(%s 'hardware_uuid') = '%s'",
                                     jsonHostUniqueQueryText, jsonDescriptionQueryTemplate, hostManifest.getHostInfo().getHardwareUuid().toLowerCase());

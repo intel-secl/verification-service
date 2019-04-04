@@ -76,7 +76,6 @@ public class FileTest {
         Map<String,Object> properties = ReflectionUtil.getQueryParams(criteria);
                 for(Map.Entry<String,Object> queryParam : properties.entrySet()) {
             log.debug("queryParam {} = {}", queryParam.getKey(), queryParam.getValue());
-//            target.queryParam(attr.getKey(), queryParam.getValue());
         }
 
     }

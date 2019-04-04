@@ -225,7 +225,6 @@ public class HostTlsPolicyResource {
         if (existing == null) {
             httpServletResponse.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return null;
-//            throw new WebApplicationException(Response.Status.NOT_FOUND); 
         }
         return existing;
     }

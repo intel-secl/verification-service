@@ -5,10 +5,7 @@
 
 package com.intel.mtwilson.features.queue;
 
-//import com.intel.mtwilson.My;
-import com.intel.mtwilson.My;
 import java.util.Date;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;

@@ -11,7 +11,6 @@ import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
 import com.intel.mtwilson.core.host.connector.vmware.VMwareClient;
 import com.intel.mtwilson.core.host.connector.vmware.VMwareConnectionPool;
 import com.intel.mtwilson.core.host.connector.vmware.VmwareClientFactory;
-//import com.intel.mtwilson.datatypes.TxtHostRecord;
 import com.intel.mtwilson.esxi.cluster.jdbi.*;
 import com.intel.mtwilson.esxi.host.jdbi.*;
 import com.intel.mtwilson.esxi.rest.v2.model.EsxiCluster;
@@ -57,7 +56,6 @@ public class EsxiClusterRepository implements DocumentRepository<EsxiCluster, Es
         log.debug("EsxiClusterCollection:Search - Got request to search for cluster info"); 
         
         EsxiClusterCollection objCollection = new EsxiClusterCollection();
-        //try(
             EsxiClusterDAO clusterDAO = EsxiClusterJdbiFactory.esxiClusterDAO();
             
             EsxiHostDAO hostDAO = EsxiHostJdbiFactory.esxiHostDAO();
@@ -98,12 +96,7 @@ public class EsxiClusterRepository implements DocumentRepository<EsxiCluster, Es
             
             return objCollection;
             
-        }/*
-        catch(Exception ex) {
-            log.error("Error on Esxi hosts search");
-            throw new RepositorySearchException(ex, criteria);
-        }*/
-    //}
+        }
     
     @Override
     @RequiresPermissions("esxi_clusters:create")
@@ -365,7 +358,6 @@ public class EsxiClusterRepository implements DocumentRepository<EsxiCluster, Es
        obj.setId(cluster.getId());
        obj.setConnectionString(cluster.getConnectionStringInPlainText());
        obj.setClusterName(cluster.getClusterName());
-       //obj.getLinks().put("hosts", hostnames);
        obj.getHosts().put("hosts", hostnames);
        
        return obj;

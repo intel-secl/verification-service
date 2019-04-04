@@ -43,11 +43,7 @@ import org.skife.jdbi.v2.sqlobject.BindBean;
 @RegisterArgumentFactory({UUIDArgument.class, DateArgument.class, LocaleArgument.class, StatusArgument.class})
 @RegisterMapper({UserResultMapper.class,RoleResultMapper.class,RolePermissionResultMapper.class,UserLoginPasswordResultMapper.class,UserLoginPasswordRoleResultMapper.class,UserLoginHmacResultMapper.class,UserLoginHmacRoleResultMapper.class,UserLoginCertificateResultMapper.class,UserLoginCertificateRoleResultMapper.class,RequestLogEntryMapper.class})
 public interface LoginDAO extends Closeable {
-    // disabling create because it's different dependign on the database system used ... between the popular mysql and postgres there are enough differences to make this useless.  for example blob vs bytea.
-    // use the .sql scripts in mtwilson-postgresql and mtwilson-mysql instead.  
-//    @SqlUpdate("create table certificate (id bigint primary key generated always as identity, uuid char(36), certificate blob, sha1 char(40), sha256 char(64), subject varchar(255), issuer varchar(255), notBefore timestamp, notAfter timestamp, revoked boolean)")
-//    void create();
-    
+
     /**
      * 
   id uuid NOT NULL,
@@ -60,27 +56,15 @@ public interface LoginDAO extends Closeable {
     @SqlUpdate("insert into mw_user (id, username, locale, comment) values (:id, :username, :locale, :comment)")
     void insertUser(@Bind("id") UUID id, @Bind("username") String username, @Bind("locale") String locale, @Bind("comment") String comment);
 
-//    @SqlUpdate("insert into mw_user (id, username, locale, comment) values (:id, :username, :locale, :comment)")
-//    void insertUser(@BindBean User user);
-    
     @SqlUpdate("update mw_user set locale=:locale, comment=:comment WHERE id=:id")
     void updateUser(@Bind("id") UUID id, @Bind("locale") String locale, @Bind("comment") String comment);
-    
-//    @SqlUpdate("update mw_user set id=:id, username=:username, locale=:locale, comment=:comment WHERE id=:id")
-//    void updateUser(@BindBean User user);
-
-//    @SqlUpdate("update mw_user set enabled=:enabled, status=:status, comment=:comment WHERE id=:id")
-//    void enableUser(@Bind("id") UUID id, @Bind("enabled") boolean enabled, @Bind("status") Status status, @Bind("comment") String comment);
 
     @SqlQuery("select id,username,locale,comment from mw_user")
     List<User> findAllUsers();
     
     @SqlQuery("select id,username,locale,comment from mw_user where id=:id")
     User findUserById(@Bind("id") UUID id);
-    
-//    @SqlQuery("select id,username,locale,comment from mw_user where id=:id and enabled=:enabled")
-//    User findUserByIdEnabled(@Bind("id") UUID id, @Bind("enabled") boolean enabled);
-    
+
     @SqlQuery("select id,username,locale,comment from mw_user where username=:username")
     User findUserByName(@Bind("username") String username);
     

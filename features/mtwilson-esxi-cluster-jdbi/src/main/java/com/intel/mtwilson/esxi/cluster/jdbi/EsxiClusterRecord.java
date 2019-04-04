@@ -31,7 +31,6 @@ public class EsxiClusterRecord {
     }
 
     public String getConnectionString() {
-        //return connectionString;
         return connectionString;
     }
 

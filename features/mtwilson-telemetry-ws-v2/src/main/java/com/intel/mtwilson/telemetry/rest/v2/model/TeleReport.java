@@ -6,7 +6,6 @@ package com.intel.mtwilson.telemetry.rest.v2.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import com.intel.dcsg.cpg.io.UUID;
 import com.intel.mtwilson.jaxrs2.Document;
 import java.util.Date;
 

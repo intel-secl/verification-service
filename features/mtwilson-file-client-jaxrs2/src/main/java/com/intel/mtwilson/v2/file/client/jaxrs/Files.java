@@ -200,14 +200,6 @@ public class Files extends MtWilsonClient {
     
     public File createFile(File file) {
         log.debug("target: {}", getTarget().getUri().toString());
-        /*
-        Response response = getTarget().path("host-files").request().post(Entity.entity(file, MediaType.APPLICATION_JSON));
-        if( response.hasEntity()) {
-            log.debug("response has an entity");
-            String test = response.readEntity(String.class); log.debug("Response = {}", test);
-        }
-        return null;
-        */
         File responseFile = getTarget().path("host-files").request().accept(MediaType.APPLICATION_JSON).post(Entity.json(file)).readEntity(File.class);
         return responseFile;
     }

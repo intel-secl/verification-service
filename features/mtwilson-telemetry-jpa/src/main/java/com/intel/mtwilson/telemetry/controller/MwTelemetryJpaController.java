@@ -141,7 +141,6 @@ public class MwTelemetryJpaController implements Serializable {
     }
     
     public List<MwTelemetry> findMwTelemetryOldest() {
-        //MwTelemetry mwTelemetry = null;
         EntityManager em = getEntityManager();
         try {
             Query query = em.createNativeQuery("SELECT * FROM mw_telemetry ORDER BY create_date LIMIT 1", MwTelemetry.class);

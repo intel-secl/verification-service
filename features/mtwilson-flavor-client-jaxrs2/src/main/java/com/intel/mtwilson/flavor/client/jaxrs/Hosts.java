@@ -391,10 +391,6 @@ public class Hosts extends MtWilsonClient {
         log.debug(obj.toString());
     }
 
-//    public void deleteHost(HostFilterCriteria criteria) {
-//        log.debug("target: {}", getTarget().getUri().toString());
-//    }
-
     /**
      * Associates the host with the flavorgroup specified in FlavorgroupHostLinkCreateCriteria java model object
      * @param hostId ID of the host to be linked to the flavorgroup

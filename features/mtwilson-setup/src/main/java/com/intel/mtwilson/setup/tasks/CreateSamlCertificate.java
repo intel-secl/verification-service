@@ -22,7 +22,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.KeyPair;
-import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -89,8 +88,6 @@ public class CreateSamlCertificate extends LocalSetupTask {
 
     @Override
     protected void configure() throws Exception {
-//        File samlKeystoreFile = new File(getSamlKeystoreFile());
-
         String samlKeystorePassword = getSamlKeystorePassword();
         if (samlKeystorePassword == null || samlKeystorePassword.isEmpty()) {
             setSamlKeystorePassword(RandomUtil.randomBase64String(16));
@@ -143,7 +140,6 @@ public class CreateSamlCertificate extends LocalSetupTask {
             return;
         }
 
-//        File samlKeystoreFile = My.configuration().getSamlKeystoreFile();
         File samlKeystoreFile = new File(getSamlKeystoreFile());
         if (!samlKeystoreFile.exists()) {
             validation("SAML keystore file is missing");
@@ -158,7 +154,6 @@ public class CreateSamlCertificate extends LocalSetupTask {
                 log.debug("SAML certificate: {}", credential.getCertificate().getSubjectX500Principal().getName());
             } catch (FileNotFoundException | KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException | CertificateEncodingException | CryptographyException e) {
                 log.debug("Cannot read SAML key from keystore", e);
-//                validation("Cannot read SAML key from keystore"); // we are assuming the keystore only has one private key entry ... 
             }
         }
     }
@@ -179,14 +174,12 @@ public class CreateSamlCertificate extends LocalSetupTask {
         // create a new key pair for SAML
         KeyPair samlkey = RsaUtil.generateRsaKeyPair(2048);
         X509Builder builder = X509Builder.factory();
-//        builder.selfSigned(samlDistinguishedName, samlkey);
         builder.issuerName(cacert);
         builder.issuerPrivateKey(cakey);
         builder.subjectName(getSamlCertificateDistinguishedName());
         builder.subjectPublicKey(samlkey.getPublic());
         X509Certificate samlcert = builder.build();
         if (cacert == null) {
-//            log.error("Failed to create certificate"); // no need to print this, if the build failed there are guaranteed to be faults to print...
             List<Fault> faults = builder.getFaults();
             for (Fault fault : faults) {
                 log.error(String.format("%s: %s", fault.getClass().getName(), fault.toString()));
@@ -198,7 +191,6 @@ public class CreateSamlCertificate extends LocalSetupTask {
 
         File samlKeystoreFile = new File(getSamlKeystoreFile());
         SimpleKeystore keystore = new SimpleKeystore(samlKeystoreFile, getSamlKeystorePassword());
-//        keystore.addTrustedCaCertificate(cacert, cacert.getIssuerX500Principal().getName());
         keystore.addKeyPairX509(samlkey.getPrivate(), samlcert, getSamlCertificateDistinguishedName(), getSamlKeystorePassword(), cacert); // we have to provide the issuer chain since it's not self-signed,  otherwise we'll get an exception from the KeyStore provider
         keystore.save();
 
@@ -211,10 +203,5 @@ public class CreateSamlCertificate extends LocalSetupTask {
         } catch (IOException e) {
             validation(e, "Cannot write saml.crt.pem");
         }
-
-//        getConfiguration().setString("saml.keystore.file", samlKeystoreFile.getAbsolutePath());
-//        getConfiguration().setString("saml.keystore.password", samlKeystorePassword);
-//        getConfiguration().setString("saml.key.alias", samlDistinguishedName);
-//        getConfiguration().setString("saml.key.password", samlKeystorePassword);
     }
 }

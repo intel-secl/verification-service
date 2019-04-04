@@ -19,8 +19,6 @@ public class UserLoginHmacRoleResultMapper implements ResultSetMapper<UserLoginH
 
     @Override
     public UserLoginHmacRole map(int i, ResultSet rs, StatementContext sc) throws SQLException {
-//        UUID uuid = UUID.valueOf(rs.getBytes("id")); // use this when uuid is a binary(mysql) or uuid(postgresql) type in database
-//        UUID uuid = UUID.valueOf(rs.getString("id")); // use this when uuid is a char type in database
         UserLoginHmacRole role = new UserLoginHmacRole();
         role.setLoginHmacId(UUID.valueOf(rs.getString("login_hmac_id")));
         role.setRoleId(UUID.valueOf(rs.getString("role_id")));

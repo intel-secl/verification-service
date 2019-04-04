@@ -125,15 +125,6 @@ public class MwFlavorJpaControllerTest {
             mwFlavorJpaController.create(mwFlavorOs);
             System.out.println(String.format("OS flavor [%s] created", mwFlavorOs.getId()));
             
-//            // TAG
-//            MwFlavor mwFlavorTag = new MwFlavor();
-//            String uuidTag = new UUID().toString();
-//            flavorTag.getMeta().setId(uuidTag);
-//            mwFlavorTag.setId(flavorTag.getMeta().getId());
-//            mwFlavorTag.setContent(flavorTag);
-//            mwFlavorJpaController.create(mwFlavorTag);
-//            System.out.println(String.format("ASSET_TAG flavor [%s] created", mwFlavorTag.getId()));
-            
             // HOST_UNIQUE
             MwFlavor mwFlavorHostUnique = new MwFlavor();
             String uuidHostUnique = new UUID().toString();
@@ -234,13 +225,6 @@ public class MwFlavorJpaControllerTest {
         
         MwFlavorgroup mwFlavorgroupAutomatic = mwFlavorgroupJpaController.findMwFlavorgroupByName(Flavorgroup.AUTOMATIC_FLAVORGROUP);
         List<MwFlavor> mwFlavorEntries = mwFlavorJpaController.findMwFlavorEntities(UUID.valueOf(mwFlavorgroupAutomatic.getId()), hostManifest, null);
-//        List<MwFlavor> mwFlavorEntries = mwFlavorJpaController.findMwFlavorEntities(UUID.valueOf(mwFlavorgroupAutomatic.getId()), flavorTypes, null);
-//        List<MwFlavor> mwFlavorEntries = mwFlavorJpaController.findMwFlavorEntities(UUID.valueOf(mwFlavorgroupAutomatic.getId()), null, null);
-//        List<MwFlavor> mwFlavorEntries = mwFlavorJpaController.findMwFlavorEntities(null, flavorTypes, null);
-//        List<MwFlavor> mwFlavorEntries = mwFlavorJpaController.findMwFlavorEntities(null, null, null);
-//        List<MwFlavor> mwFlavorEntries = mwFlavorJpaController.findMwFlavorEntities(null, null, hostManifest);
-//        List<MwFlavor> mwFlavorEntries = mwFlavorJpaController.findMwFlavorEntities(UUID.valueOf(mwFlavorgroupAutomatic.getId()), new ArrayList<String>(), hostManifest);
-        
         if (mwFlavorEntries == null) {
             System.out.println(String.format("Could not find any flavors"));
             return;
@@ -254,7 +238,6 @@ public class MwFlavorJpaControllerTest {
     
     @Test
     public void hostHasUniqueFlavor() throws Exception {
-//        String hostName = "host-1";
         String hardwareUuid = "00083153-d529-e511-906e-0012795d96dd";
         boolean hostHasUniqueFlavor = mwFlavorJpaController.hostHasUniqueFlavor(hardwareUuid, HOST_UNIQUE.getValue());
         if (!hostHasUniqueFlavor) {

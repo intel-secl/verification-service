@@ -36,8 +36,7 @@ public class TlsPolicyDescriptorTest {
         json.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());
         json.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
         json.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        xml = new XmlMapper(/*jsonFactory*/);
-//        xml.setPropertyNamingStrategy(new LowercaseWithHyphensStrategy());
+        xml = new XmlMapper();
         xml.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         xml.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
         xml.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

@@ -5,17 +5,8 @@
 
 package com.intel.mtwilson.flavor.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.mtwilson.flavor.data.MwHost;
-import com.intel.mtwilson.flavor.data.MwHostStatus;
-import com.intel.mtwilson.jaxrs2.provider.JacksonObjectMapperProvider;
-import com.intel.mtwilson.core.common.model.HostManifest;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import javax.persistence.EntityManagerFactory;
@@ -27,7 +18,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
