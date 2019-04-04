@@ -89,16 +89,6 @@ public class MwClientUtil {
         return createUserInResourceV2(resource, username, password, server, properties, comments, null, "TLSv1.2");
     }
 
-    /*public static SimpleKeystore createUserInResourceV2(Resource resource, String username, String password, 
-            URL server, String comments) throws IOException, ApiException, CryptographyException, ClientException {
-        return createUserInResourceV2(resource, username, password, server, new InsecureTlsPolicy(), comments, null);
-    }
-
-    public static SimpleKeystore createUserInResourceV2(Resource resource, String username, String password, 
-            URL server, TlsPolicy tlsPolicy, String comments, Locale locale) throws IOException, ApiException, CryptographyException, ClientException {
-        return createUserInResourceV2(resource, username, password, server, tlsPolicy, comments, locale, "TLS");
-    }*/
-
      /**
      * Helper function to create a request of user's access along with the keystore with user's RSA keypair and MTW server's TLS, SAML, Privacy CA and Root certificates. 
      * @param resource Resource object which would have the user's keystore

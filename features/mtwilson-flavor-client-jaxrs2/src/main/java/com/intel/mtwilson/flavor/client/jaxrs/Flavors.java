@@ -635,10 +635,6 @@ public class Flavors extends MtWilsonClient {
         return obj;
     }
     
-//    public void deleteFlavor(FlavorFilterCriteria criteria) {
-//        log.debug("target: {}", getTarget().getUri().toString());
-//    }
-    
     /**
      * Searches for flavors.
      * @param filterCriteria The content models of the FlavorFilterCriteria java model object can be used as query parameters.

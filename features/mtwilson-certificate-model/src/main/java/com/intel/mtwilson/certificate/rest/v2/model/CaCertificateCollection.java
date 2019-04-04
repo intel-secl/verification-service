@@ -13,7 +13,6 @@ import com.intel.mtwilson.jaxrs2.DocumentCollection;
 import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-//import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
  *

@@ -29,8 +29,6 @@ public class MyPrefs {
     }
     
     public static void main(String[] args) {
-        //ExtendedOptions getopt = new ExtendedOptions(args);
-        //Configuration options = getopt.getOptions();
         requireMinArgs(1, args); // for the verb:  get, set, remove
         String verb = args[0];
         if( verb != null && verb.equals("get") ) {
@@ -45,7 +43,6 @@ public class MyPrefs {
             String key = args[1];
             String value = args[2];
             prefs.put(key, value);
-//            System.out.println(key+"="+value);
             return;
         }
         if( verb != null && verb.equals("remove") ) {

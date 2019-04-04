@@ -12,7 +12,6 @@ import com.google.common.io.Resources;
 import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.flavor.model.FlavorMatchPolicyCollection;
 import com.intel.mtwilson.flavor.model.MatchPolicy;
-import com.intel.mtwilson.flavor.model.MatchPolicy.MatchType;
 import static com.intel.mtwilson.flavor.model.MatchPolicy.MatchType.ALL_OF;
 import com.intel.mtwilson.jaxrs2.provider.JacksonObjectMapperProvider;
 import org.junit.Test;

@@ -4,7 +4,6 @@
  */
 package com.intel.mtwilson.setup.tasks;
 
-//import com.intel.dcsg.cpg.io.Resource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
@@ -98,23 +97,6 @@ public class InitDatabase extends LocalSetupTask {
         }
         
     }
- 
-    /*
-    private boolean checkDatabaseConnection() throws SetupException, IOException, SQLException {
-        
-            DataSource ds = getDataSourceNoSchema();
-            try {
-                Connection c = ds.getConnection();
-                log.debug("Connected to database");
-                return true;
-            }
-            catch(SQLException e) {
-                log.debug("Database connection failed: {}",e.toString(), e);
-                log.error("Failed to connect to {} without schema", databaseVendor);
-                return false;
-            }
-    }
-    */
 
     public static class ChangelogEntry {
         public String id;
@@ -129,11 +111,6 @@ public class InitDatabase extends LocalSetupTask {
     }
     
     private void verbose(String format, Object... args) {
-        /*
-        if( options.getBoolean("verbose", false) ) {
-            System.out.println(String.format(format, args));
-        }
-        */
         log.debug(String.format(format, args));
     }
     
@@ -144,7 +121,6 @@ public class InitDatabase extends LocalSetupTask {
         log.debug("Loading SQL for {}", databaseVendor);
         sql = getSql(databaseVendor); 
         
-//        Configuration attestationServiceConf = ASConfig.getConfiguration();
         DataSource ds = getDataSource();
         
         log.debug("Connecting to {}", databaseVendor);
@@ -156,12 +132,9 @@ public class InitDatabase extends LocalSetupTask {
             log.error("Failed to connect to {} with schema: error = {}", databaseVendor, e.getMessage()); 
                 validation("Cannot connect to database");
                 return;
-//                System.exit(2);
-//            throw e;
             // it's possible that the database connection is fine but the SCHEMA doesn't exist... so try connecting w/o a schema
         }
         
-//        log.debug("Connected to schema: {}", c.getSchema());
         List<ChangelogEntry> changelog = getChangelog(c);
         HashMap<Long,ChangelogEntry> presentChanges = new HashMap<>(); // what is already in the database according to the changelog
         verbose("Existing database changelog has %d entries", changelog.size());
@@ -173,14 +146,12 @@ public class InitDatabase extends LocalSetupTask {
         }
 
         // Does it have any changes that we don't?  In other words, is the database schema newer than what we know in this installer?
-//        if( options.getBoolean("check", false) ) {
             HashSet<Long> unknownChanges = new HashSet<>(presentChanges.keySet()); // list of what is in database
             unknownChanges.removeAll(sql.keySet()); // remove what we have in this installer
             if( unknownChanges.isEmpty() ) {
                 log.info("Database is compatible");
-//                System.exit(0); // not yet -- after this block we'll print out if there are any changes to apply
             }
-            else { // if( !unknownChanges.isEmpty() ) {
+            else {
                 // Database has new schema changes we dont' know about
                 log.warn("Database schema is newer than this version of Mt Wilson");
                 ArrayList<Long> unknownChangesInOrder = new ArrayList<>(unknownChanges);
@@ -189,19 +160,15 @@ public class InitDatabase extends LocalSetupTask {
                     ChangelogEntry entry = presentChanges.get(unknownChangeId);
                     log.info(String.format("%s %s %s", entry.id, entry.applied_at, entry.description));
                 }
-//                System.exit(8); // database not compatible
                 validation("Database is not compatible");
                 return;
             }
-//        }
-        
+
         changesToApply = new HashSet<>(sql.keySet());
         changesToApply.removeAll(presentChanges.keySet());
         
         if( changesToApply.isEmpty() ) {
             log.info("No database updates available");
-//            return;
-//            System.exit(0); // database is compatible;   whether we are doing a dry run with --check or not, we exit here with success because there is nothing else to do
         }
         else {
             validation("There are %s database updates to apply", changesToApply.size());
@@ -218,7 +185,6 @@ public class InitDatabase extends LocalSetupTask {
      * @throws SQLException 
      */
     private void initDatabase() throws SetupException, IOException, SQLException {
-//        Configuration attestationServiceConf = ASConfig.getConfiguration();
         DataSource ds = getDataSource();
         
         log.debug("Connecting to {}", databaseVendor);
@@ -227,25 +193,14 @@ public class InitDatabase extends LocalSetupTask {
             Collections.sort(changesToApplyInOrder);
             
             
-    //        if(options.getBoolean("check", false)) {
                 log.info("The following changes will be applied:");
                         for(Long changeId : changesToApplyInOrder) {
-                            /*
-                            ChangelogEntry entry = presentChanges.get(changeId);
-                            System.out.println(String.format("%s %s %s", entry.id, entry.applied_at, entry.description));
-                            */
                             log.info("Change ID: {}", changeId);
                         }
-    //            System.exit(0); // database is compatible
-    //            return;
-    //        }
-            
             ResourceDatabasePopulator rdp = new ResourceDatabasePopulator();
             // removing unneeded output as user can't choice what updates to apply
-            //System.out.println("Available database updates:");
             for(Long id : changesToApplyInOrder) {
-                //System.out.println(String.format("%d %s", id, basename(sql.get(id).getURL())));
-                rdp.addScript(sql.get(id)); // new ClassPathResource("/com/intel/mtwilson/database/mysql/bootstrap.sql")); // must specify full path to resource
+                rdp.addScript(sql.get(id));
             }
             
             rdp.setContinueOnError(true);
@@ -258,26 +213,7 @@ public class InitDatabase extends LocalSetupTask {
         }
 
     }
-    // commenting out unused function (6/11 1.2)
-    /*
-    private String getDatabaseHostname(Connection c) throws SQLException {
-        String hostname = null;
-        Statement s = c.createStatement();
-//            ResultSet rs = s.executeQuery("SELECT @@version"); // output is 1 column (VARCHAR) with content like this: 5.1.63-0ubuntu0.11.10.1
-//            ResultSet rs = s.executeQuery("SELECT version()"); // output is same as for @@version
-        ResultSet rs = s.executeQuery("SELECT @@hostname"); // output is 1 column (VARCHAR) with content like this: mtwilsondev    (hostname of database server)
-        if( rs.next() ) {
-            int columns = rs.getMetaData().getColumnCount();
-            System.out.println("Got "+columns+" columns from datbase server");
-            System.out.println("First column type: "+rs.getMetaData().getColumnTypeName(1));
-            System.out.println("First column: "+rs.getString(1));
-            hostname = rs.getString(1); 
-        }
-        rs.close();
-        s.close();
-         return hostname;
-    }
-    */
+
     /**
      * Locates the SQL files for the specified vendor, and reads them to
      * create a mapping of changelog-date to SQL content. This mapping can
@@ -294,9 +230,6 @@ public class InitDatabase extends LocalSetupTask {
             Resource[] list = listResources(databaseVendor); // each URL like: jar:file:/C:/Users/jbuhacof/workspace/mountwilson-0.5.4/desktop/setup-console/target/setup-console-0.5.4-SNAPSHOT-with-dependencies.jar!/com/intel/mtwilson/database/mysql/20121226000000_remove_created_by_patch_rc3.sql
             for(Resource resource : list) {
                 URL url = resource.getURL();
-//                InputStream in = url.openStream();
-//                String sql = IOUtils.toString(in, "UTF-8");
-//                IOUtils.closeQuietly(in);
                 Long timestamp = getTimestampFromSqlFilename(basename(url));
                 if( timestamp != null ) {
                     sqlmap.put(timestamp, resource);
@@ -309,20 +242,13 @@ public class InitDatabase extends LocalSetupTask {
         catch(IOException e) {
             throw new SetupException("Error while scanning for SQL files: "+e.getLocalizedMessage(), e);
         }
-        //System.err.println("Number of SQL files: "+sqlmap.size());
-        return sqlmap;        
+        return sqlmap;
     }
     
     private Resource[] listResources(String databaseVendor) throws IOException {
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(getClass().getClassLoader());
         Resource[] resources = resolver.getResources("classpath:com/intel/mtwilson/database/"+databaseVendor+"/*.sql");
         return resources; 
-        /*
-        ArrayList<URL> list = new ArrayList<URL>();
-        for(Resource resource : resources) {
-            list.add(resource.getURL());
-        }
-        return list;*/
     }
     
     Pattern pTimestampName = Pattern.compile("^([0-9]+).*");
@@ -352,18 +278,7 @@ public class InitDatabase extends LocalSetupTask {
         }
         return null;
     }
-    // commenting out unused function (6/11 1.2)
-    /*
-    private void printSqlMap(Map<Long,String> sqlmap) {
-        Set<Long> timestampSet = sqlmap.keySet();
-        ArrayList<Long> timestampList = new ArrayList<Long>();
-        timestampList.addAll(timestampSet);
-        Collections.sort(timestampList);
-        for(Long timestamp : timestampList) {
-            System.out.println("File timestamp: "+timestamp);
-        }
-    }
-    */
+
     /**
      * 
      * @return datasource object for mt wilson database, guaranteed non-null
@@ -383,7 +298,6 @@ public class InitDatabase extends LocalSetupTask {
             if( ds == null ) {
                 log.error("Cannot load persistence unit info");
                 System.exit(2);
-//                throw new SetupException("Cannot load persistence unit info");
             }
             log.debug("Loaded persistence unit: ASDataPU");
             return ds;
@@ -392,32 +306,7 @@ public class InitDatabase extends LocalSetupTask {
             throw new SetupException("Cannot load persistence unit info", e);
         }   
     }
-    
 
-    /*
-    private DataSource getDataSourceNoSchema() throws SetupException {
-        try {
-            PropertyHidingConfiguration confNoSchema = new PropertyHidingConfiguration(ASConfig.getConfiguration());
-            confNoSchema.replaceProperty("mtwilson.db.schema","");
-            confNoSchema.replaceProperty("mountwilson.as.db.schema","");
-            confNoSchema.replaceProperty("mountwilson.ms.db.schema","");
-            Properties jpaProperties = MyPersistenceManager.getASDataJpaProperties(confNoSchema);
-            log.debug("JDBC URL without schema: {}", jpaProperties.getProperty("javax.persistence.jdbc.url"));
-            DataSource ds = PersistenceManager.getPersistenceUnitInfo("ASDataPU", jpaProperties).getNonJtaDataSource();
-            if( ds == null ) {
-                throw new SetupException("Cannot load persistence unit info");
-            }
-            log.debug("Loaded persistence unit: ASDataPU");
-            return ds;
-        }
-        catch(IOException e) {
-            throw new SetupException("Cannot load persistence unit info", e);
-        }
-        
-    }
-    */
-    
-    
     private List<String> getTableNames(Connection c) throws SQLException {
         
        ArrayList<String> list = new ArrayList<>();

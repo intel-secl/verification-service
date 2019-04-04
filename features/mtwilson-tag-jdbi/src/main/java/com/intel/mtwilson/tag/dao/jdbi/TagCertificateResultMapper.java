@@ -5,9 +5,6 @@
 package com.intel.mtwilson.tag.dao.jdbi;
 
 import com.intel.mtwilson.core.common.tag.model.TagCertificate;
-import com.intel.mtwilson.tag.model.CertificateRequest;
-import com.intel.dcsg.cpg.crypto.Sha1Digest;
-import com.intel.dcsg.cpg.crypto.Sha256Digest;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import com.intel.dcsg.cpg.io.UUID;
@@ -26,14 +23,12 @@ public class TagCertificateResultMapper implements ResultSetMapper<TagCertificat
         TagCertificate certificate = new TagCertificate();
         java.util.UUID id_uuid =  java.util.UUID.fromString(rs.getString("id"));
         certificate.setId(UUID.valueOf(id_uuid.toString()));
-//        certificate.setId(UUID.valueOf(rs.getString("id")));
         certificate.setCertificate(content);
         certificate.setSubject(rs.getString("subject"));
         certificate.setIssuer(rs.getString("issuer"));
         certificate.setNotBefore(rs.getTimestamp("notBefore"));
         certificate.setNotAfter(rs.getTimestamp("notAfter"));
         java.util.UUID hid_uuid = java.util.UUID.fromString(rs.getString("hardware_uuid"));
-//        certificate.setId(UUID.valueOf(rs.getString("hardware_uuid")));
         certificate.setHardwareUuid(UUID.valueOf(hid_uuid.toString()));
         return certificate;
     }

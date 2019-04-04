@@ -10,7 +10,6 @@ import com.intel.mtwilson.My;
 import com.intel.mtwilson.setup.LocalSetupTask;
 import gov.niarl.his.privacyca.TpmUtils;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.security.cert.X509Certificate;
 import org.apache.commons.io.FileUtils;
 

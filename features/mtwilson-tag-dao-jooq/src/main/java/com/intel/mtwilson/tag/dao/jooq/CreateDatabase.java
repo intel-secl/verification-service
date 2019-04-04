@@ -37,7 +37,6 @@ public class CreateDatabase {
      * @throws Exception 
      */
     public void execute(String[] args) throws SQLException {
-//        Derby.protocol = "jdbc:derby:directory:mytestdb;create=true"; // was:   jdbc:derby:directory:target/derby/mytestdb;create=true
         log.debug("Starting Derby...");
         Derby.startDatabase();
         log.debug("Derby started");
@@ -63,16 +62,7 @@ public class CreateDatabase {
             }
         }
     }
-    
-    /* 
-    private <T extends GenericDAO> void createTable(String name, Class<T> daoClass, DBI dbi) {
-        T dao = dbi.open(daoClass);
-        if( !Derby.tableExists(name) ) { dao.create(); }        
-        dao.close();
-        
-    }
-    */
-    
+
     public void createTables() throws SQLException {
         DataSource ds = Derby.getDataSource();
         DBI dbi = new DBI(ds);

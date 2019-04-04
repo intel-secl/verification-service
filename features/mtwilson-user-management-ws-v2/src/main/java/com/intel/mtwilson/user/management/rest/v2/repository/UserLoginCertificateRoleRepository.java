@@ -28,7 +28,6 @@ public class UserLoginCertificateRoleRepository implements DocumentRepository<Us
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UserLoginCertificateRoleRepository.class);
     
     @Override
-//    @RequiresPermissions("user_login_certificate_roles:search")        
     public UserLoginCertificateRoleCollection search(UserLoginCertificateRoleFilterCriteria criteria) {
         log.debug("UserLoginCertificateRole:Search - Got request to search for the users login certificates.");        
         UserLoginCertificateRoleCollection objCollection = new UserLoginCertificateRoleCollection();
@@ -117,7 +116,6 @@ public class UserLoginCertificateRoleRepository implements DocumentRepository<Us
     }
     
     @Override
-//    @RequiresPermissions("user_login_certificate_roles:delete,search")        
     public void delete(UserLoginCertificateRoleFilterCriteria criteria) {
         log.debug("UserLoginCertificateRole:Delete - Got request to delete login certificate role by search criteria.");        
         UserLoginCertificateRoleCollection objList = search(criteria);

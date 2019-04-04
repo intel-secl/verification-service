@@ -125,8 +125,6 @@ public class MwReportJpaControllerTest {
             obj.setCreated(created);
             obj.setExpiration(expiration);
             mwReportJpaController.create(obj);
-
-            //Thread.sleep(5000);
         }
     }
 

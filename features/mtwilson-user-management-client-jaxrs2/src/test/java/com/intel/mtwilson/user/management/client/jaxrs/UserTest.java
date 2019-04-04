@@ -5,8 +5,6 @@
 package com.intel.mtwilson.user.management.client.jaxrs;
 
 import com.intel.dcsg.cpg.crypto.RsaUtil;
-import com.intel.dcsg.cpg.crypto.Sha1Digest;
-import com.intel.dcsg.cpg.crypto.Sha256Digest;
 import com.intel.dcsg.cpg.i18n.LocaleUtil;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.x509.X509Builder;
@@ -18,8 +16,6 @@ import com.intel.mtwilson.user.management.rest.v2.model.UserCollection;
 import com.intel.mtwilson.user.management.rest.v2.model.UserFilterCriteria;
 import com.intel.mtwilson.user.management.rest.v2.model.UserLocator;
 import com.intel.mtwilson.user.management.rest.v2.model.UserLoginCertificate;
-import com.intel.mtwilson.user.management.rest.v2.model.UserLoginCertificateCollection;
-import com.intel.mtwilson.user.management.rest.v2.model.UserLoginCertificateFilterCriteria;
 import com.intel.mtwilson.user.management.rest.v2.model.UserLoginPassword;
 import java.nio.charset.Charset;
 import java.security.KeyPair;
@@ -110,8 +106,6 @@ public class UserTest {
         userLoginCertificate.setStatus(Status.APPROVED);
         userLoginCertificate.setRoles(roleSet);
         certificateClient.store(userLoginCertificate);
-        
-        //client.deleteUser(createUser.getId().toString());
     }
     
     @Test

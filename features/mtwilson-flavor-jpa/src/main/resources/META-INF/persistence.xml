@@ -21,11 +21,5 @@
     <class>com.intel.mtwilson.flavor.data.MwQueue</class>
     <class>com.intel.mtwilson.flavor.data.MwReport</class>
     <shared-cache-mode>NONE</shared-cache-mode>
-    <!--    <properties>
-      <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://192.168.0.1:5432/mw_as"/>
-      <property name="javax.persistence.jdbc.user" value="root"/>
-      <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
-      <property name="javax.persistence.jdbc.password" value=""/>
-    </properties>-->
   </persistence-unit>
 </persistence>

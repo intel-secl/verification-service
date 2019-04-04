@@ -4,7 +4,6 @@
  */
 package com.intel.mtwilson.audit.api;
 
-import com.intel.mtwilson.audit.data.AuditLog;
 import com.intel.mtwilson.audit.data.AuditLogEntry;
 import com.intel.mtwilson.audit.helper.AuditHandlerException;
 

@@ -175,7 +175,6 @@ public class CertificateRequestRepository implements DocumentRepository<Certific
                 item.setStatus("New");
             }
             encrypt(item);
-//            certRequestDao.insert(item.getId().toString(), item.getSubject(), selectionObj.getId().toString(), null, null);
             certRequestDao.insert(item);
             log.debug("CertificateRequest:Create - Created the CertificateRequest {} successfully.", item.getId().toString());
             

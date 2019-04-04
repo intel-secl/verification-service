@@ -21,7 +21,6 @@ public class TagImportFile extends TagCommand {
     
     @Override
     public void execute(String[] args) throws Exception {
-        // file name, and either outfile or stdout
         if( args.length < 1 ) { throw new IllegalArgumentException("Usage: import-file <filename> [--type=text/plain]"); }
         String filename = args[0];
                 

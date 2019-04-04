@@ -4,13 +4,9 @@
  */
 package com.intel.mtwilson.audit.helper;
 
-
 import com.intel.mtwilson.audit.data.AuditContext;
-//import com.sun.jersey.spi.container.ContainerRequest;
-//import com.sun.jersey.spi.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerRequestContext;
-import java.util.UUID;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 import org.slf4j.Logger;
@@ -39,8 +35,6 @@ public class AuditJerseyRequestFilter implements ContainerRequestFilter{
         { request.getMethod(), request.getUriInfo().getPath(), String.valueOf(auditContext.getStartMilliseconds()) });
         
         MtWilsonThreadLocal.set(auditContext);
-        
-//        return request;
     }
     
 }

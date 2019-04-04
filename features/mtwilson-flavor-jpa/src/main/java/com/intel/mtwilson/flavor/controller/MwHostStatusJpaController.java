@@ -265,20 +265,6 @@ public class MwHostStatusJpaController implements Serializable {
         }
     }
 
-//    public MwHostStatus findMwHostStatusByAikPublicKey(String aikPublicKey) {
-//        String jsonQueryText = String.format("host_report -> 'aik' ->> 'public_key' = '%s'", aikPublicKey);
-//        MwHostStatus mwHostStatus = null;
-//        EntityManager em = getEntityManager();
-//        try {
-//            Query query = em.createNativeQuery("SELECT * FROM mw_host_status WHERE " + jsonQueryText, MwHostStatus.class);
-//            if (query.getResultList() != null && !query.getResultList().isEmpty()) {
-//                mwHostStatus = (MwHostStatus) query.getSingleResult();
-//            }
-//            return mwHostStatus;
-//        } finally {
-//            em.close();
-//        }
-//    }
     public List<String> findMwHostListByKeyValue(String key, String value) {
         List<String> hostList = null;
         EntityManager em = getEntityManager();

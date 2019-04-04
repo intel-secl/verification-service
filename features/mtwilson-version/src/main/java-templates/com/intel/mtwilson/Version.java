@@ -18,7 +18,6 @@ public class Version {
     public static final String GIT_COMMIT_ID = "${git.commit.id}";
     public static final String GIT_COMMIT_ABBREV = "${git.commit.abbrev}";
     public static final String GIT_COMMIT_TIME = "${git.commit.time}";
-//    public static final String BUILD_TIMESTAMP = "${maven.build.timestamp}";
     public static final String BUILD_TIMESTAMP = "${timestamp}";
 
     private static final Version instance = new Version();

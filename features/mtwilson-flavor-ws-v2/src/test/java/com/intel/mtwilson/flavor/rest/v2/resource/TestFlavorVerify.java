@@ -54,11 +54,9 @@ public class TestFlavorVerify {
         mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 
         String combinedTrustReportInString = Resources.toString(Resources.getResource("combined_trustreport.json"), Charsets.UTF_8);
-        //String individualTrustReportInString = Resources.toString(Resources.getResource(pathPrefix + "/individual_trustreport.json"), Charsets.UTF_8);
 
         combinedTrustReport = mapper.readValue(combinedTrustReportInString, TrustReport.class);
-        //individualTrustReport = mapper.readValue(individualTrustReportInString, TrustReport.class);
-        
+
         String hostManifestAsJson = Resources.toString(Resources.getResource("hostmanifest.json"), Charsets.UTF_8);
         String tagCerAsJson = Resources.toString(Resources.getResource("tagcer.json"), Charsets.UTF_8);
 

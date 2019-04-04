@@ -13,8 +13,4 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public abstract class AttributeTypeMixIn {
-    /*
-    // this section wouldn't be necessary if the JaxbAnnotationIntrospector worked properly and used the XmlAttribute annotations...
-    protected String oid;
-    */
 }

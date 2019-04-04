@@ -47,9 +47,6 @@ public interface TpmPasswordDAO extends Closeable {
     @SqlQuery("select id, password, modifiedOn from mw_host_tpm_password where id=:id")
     TpmPassword findById(@Bind("id") UUID id);
 
-//    @SqlQuery("select id,uuid,password from mw_host_tpm_password where uuid=:uuid")
-//    TpmPassword findByUuid(@Bind("uuid") String uuid);
-    
     @SqlUpdate("delete from mw_host_tpm_password where id=:id")
     void delete(@Bind("id") UUID id);
     

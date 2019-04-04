@@ -20,18 +20,6 @@ import java.util.Date;
 public class HostStatusInformation extends Document {
     private HostState hostState;
     private Date lastTimeConnected;
-//    @JsonInclude(JsonInclude.Include.ALWAYS)
-//    @JacksonXmlElementWrapper(localName = "faults")
-//    @JacksonXmlProperty(localName = "fault")
-//    private List<Fault> faults;
-//
-//    public List<Fault> getFaults() {
-//        return faults;
-//    }
-//
-//    public void setFaults(List<Fault> faults) {
-//        this.faults = faults;
-//    }
 
     public HostState getHostState() {
         return hostState;

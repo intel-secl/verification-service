@@ -309,11 +309,6 @@ public class Flavorgroups extends MtWilsonClient {
         return obj;
     }
 
-//    public Flavorgroup update(Flavorgroup obj) {
-//        log.debug("target: {}", getTarget().getUri().toString());
-//        return null;
-//    }
-
      /**
      * Searches for flavor groups.
      * @param filterCriteria The content models of the FlavorgroupFilterCriteria java model object can be used as query parameters.

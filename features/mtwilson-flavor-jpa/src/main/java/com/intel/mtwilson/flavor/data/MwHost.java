@@ -5,7 +5,6 @@
 
 package com.intel.mtwilson.flavor.data;
 
-import com.intel.mtwilson.util.ASDataCipher;
 import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;

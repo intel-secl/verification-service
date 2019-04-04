@@ -39,7 +39,6 @@ public interface FileDAO extends Closeable {
     void create();
     
     @SqlUpdate("insert into mw_file (id , name, contentType, content) values (:id, :name, :contentType, :content)")
-//    @GetGeneratedKeys
     void insert(@Bind("id") UUID id, @Bind("name") String name, @Bind("contentType") String contentType, @Bind("content") byte[] content);
 
     @SqlUpdate("update mw_file set name=:name, contentType=:contentType, content=:content where id=:id")

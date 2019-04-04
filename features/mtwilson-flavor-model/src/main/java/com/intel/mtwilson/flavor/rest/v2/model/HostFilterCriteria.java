@@ -10,8 +10,6 @@ import com.intel.dcsg.cpg.validation.Validator;
 import com.intel.mtwilson.jaxrs2.DefaultFilterCriteria;
 import com.intel.mtwilson.repository.FilterCriteria;
 import com.intel.mtwilson.validators.ConnectionStringValidator;
-//import java.security.PublicKey;
-//import java.security.cert.X509Certificate;
 import javax.ws.rs.QueryParam;
 
 /**
@@ -34,8 +32,6 @@ public class HostFilterCriteria extends DefaultFilterCriteria implements FilterC
     public String value;
     @QueryParam("aikCertificate")
     public String aikCertificate;
-//    @QueryParam("aikPublicKey")
-//    public PublicKey aikPublicKey;
     @QueryParam("description")
     public String description;
     @Validator(ConnectionStringValidator.class)

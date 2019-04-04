@@ -10,7 +10,6 @@ import com.intel.dcsg.cpg.validation.Regex;
 import com.intel.dcsg.cpg.validation.RegexPatterns;
 import com.intel.mtwilson.repository.FilterCriteria;
 import com.intel.mtwilson.jaxrs2.DefaultFilterCriteria;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 
 /**

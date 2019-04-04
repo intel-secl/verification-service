@@ -4,12 +4,9 @@
  */
 package com.intel.mtwilson.tls.policy.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.intel.mtwilson.jaxrs2.Document;
 import com.intel.mtwilson.tls.policy.TlsPolicyDescriptor;
-//import com.intel.dcsg.cpg.validation.Regex;
-//import com.intel.dcsg.cpg.validation.RegexPatterns;
 
 /**
  * 
@@ -20,7 +17,6 @@ public class HostTlsPolicy extends Document {
     
     private String name;
     
-//    @JsonProperty("private")
     private boolean privateScope = false;
     
     private TlsPolicyDescriptor descriptor;

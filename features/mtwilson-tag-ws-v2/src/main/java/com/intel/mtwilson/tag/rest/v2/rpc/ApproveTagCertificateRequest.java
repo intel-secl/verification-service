@@ -6,13 +6,11 @@ package com.intel.mtwilson.tag.rest.v2.rpc;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.intel.dcsg.cpg.io.UUID;
-import com.intel.mtwilson.tag.model.Certificate;
 import com.intel.mtwilson.tag.model.X509AttributeCertificate;
 import com.intel.mtwilson.launcher.ws.ext.RPC;
 import com.intel.mtwilson.repository.RepositoryException;
 import com.intel.mtwilson.repository.RepositoryInvalidInputException;
 import com.intel.mtwilson.tag.dao.TagJdbi;
-import com.intel.mtwilson.tag.dao.jdbi.CertificateDAO;
 import com.intel.mtwilson.tag.dao.jdbi.CertificateRequestDAO;
 import com.intel.mtwilson.tag.dao.jdbi.TagCertificateDAO;
 import com.intel.mtwilson.tag.model.CertificateRequest;
@@ -80,7 +78,6 @@ public class ApproveTagCertificateRequest implements Runnable{
                 certDao.insert(certificate.getId(), certificate.getCertificate(), 
                         certificate.getSubject(), certificate.getIssuer(), certificate.getNotBefore(), certificate.getNotAfter(), certificate.getHardwareUuid());
                 
-                //certRequestdao.updateApproved(certificateRequestId.toString(), newCertId.toString()); // automatically sets status to 'Done' in db
                 certRequestdao.updateStatus(certificateRequestId, "Done");
             } else {
                 log.error("RPC: ApproveTagCertificateRequest - Certificate request id {} specified for auto approval is not valid.", certificateRequestId);

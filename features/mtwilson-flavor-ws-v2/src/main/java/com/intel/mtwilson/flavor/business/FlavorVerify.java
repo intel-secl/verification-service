@@ -63,8 +63,6 @@ import static com.intel.mtwilson.features.queue.model.QueueState.TIMEOUT;
 import static com.intel.mtwilson.features.queue.model.QueueState.ERROR;
 import com.intel.mtwilson.flavor.rest.v2.resource.HostStatusResource;
 import static com.intel.mtwilson.i18n.HostState.CONNECTION_TIMEOUT;
-import static com.intel.mtwilson.i18n.HostState.CONNECTION_FAILURE;
-import static com.intel.mtwilson.i18n.HostState.UNKNOWN;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -218,8 +216,7 @@ public class FlavorVerify extends QueueOperation {
             HostStatusInformation hostStatusInfo = new HostStatusInformation();
             hostStatusInfo.setLastTimeConnected(Calendar.getInstance().getTime());
             hostStatusInfo.setHostState(hostState);
-            //hostStatusInfo.setFaults(hostConnector.getFaults());
-            
+
             // store host status
             HostStatus hostStatus = new HostStatus();
             hostStatus.setHostId(hostId);

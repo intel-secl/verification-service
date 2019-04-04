@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import com.intel.dcsg.cpg.io.UUID;
 import com.intel.mtwilson.jaxrs2.Document;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

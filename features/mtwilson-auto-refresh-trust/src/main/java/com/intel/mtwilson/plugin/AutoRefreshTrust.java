@@ -4,10 +4,6 @@
  */
 package com.intel.mtwilson.plugin;
 
-import com.intel.dcsg.cpg.io.UUID;
-//import com.intel.mtwilson.as.business.trust.BulkHostTrustBO;
-//import com.intel.mtwilson.as.controller.TblSamlAssertionJpaController;
-//import com.intel.mtwilson.plugin.api.Plugin;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.flavor.rest.v2.repository.HostRepository;
 import com.intel.mtwilson.flavor.rest.v2.resource.HostResource;
@@ -28,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author jbuhacoff
  */
-public class AutoRefreshTrust implements Runnable { //, Plugin {
+public class AutoRefreshTrust implements Runnable {
     private Logger log = LoggerFactory.getLogger(getClass());
     private boolean enabled = true;
     private long maxCacheDuration = 5; // hour
@@ -36,15 +32,11 @@ public class AutoRefreshTrust implements Runnable { //, Plugin {
     private int refreshTimeBeforeSamlExpiry = 300; // seconds
     private long interval = 120; // seconds
     private TimeUnit intervalUnits = TimeUnit.SECONDS;
-//    private BulkHostTrustBO bulkHostTrustBO = null;
-//    private TblSamlAssertionJpaController samlJpa = null;
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
     public void setMaxCacheDuration(long maxCacheDuration) { this.maxCacheDuration = maxCacheDuration; }
     public void setMaxCacheDurationUnits(TimeUnit maxCacheDurationUnits) { this.maxCacheDurationUnits = maxCacheDurationUnits; }
     public void setInterval(long interval) { this.interval = interval; }
     public void setIntervalUnits(TimeUnit intervalUnits) { this.intervalUnits = intervalUnits; }
-//    public void setBulkHostTrustBO(BulkHostTrustBO bulkHostTrustBO) { this.bulkHostTrustBO = bulkHostTrustBO; }
-//    public void setTblSamlAssertionJpaController(TblSamlAssertionJpaController samlJpa) { this.samlJpa = samlJpa; }
     private volatile boolean running;
 
     public AutoRefreshTrust(long interval, TimeUnit intervalUnits) {
@@ -70,11 +62,6 @@ public class AutoRefreshTrust implements Runnable { //, Plugin {
                 new HostResource().updateHostStatusList(hostListForFlavorVerifyQueue, QUEUE, null);
                 //add all the hosts with expired saml to queue
                 new HostResource().addHostsToFlavorVerifyQueue(hostListForFlavorVerifyQueue, true);
-                /*HashSet<String> hosts = new HashSet<>(hostsToRefresh);
-                long bulkBOTimeout = My.configuration().getConfiguration().getLong("mtwilson.ms.registration.hostTimeout", 60); // Default is 60 seconds
-                bulkHostTrustBO = new BulkHostTrustBO((int)bulkBOTimeout);
-                String saml = bulkHostTrustBO.getBulkTrustSaml(hosts, true);
-                log.info("Auto bulk refresh SAML: {}", saml);*/
                 log.info("AutoRefreshTrust completed for {} hosts.", hostsToRefresh.size());
             } else {
                 log.info("No hosts for bulk refresh");
@@ -93,7 +80,6 @@ public class AutoRefreshTrust implements Runnable { //, Plugin {
     
     public List<String> findHostIdsWithExpiredCache() {
         try {
-            //return My.jpa().mwSamlAssertion().findHostnamesWithExpiredCache(My.configuration().getSamlValidityTimeInSeconds() - refreshTimeBeforeSamlExpiry);
             return My.jpa().mwReport().findHostsWithExpiredCache(refreshTimeBeforeSamlExpiry);
         } catch (Exception ex) {
             log.error("AutoRefreshTrust:findHostnamesWithExpiredCache - Error during retrieval of hosts with expired cache.", ex);
@@ -105,34 +91,5 @@ public class AutoRefreshTrust implements Runnable { //, Plugin {
         String hostname;
         Date lastChecked; // alwasys more than maxCacheDuration ago...
     }
-    
-    /*
-    public static class NextHostStatus {
-        String hostname;
-        long delay;
-        TimeUnit delayUnit = TimeUnit.SECONDS;
-    }*/
-
-//    public List<ExpiredHostStatus> findHostnamesAndLastEntryWithExpiredCache() {
-//        log.info("findHostnamesAndLastEntryWithExpiredCache");
-//        Query query = samlJpa.getEntityManager().createNativeQuery("SELECT h.Name as hostname,max(s.created_ts) as lastcheck FROM mw_hosts as h JOIN mw_saml_assertion as s ON h.id=s.host_id WHERE NOT EXISTS ( SELECT ID FROM mw_saml_assertion as t WHERE h.ID = t.host_id AND t.created_ts > ? ) GROUP BY h.ID");
-//        Calendar maxCache = Calendar.getInstance();        
-//        maxCache.add(Calendar.SECOND, -(int)TimeUnit.SECONDS.convert(maxCacheDuration, maxCacheDurationUnits));
-//        log.debug("Searching for hosts with last trust status before {}", new Rfc822Date(maxCache.getTime()).toString());
-//        query.setParameter(1, maxCache);
-//        List<Object[]> results = query.getResultList();
-//        log.debug("Got {} results", results.size());
-//        ArrayList<ExpiredHostStatus> list = new ArrayList<ExpiredHostStatus>();
-//        for(Object[] result : results) {
-//            ExpiredHostStatus entry = new ExpiredHostStatus();
-//            log.debug("Hostname: {}  last checked: {}", result[0], result[1]);
-//            entry.hostname = (String)result[0];
-//            entry.lastChecked = (Date)result[1];
-//            list.add(entry);
-//        }
-//        return list;
-//    }
-    
-    
     
 }

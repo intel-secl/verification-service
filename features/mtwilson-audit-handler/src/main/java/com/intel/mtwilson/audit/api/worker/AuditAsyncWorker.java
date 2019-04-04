@@ -10,9 +10,6 @@ import com.intel.mtwilson.audit.controller.AuditLogEntryJpaController;
 import com.intel.mtwilson.audit.data.AuditLogEntry;
 import com.intel.mtwilson.audit.helper.AuditHandlerException;
 import com.intel.mtwilson.audit.helper.AuditPersistenceManager;
-//import javax.ejb.Asynchronous;
-//import javax.ejb.LocalBean;
-//import javax.ejb.Stateless;
 import javax.persistence.EntityManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,8 +18,6 @@ import org.slf4j.LoggerFactory;
  *
  * @author dsmagadx
  */
-//@Stateless
-//@LocalBean
 public class AuditAsyncWorker implements AuditWorker {
 
     private Logger logger = LoggerFactory.getLogger(getClass().getName());
@@ -38,7 +33,6 @@ public class AuditAsyncWorker implements AuditWorker {
     private final int numRotations = new MyConfiguration().getConfiguration().getInt("mtwilson.audit.log.num.rotations", DEFAULT_AUDIT_LOG_NUM_ROTATIONS);
     
     @Override
-//    @Asynchronous
     public void addLog(AuditLogEntry log) throws AuditHandlerException {
         AuditLogEntryJpaController controller = new AuditLogEntryJpaController(getEntityManagerFactory());
         controller.rotate(maxRowCount,numRotations);
