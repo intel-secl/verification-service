@@ -109,21 +109,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.opensaml</groupId>
-            <artifactId>xmltooling</artifactId>
-            <exclusions>
-                <!-- not-yet-commons-ssl downloaded with this dependency contains CVEs -->
-                <exclusion>
-                    <groupId>ca.juliusdavies</groupId>
-                    <artifactId>not-yet-commons-ssl</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>ca.juliusdavies</groupId>
-            <artifactId>not-yet-commons-ssl</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.intel.mtwilson.features</groupId>
             <artifactId>mtwilson-tls-policy-client-jaxrs2</artifactId>
             <version>${project.version}</version>
