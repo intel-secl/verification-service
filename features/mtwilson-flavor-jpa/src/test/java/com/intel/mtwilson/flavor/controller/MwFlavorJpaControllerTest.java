@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import java.util.Arrays; 
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.mtwilson.core.flavor.PlatformFlavor;
 import com.intel.mtwilson.core.flavor.PlatformFlavorFactory;
