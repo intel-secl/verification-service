@@ -18,6 +18,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.*;
 import org.junit.After;
 import org.junit.AfterClass;
+import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
