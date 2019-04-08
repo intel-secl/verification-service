@@ -226,18 +226,6 @@ public class FlavorResource {
         return createOne(item);
     }
 
-    // TODO: Additional support for backward compatibility
-    private List<String> replaceBoisToPlatform(List<String> partialFlavorTypes) {
-        List<String> filteredFlavorTypes = new ArrayList<>();
-        for(String flavorType :  partialFlavorTypes) {
-            if(flavorType.equalsIgnoreCase(DEPRECATED_FLAVOR_PART_BIOS)) {
-                filteredFlavorTypes.add(FlavorPart.PLATFORM.getValue());
-            } else {
-                filteredFlavorTypes.add(flavorType);
-            }
-        }
-        return filteredFlavorTypes;
-    }
     
     private FlavorCollection createOne(FlavorCreateCriteria item) throws IOException, Exception {
         X509AttributeCertificate attributeCertificate = null;
