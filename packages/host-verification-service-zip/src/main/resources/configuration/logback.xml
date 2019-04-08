@@ -32,7 +32,7 @@
         </encoder>
     </appender>
     <appender name="ConsoleInfo" class="ch.qos.logback.core.ConsoleAppender">
-        <target>System.err</target>
+        <target>System.out</target>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>INFO</level>
             <onMatch>ACCEPT</onMatch>
