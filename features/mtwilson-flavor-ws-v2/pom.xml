@@ -47,11 +47,6 @@
             <artifactId>mtwilson-launcher-api</artifactId>
         </dependency>
         <dependency>
-        <groupId>com.intel.mtwilson.maven</groupId>
-        <artifactId>mtwilson-maven-bom-external</artifactId>
-        <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.intel.mtwilson.util</groupId>
             <artifactId>mtwilson-util-jaxrs2-server</artifactId>
         </dependency>
@@ -115,18 +110,7 @@
         </dependency>
         <dependency>
             <groupId>org.opensaml</groupId>
-            <artifactId>xmltooling</artifactId>
-            <exclusions>
-                <!-- not-yet-commons-ssl downloaded with this dependency contains CVEs -->
-                <exclusion>
-                    <groupId>ca.juliusdavies</groupId>
-                    <artifactId>not-yet-commons-ssl</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>ca.juliusdavies</groupId>
-            <artifactId>not-yet-commons-ssl</artifactId>
+            <artifactId>opensaml-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.features</groupId>
