@@ -88,7 +88,7 @@ import org.apache.commons.beanutils.BeanMap;
 import org.apache.commons.lang.WordUtils;
 import org.apache.shiro.util.CollectionUtils;
 import org.opensaml.core.config.InitializationException;
-import org.opensaml.core.xml.io.MarshallingException
+import org.opensaml.core.xml.io.MarshallingException;
 /**
  *
  * @author rksavino
