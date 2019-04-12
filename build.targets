@@ -1,10 +1,6 @@
 # A successful build produces the following files:
-packages/host-verification-service-linux/target/host-verification-service-linux-5.0-SNAPSHOT.bin
-packages/host-verification-service-linux/target/host-verification-service-linux-5.0-SNAPSHOT.bin.README
-packages/host-verification-service-linux/target/host-verification-service-linux-5.0-SNAPSHOT.bin.README.sig
-packages/host-verification-service-client-java8/target/host-verification-service-client-java8-5.0-SNAPSHOT.jar
-packages/host-verification-service-client-java8/target/host-verification-service-client-java8-5.0-SNAPSHOT.zip
-packages/host-verification-service-client-java8/target/host-verification-service-client-java8-5.0-SNAPSHOT-javadoc.zip
-packages/host-verification-service-docker/target/host-verification-service-docker-5.0-SNAPSHOT.zip
-packages/host-verification-service-docker/target/host-verification-service-docker-5.0-SNAPSHOT.zip.README
-packages/host-verification-service-docker/target/host-verification-service-docker-5.0-SNAPSHOT.zip.README.sig
+packages/host-verification-service-linux/target/host-verification-service-linux-*.bin
+packages/host-verification-service-client-java8/target/host-verification-service-client-*.jar
+packages/host-verification-service-client-java8/target/host-verification-service-client-java8-*.zip
+packages/host-verification-service-client-java8/target/host-verification-service-client-java8-*-javadoc.zip
+packages/host-verification-service-docker/target/host-verification-service-docker-*.zip
