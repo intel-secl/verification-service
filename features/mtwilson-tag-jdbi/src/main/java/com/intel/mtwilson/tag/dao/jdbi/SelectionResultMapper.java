@@ -4,7 +4,6 @@
  */
 package com.intel.mtwilson.tag.dao.jdbi;
 
-import com.intel.mtwilson.tag.model.CertificateRequest;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import com.intel.dcsg.cpg.io.UUID;
@@ -23,9 +22,6 @@ public class SelectionResultMapper implements ResultSetMapper<Selection> {
     public Selection map(int i, ResultSet rs, StatementContext sc) throws SQLException {
         String driver = (String)sc.getAttribute("driver");
         log.debug("driver is {}", driver);
-//        UUID uuid = UUID.valueOf(rs.getBytes("uuid")); // use this when uuid is a binary type in database
-//        UUID uuid = UUID.valueOf(rs.getString("uuid")); // use this when uuid is a char type in database
-//        Selection selection = new Selection(rs.getLong("id"), uuid);
         Selection selection = new Selection();
         selection.setId(UUID.valueOf(rs.getString("id")));
         selection.setName(rs.getString("name"));

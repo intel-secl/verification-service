@@ -86,5 +86,5 @@ if check_mtwilson_status; then
    exit
 fi
 touch $MTWILSON_CONFIGURATION/.setup_done
-
+chown -R mtwilson:mtwilson $MTWILSON_CONFIGURATION
 tail -f /opt/mtwilson/logs/mtwilson.log

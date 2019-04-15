@@ -442,29 +442,6 @@ public class HostResource {
 
     }
 
-//    private Host convert(HostFilterCriteria item) {
-//        Host host = new Host();
-//        if (item.id != null) {
-//            host.setId(item.id);
-//        }
-//        if (item.nameEqualTo != null) {
-//            host.setHostName(item.nameEqualTo);
-//        }
-//        if (item.hostHardwareId != null) {
-//            host.setHardwareUuid(item.hostHardwareId);
-//        }
-//        if (item.tlsPolicyId != null) {
-//            host.setTlsPolicyId(item.tlsPolicyId);
-//        }
-//        if (item.connectionString != null) {
-//            host.setConnectionString(item.connectionString);
-//        }
-//        if (item.description != null) {
-//            host.setDescription(item.description);
-//        }
-//        return host;
-//    }
-
     public void addHostToFlavorVerifyQueue(UUID hostId, boolean forceUpdate) {
         //check if the host exists in the queue
         if (checkHostAlreadyInQueue(hostId.toString(), forceUpdate)) {

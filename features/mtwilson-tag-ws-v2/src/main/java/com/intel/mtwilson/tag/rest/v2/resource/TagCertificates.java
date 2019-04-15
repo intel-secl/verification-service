@@ -26,13 +26,9 @@ import com.intel.mtwilson.supplemental.asset.tag.TagSelectionBuilder;
 import com.intel.mtwilson.supplemental.asset.tag.model.TagKvAttribute;
 import com.intel.mtwilson.supplemental.asset.tag.model.TagSelection;
 import com.intel.mtwilson.tag.TagConfiguration;
-import com.intel.mtwilson.tag.model.SelectionKvAttribute;
-import com.intel.mtwilson.tag.model.SelectionKvAttributeCollection;
-import com.intel.mtwilson.tag.model.SelectionKvAttributeFilterCriteria;
 import com.intel.mtwilson.tag.model.TagCertificateFilterCriteria;
 import com.intel.mtwilson.tag.model.TagCertificateLocator;
 import com.intel.mtwilson.tag.rest.v2.repository.TagCertificateRepository;
-//import com.intel.mtwilson.tag.rest.v2.repository.SelectionKvAttributeRepository;
 import java.io.UnsupportedEncodingException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
@@ -93,26 +89,6 @@ public class TagCertificates {
                 }
                 tagSelectionBuilder.build();
             }
-
-//        } else { // Selection id or name is provided
-//            SelectionKvAttributeFilterCriteria selectionKvCriteria = new SelectionKvAttributeFilterCriteria();
-//            SelectionKvAttributeRepository selectionKvAttributeRepository = new SelectionKvAttributeRepository();
-//
-//            if (tagCertificateCreateCriteria.getSelectionId() != null) {
-//                selectionKvCriteria.id = tagCertificateCreateCriteria.getSelectionId();
-//            } else {
-//                selectionKvCriteria.nameEqualTo = tagCertificateCreateCriteria.getSelectionName();
-//            }
-//            SelectionKvAttributeCollection kvAttributeCollection = selectionKvAttributeRepository.search(selectionKvCriteria);
-//            if (kvAttributeCollection.getSelectionKvAttributeValues().isEmpty()){
-//                log.error("Error during Tag Certificate creation");
-//                throw new RepositoryInvalidInputException("Invalid Selection id or name");    
-//            }
-//            for (SelectionKvAttribute selectionKvAttribute : kvAttributeCollection.getSelectionKvAttributeValues()) {
-//                tagSelectionBuilder.textKvAttribute(selectionKvAttribute.getKvAttributeName(), selectionKvAttribute.getKvAttributeValue());
-//                log.info("Tag Key {}, Value {}", selectionKvAttribute.getKvAttributeName(), selectionKvAttribute.getKvAttributeValue());
-//            }
-//            tagSelectionBuilder.build();
         }
 
         PrivateKey cakey = Global.cakey();

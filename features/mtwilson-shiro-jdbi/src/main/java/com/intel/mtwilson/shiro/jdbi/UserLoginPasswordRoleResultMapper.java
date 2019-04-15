@@ -19,8 +19,6 @@ public class UserLoginPasswordRoleResultMapper implements ResultSetMapper<UserLo
 
     @Override
     public UserLoginPasswordRole map(int i, ResultSet rs, StatementContext sc) throws SQLException {
-//        UUID uuid = UUID.valueOf(rs.getBytes("id")); // use this when uuid is a binary(mysql) or uuid(postgresql) type in database
-//        UUID uuid = UUID.valueOf(rs.getString("id")); // use this when uuid is a char type in database
         UserLoginPasswordRole role = new UserLoginPasswordRole();
         role.setLoginPasswordId(UUID.valueOf(rs.getString("login_password_id")));
         role.setRoleId(UUID.valueOf(rs.getString("role_id")));

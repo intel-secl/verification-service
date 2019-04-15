@@ -34,8 +34,7 @@ public interface CertificateDAO extends Closeable {
     
     @SqlUpdate("insert into mw_tag_certificate (id, certificate, sha1, sha256, subject, issuer, notBefore, notAfter, revoked) "
             + "values (:id, :certificate, :sha1, :sha256, :subject, :issuer, :notBefore, :notAfter, false)")
-//    @GetGeneratedKeys
-    void insert(@Bind("id") UUID id, @Bind("certificate") byte[] certificate, @Bind("sha1") String sha1, 
+    void insert(@Bind("id") UUID id, @Bind("certificate") byte[] certificate, @Bind("sha1") String sha1,
     @Bind("sha256") String sha256, @Bind("subject") String subject, @Bind("issuer") String issuer, @Bind("notBefore") Date notBefore, @Bind("notAfter") Date notAfter);
 
     @SqlUpdate("update mw_tag_certificate set revoked=:revoked where id=:id")
@@ -46,9 +45,6 @@ public interface CertificateDAO extends Closeable {
     
     @SqlQuery("select * from mw_tag_certificate where LOWER(subject)=LOWER(:subject) order by notbefore desc limit 1")
     Certificate findLatestBySubject(@Bind("subject") String subject);
-
-//    @SqlQuery("select id,uuid,certificate,sha1,sha256,subject,issuer,notBefore,notAfter,revoked from mw_tag_certificate where uuid=:uuid")
-//    Certificate findByUuid(@Bind("uuid") UUID uuid);
 
     @SqlQuery("select id,certificate,sha1,sha256,subject,issuer,notBefore,notAfter,revoked from mw_tag_certificate where sha1=:sha1")
     Certificate findBySha1(@Bind("sha1") String sha1);

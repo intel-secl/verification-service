@@ -39,8 +39,6 @@ public class AutoRefreshTrustLoader implements ServletContextListener {
             art = new AutoRefreshTrust(sleepInterval, TimeUnit.SECONDS);
             future = executor.scheduleWithFixedDelay(art, sleepInterval, sleepInterval, TimeUnit.SECONDS);
             log.debug("================ Done ==============");
-//            mainThread = new Thread(art);
-//            mainThread.start();
         }
     }
 
@@ -49,8 +47,6 @@ public class AutoRefreshTrustLoader implements ServletContextListener {
         if (art != null) {
             log.trace("AutoRefreshTrust: About to end the thread");
             art.cancel();
-//            mainThread.interrupt();
-            
         }
         if( future != null ) {
             future.cancel(true);            
@@ -59,28 +55,4 @@ public class AutoRefreshTrustLoader implements ServletContextListener {
             executor.shutdown();
         }
     }
-//    @Override
-//    public Plugin loadPlugin() {
-//        try {
-//            AutoRefreshTrust plugin = new AutoRefreshTrust();
-//            plugin.setEnabled(true);
-//            plugin.setMaxCacheDuration(5);
-//            plugin.setMaxCacheDurationUnits(TimeUnit.MINUTES);
-//            plugin.setTimeout(60);
-//            plugin.setTimeoutUnits(TimeUnit.SECONDS);
-//            TblSamlAssertionJpaController samlJpa = My.jpa().mwSamlAssertion();
-//            plugin.setTblSamlAssertionJpaController(samlJpa);
-//            BulkHostTrustBO bulkHostTrustBO = new BulkHostTrustBO((int)TimeUnit.SECONDS.convert(60, TimeUnit.SECONDS));
-//            plugin.setBulkHostTrustBO(bulkHostTrustBO);
-//            
-//            // before we load the plugin, make sure that we start the background task
-//            long interval = ASConfig.getConfiguration().getInt("mtwilson.auto.refresh.trust.interval", (int)TimeUnit.SECONDS.convert(30, TimeUnit.MINUTES));
-//            log.debug("Scheduling auto refresh plugin every {} seconds", interval);
-//            executor.scheduleAtFixedRate(plugin, interval, interval, TimeUnit.SECONDS);
-//            return plugin;
-//        } catch (IOException ex) {
-//            log.error("Error in auto refresh trust plugin", ex);
-//            throw new ASException(ErrorCode.SYSTEM_ERROR, ex.getClass().getSimpleName());
-//        }
-//    }
 }

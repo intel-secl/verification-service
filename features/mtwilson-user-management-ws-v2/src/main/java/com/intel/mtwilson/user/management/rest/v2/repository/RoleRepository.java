@@ -154,9 +154,8 @@ public class RoleRepository implements DocumentRepository<Role, RoleCollection, 
         try (LoginDAO loginDAO = MyJdbi.authz()) {
             Role obj = loginDAO.findRoleById(locator.id);
             if (obj != null ) {
-                // Before the role object is deleted, we need to see if there are any reference to this role in Certificate, Password and Hmac role repositories
+                // Before the role object is deleted, we need to see if there are any reference to this role in Certificate, Password role repositories
                 if ((loginDAO.findUserLoginCertificateRolesByRoleId(obj.getId()).size() > 0) ||
-                        //(loginDAO.findUserLoginHmacRolesByRoleId(obj.getId()).size() > 0) ||
                         (loginDAO.findUserLoginPasswordRolesByRoleId(obj.getId()).size() > 0)) {
                     log.error("Role with id {} cannot be deleted since it is associated to users.");
                     throw new RepositoryDeleteConflictException(locator);

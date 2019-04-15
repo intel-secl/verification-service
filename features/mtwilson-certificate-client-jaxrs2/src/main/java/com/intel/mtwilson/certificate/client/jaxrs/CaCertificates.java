@@ -7,7 +7,6 @@ package com.intel.mtwilson.certificate.client.jaxrs;
 
 import com.intel.mtwilson.jaxrs2.client.MtWilsonClient;
 import com.intel.mtwilson.jaxrs2.mediatype.CryptoMediaType;
-import java.net.URL;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Properties;

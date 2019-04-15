@@ -16,8 +16,6 @@ import com.intel.mtwilson.My;
 import com.intel.mtwilson.telemetry.rest.v2.model.TelemetryCollection;
 import com.intel.mtwilson.telemetry.rest.v2.model.TelemetryRecord;
 
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -81,12 +79,6 @@ public class TelemetryRepository {
         } 
     }
 
-    /*
-    @RequiresPermissions("telemetry:delete")
-    public void delete(Integer id) {
-        log.debug("Deleting entry with id: {}", id);
-    }
-    */
 
     private TelemetryRecord convert(MwTelemetry mwTel) {
         TelemetryRecord teleRecord = new TelemetryRecord();

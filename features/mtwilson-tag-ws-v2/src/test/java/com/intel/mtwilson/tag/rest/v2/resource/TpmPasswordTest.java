@@ -7,8 +7,6 @@ package com.intel.mtwilson.tag.rest.v2.resource;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.mtwilson.tag.model.*;
 import com.intel.mtwilson.tag.rest.v2.repository.TpmPasswordRepository;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.Test;
 
 /**

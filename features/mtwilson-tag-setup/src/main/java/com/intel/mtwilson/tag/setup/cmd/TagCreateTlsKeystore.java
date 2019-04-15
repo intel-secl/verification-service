@@ -9,8 +9,6 @@ import com.intel.dcsg.cpg.crypto.RsaUtil;
 import com.intel.dcsg.cpg.crypto.SimpleKeystore;
 import com.intel.dcsg.cpg.validation.Fault;
 import com.intel.dcsg.cpg.x509.X509Builder;
-import com.intel.mtwilson.My;
-import java.io.File;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.List;
@@ -38,7 +36,6 @@ public class TagCreateTlsKeystore extends TagCommand {
     public void execute(String[] args) throws Exception {
         // file name, and either outfile or stdout
         String ipAlternativeName, dnsAlternativeName;
-//        String filename;
         String dn;
         if( args.length > 0 ) { 
             dn = args[0];
@@ -69,21 +66,14 @@ public class TagCreateTlsKeystore extends TagCommand {
         }
         X509Certificate cacert = builder.build();
         if( cacert == null ) {
-//            log.error("Failed to create certificate"); // no need to print this, if the build failed there are guaranteed to be faults to print...
             List<Fault> faults = builder.getFaults();
             for(Fault fault : faults) {
                 log.error(String.format("%s: %s", fault.getClass().getName(), fault.toString()));
-//                log.error(String.format("%s%s", fault.toString(), fault.getCause() == null ? "" : ": "+fault.getCause().getMessage()));
             }
             return;
             
         }
         
-        /*  ASSET TAG SERVICE NO LONGER HAS A SEPARATE SSL KEYSTORE
-        SimpleKeystore keystore = new SimpleKeystore(new File(filename), My.configuration().getAssetTagKeyStorePassword());
-        keystore.addKeyPairX509(cakey.getPrivate(), cacert, dn, My.configuration().getAssetTagKeyPassword());
-        keystore.save();
-        */
     }
     
     /**

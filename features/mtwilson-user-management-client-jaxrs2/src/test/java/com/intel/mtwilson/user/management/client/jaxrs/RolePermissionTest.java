@@ -9,7 +9,6 @@ import com.intel.mtwilson.My;
 import com.intel.mtwilson.user.management.rest.v2.model.RolePermission;
 import com.intel.mtwilson.user.management.rest.v2.model.RolePermissionCollection;
 import com.intel.mtwilson.user.management.rest.v2.model.RolePermissionFilterCriteria;
-import java.util.Locale;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

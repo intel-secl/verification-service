@@ -4,8 +4,6 @@
  */
 package com.intel.mtwilson.audit.data;
 
-import java.util.Date;
-
 /**
  *
  * @author dsmagadx

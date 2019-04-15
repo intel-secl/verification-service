@@ -4,7 +4,6 @@
  */
 package com.intel.mtwilson.tpm.endorsement.repository;
 
-import com.intel.mtwilson.My;
 import com.intel.mtwilson.jaxrs2.server.resource.DocumentRepository;
 import com.intel.mtwilson.repository.RepositoryCreateConflictException;
 import com.intel.mtwilson.repository.RepositoryCreateException;
@@ -99,18 +98,6 @@ public class TpmEndorsementRepository implements DocumentRepository<TpmEndorseme
         log.debug("TpmEndorsement:Search - Returning back {} of results.", objCollection.getTpmEndorsements().size());                
         return objCollection;
     }
-    /*
-
-     TblHostsJpaController jpaController = My.jpa().mwHosts();
-     // when searching for a private tpmEndorsement, the tpmEndorsement name is the host uuid
-     if (criteria.privateEqualTo != null && criteria.privateEqualTo.booleanValue() && criteria.nameEqualTo != null) {
-     TblHosts obj = jpaController.findHostByUuid(criteria.nameEqualTo.toString());
-     if (obj != null) {
-     objCollection.getTpmEndorsements().add(convert(obj));
-     }
-     }
-     * 
-     */
 
     @Override
     @RequiresPermissions("tpm_endorsements:retrieve")
@@ -145,22 +132,6 @@ public class TpmEndorsementRepository implements DocumentRepository<TpmEndorseme
         }
 
     }
-    /*
-
-     try {
-     TblHostsJpaController jpaController = My.jpa().mwHosts();
-     TblHosts obj = jpaController.findHostByUuid(item.getHostUuid()); 
-     if (obj != null) {
-     obj.setTpmEndorsementName(item.getName());
-     //                obj.setTlsKeystore(item.getKeyStore());
-     jpaController.edit(obj);
-     }
-     } catch (ASException aex) {
-     throw aex;            
-     } catch (Exception ex) {
-     log.error("Error during update of host Tls Policy.", ex);
-     throw new ASException(ErrorCode.AS_UPDATE_HOST_ERROR, ex.getClass().getSimpleName());
-     */
 
     @Override
     @RequiresPermissions("tpm_endorsements:create")

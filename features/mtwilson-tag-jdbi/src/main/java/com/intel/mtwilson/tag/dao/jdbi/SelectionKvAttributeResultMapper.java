@@ -9,7 +9,6 @@ import com.intel.mtwilson.jdbi.util.JdbcUtil;
 import com.intel.mtwilson.tag.model.SelectionKvAttribute;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-//import com.intel.dcsg.cpg.io.UUID;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import org.slf4j.Logger;
@@ -33,7 +32,6 @@ public class SelectionKvAttributeResultMapper implements ResultSetMapper<Selecti
         if( rs.getMetaData().getColumnCount() > 3 ) { // 
             result.setKvAttributeName(rs.getString("name"));
             result.setKvAttributeValue(rs.getString("value"));
-//            result.setSelectionName(rs.getString(""))
         }
         return result;
     }

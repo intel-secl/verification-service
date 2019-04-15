@@ -40,7 +40,6 @@ import java.security.GeneralSecurityException;
 public class LoginPassword implements Command {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LoginPassword.class);
-//    private TrustagentConfiguration configuration;
     private Configuration options;
 
     @Override
@@ -139,12 +138,10 @@ public class LoginPassword implements Command {
 
         try (LoginDAO dao = MyJdbi.authz()) {
             // create the new user record
-//        removeUser(username);
             User user = dao.findUserByName(username);
             if (user == null) {
                 user = new User();
                 user.setId(new UUID());
-                //user.setComment("automatically created by setup");
                 user.setUsername(username);
                 dao.insertUser(user.getId(), user.getUsername(), null, ""); 
                 log.info("Created user {}", username);

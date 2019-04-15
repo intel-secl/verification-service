@@ -92,8 +92,6 @@ public class Setup implements Command {
     }
 
     protected File getConfigurationFile() {
-//        Filesystem fs = new Filesystem();
-//        return fs.getConfigurationFile();
         return My.configuration().getConfigurationFile();
     }
 
@@ -108,10 +106,9 @@ public class Setup implements Command {
     @Override
     public void execute(String[] args) throws Exception {
 
-        // now find the setup tasks that the user has asked for or use a default set
+        // now find the setup tasks that the user has asked for
         if (args.length == 0) {
             log.error("One or more tasks must be specified");
-//            execute(getAllSetupTasks());
             return;
         }
         
@@ -140,12 +137,6 @@ public class Setup implements Command {
     }
 
     protected List<SetupTask> getAllSetupTasks() throws IOException {
-        /*
-         List<SetupTask> tasks = Extensions.findAll(SetupTask.class);
-         for (SetupTask task : tasks) {
-         execute(task);
-         } 
-         */
         return Collections.EMPTY_LIST;
     }
 
@@ -177,15 +168,11 @@ public class Setup implements Command {
     public void execute(List<SetupTask> tasks) throws IOException {
         SetupConfigurationProvider provider = new SetupConfigurationProvider(ConfigurationFactory.getConfigurationProvider());
         Configuration configuration = provider.load();
-//        Configuration configurationAdapter =  new CommonsConfiguration(configuration);
-//        Configuration env = new KeyTransformerConfiguration(new AllCapsNamingStrategy(), new EnvironmentConfiguration()); // transforms mtwilson.ssl.cert.sha1 to MTWILSON_SSL_CERT_SHA1 
-//        MutableCompositeConfiguration configuration = new MutableCompositeConfiguration(properties, env);
         boolean error = false;
         try {
             for (SetupTask setupTask : tasks) {
                 String taskName = setupTask.getClass().getSimpleName();
                 setupTask.setConfiguration(configuration);
-//                log.debug("set tpm owner password {} for task {}", properties.getString("tpm.owner.secret"), taskName);
                 try {
                     if( setupTask.isConfigured() && setupTask.isValidated() && !isForceEnabled() ) {
                         log.debug("Skipping {}", taskName);

@@ -17,7 +17,6 @@ import com.intel.mtwilson.setup.SetupException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.security.KeyPair;
-import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.List;
@@ -34,7 +33,6 @@ public class CreateTlsCertificate extends LocalSetupTask {
     private String tlsDistinguishedName = "CN=mtwilson-tls,OU=mtwilson";
     private String ipAlternativeName = null;
     private String dnsAlternativeName = null;
-//    private File tlsKeystoreFile = null; // maybe the path would be a configuration item, currently it's hardcoded to be "mtwilson-tls.jks" under MTWILSON_CONF
     private String tlsKeystorePassword = null;
 
     public String getTlsDistinguishedName() {
@@ -139,7 +137,6 @@ public class CreateTlsCertificate extends LocalSetupTask {
             }
             catch(Exception e) {
                 log.debug("Cannot read TLS key from keystore", e);
-//                validation("Cannot read TLS key from keystore"); // we are assuming the keystore only has one private key entry ... 
             }
         }
     }
@@ -158,7 +155,6 @@ public class CreateTlsCertificate extends LocalSetupTask {
         // create a new key pair for TLS
         KeyPair tlskey = RsaUtil.generateRsaKeyPair(2048);
         X509Builder builder = X509Builder.factory();
-//        builder.selfSigned(tlsDistinguishedName, tlskey);
         builder.issuerName(cacert);
         builder.issuerPrivateKey(cakey);
         builder.subjectName(tlsDistinguishedName);
@@ -171,7 +167,6 @@ public class CreateTlsCertificate extends LocalSetupTask {
         }
         X509Certificate tlscert = builder.build();
         if( cacert == null ) {
-//            log.error("Failed to create certificate"); // no need to print this, if the build failed there are guaranteed to be faults to print...
             List<Fault> faults = builder.getFaults();
             for(Fault fault : faults) {
                 log.error(String.format("%s: %s", fault.getClass().getName(), fault.toString()));
@@ -183,7 +178,6 @@ public class CreateTlsCertificate extends LocalSetupTask {
         
         File tlsKeystoreFile = My.configuration().getTlsKeystoreFile();
         SimpleKeystore keystore = new SimpleKeystore(tlsKeystoreFile, tlsKeystorePassword);
-//        keystore.addTrustedCaCertificate(cacert, cacert.getIssuerX500Principal().getName());
         keystore.addKeyPairX509(tlskey.getPrivate(), tlscert, tlsDistinguishedName, tlsKeystorePassword, cacert); // we have to provide the issuer chain since it's not self-signed,  otherwise we'll get an exception from the KeyStore provider
         keystore.save();
     }

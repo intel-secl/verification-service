@@ -114,19 +114,6 @@ public class HostTlsPolicyRepository implements DocumentRepository<HostTlsPolicy
         return objCollection;
     }
 
-    /*
-
-     TblHostsJpaController jpaController = My.jpa().mwHosts();
-     // when searching for a private policy, the policy name is the host uuid
-     if (criteria.privateEqualTo != null && criteria.privateEqualTo.booleanValue() && criteria.nameEqualTo != null) {
-     TblHosts obj = jpaController.findHostByUuid(criteria.nameEqualTo.toString());
-     if (obj != null) {
-     objCollection.getTlsPolicies().add(convert(obj));
-     }
-     }
-     * 
-     */
-
     @Override
     public HostTlsPolicy retrieve(HostTlsPolicyLocator locator) {
         log.debug("HostTlsPolicy:Retrieve - got request to retrieve host TLS policy");
@@ -203,23 +190,6 @@ public class HostTlsPolicyRepository implements DocumentRepository<HostTlsPolicy
         }
     }
 
-    /*
-
-     try {
-     TblHostsJpaController jpaController = My.jpa().mwHosts();
-     TblHosts obj = jpaController.findHostByUuid(item.getHostUuid()); 
-     if (obj != null) {
-     obj.setTlsPolicyName(item.getName());
-     //                obj.setTlsKeystore(item.getKeyStore());
-     jpaController.edit(obj);
-     }
-     } catch (ASException aex) {
-     throw aex;            
-     } catch (Exception ex) {
-     log.error("Error during update of host Tls Policy.", ex);
-     throw new ASException(ErrorCode.AS_UPDATE_HOST_ERROR, ex.getClass().getSimpleName());
-     */
-
     @Override
     public void create(HostTlsPolicy item) {
         log.debug("HostTlsPolicy:Create - Got request to create a new HostTlsPolicy.");
@@ -291,15 +261,6 @@ public class HostTlsPolicyRepository implements DocumentRepository<HostTlsPolicy
         }
     }
 
-    /*
-     private HostTlsPolicy convert(TblHosts obj) {
-     HostTlsPolicy convObj = new HostTlsPolicy();
-     //        convObj.setHostUuid(obj.getUuid_hex());
-     convObj.setName(obj.getTlsPolicyName());
-     //        convObj.setKeyStore(obj.getTlsKeystore());
-     return convObj;
-     }
-     */
     private HostTlsPolicy convert(TlsPolicyRecord policyRecord) {
         HostTlsPolicy policy = new HostTlsPolicy();
         policy.setId(policyRecord.getId());

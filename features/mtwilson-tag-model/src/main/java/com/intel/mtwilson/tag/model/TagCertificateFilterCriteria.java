@@ -5,8 +5,6 @@
 package com.intel.mtwilson.tag.model;
 
 import com.intel.mtwilson.core.common.tag.model.TagCertificate;
-import com.intel.dcsg.cpg.crypto.Sha1Digest;
-import com.intel.dcsg.cpg.crypto.Sha256Digest;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.mtwilson.repository.FilterCriteria;
 import com.intel.mtwilson.jaxrs2.DefaultFilterCriteria;
@@ -45,13 +43,4 @@ public class TagCertificateFilterCriteria extends DefaultFilterCriteria implemen
     public Date validAfter;
     @QueryParam("hardwareUuid")
     public UUID hardwareUuid;
-//    @Unchecked
-//    @QueryParam("sha1")
-//    public Sha1Digest sha1;
-//    @Unchecked
-//    @QueryParam("sha256")
-//    public Sha256Digest sha256;
-//    @QueryParam("revoked")
-//    public Boolean revoked;
-    
 }

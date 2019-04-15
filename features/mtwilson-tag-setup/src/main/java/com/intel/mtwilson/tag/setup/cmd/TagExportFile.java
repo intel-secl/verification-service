@@ -20,7 +20,6 @@ public class TagExportFile extends TagCommand {
     
     @Override
     public void execute(String[] args) throws Exception {
-        // file name, and either outfile or stdout
         if( args.length < 1 ) { throw new IllegalArgumentException("Usage: export-file <filename>"); }
         String filename = args[0];
         

@@ -5,7 +5,6 @@
 package com.intel.mtwilson.setup;
 
 import com.intel.mtwilson.configuration.ConfigurationProvider;
-import com.intel.dcsg.cpg.configuration.CommonsValveConfiguration;
 import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.configuration.EnvironmentConfiguration;
 import com.intel.dcsg.cpg.configuration.KeyTransformerConfiguration;
@@ -14,11 +13,6 @@ import com.intel.dcsg.cpg.configuration.PropertiesConfiguration;
 import com.intel.dcsg.cpg.configuration.ValveConfiguration;
 import com.intel.mtwilson.text.transform.AllCapsNamingStrategy;
 import java.io.IOException;
-//import org.apache.commons.configuration.CompositeConfiguration;
-//import org.apache.commons.configuration.Configuration;
-//import org.apache.commons.configuration.ConfigurationException;
-//import org.apache.commons.configuration.EnvironmentConfiguration;
-//import org.apache.commons.configuration.MapConfiguration;
 
 /**
  * This ConfigurationProvider should be used only by setup tasks because it
@@ -31,7 +25,6 @@ import java.io.IOException;
  */
 public class SetupConfigurationProvider implements ConfigurationProvider {
     private ConfigurationProvider delegate;
-//    private Configuration configuration;
     public SetupConfigurationProvider(ConfigurationProvider provider) {
         delegate = provider;
     }
@@ -50,8 +43,6 @@ public class SetupConfigurationProvider implements ConfigurationProvider {
 
         // use the valve to ensure that changes only go to the writable configuration (and not to system properties or environment)
         ValveConfiguration valve = new ValveConfiguration(composite, file);
-//        valve.setReadFrom(composite);
-//        valve.setWriteTo(file);
         return valve;
     }
 

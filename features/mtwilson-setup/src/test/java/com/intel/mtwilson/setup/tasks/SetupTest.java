@@ -29,18 +29,11 @@ public class SetupTest {
         CreateTlsCertificate createTlsCertificate = new CreateTlsCertificate();
         createTlsCertificate.setDnsAlternativeName("localhost");
         createTlsCertificate.setIpAlternativeName("127.0.0.1");
-//        createTlsCertificate.setTlsKeystorePassword("password"); // or use My.configuration()...
         tasks.add(createTlsCertificate);
         CreateSamlCertificate createSamlCertificate = new CreateSamlCertificate();
-//        createSamlCertificate.setSamlKeystorePassword("password");// or use My.configuration()...
         tasks.add(createSamlCertificate);
         tasks.add(new ConfigureDatabase());
         tasks.add(new InitDatabase());
-        
-        // see also CreateAdminUser in mtwilson-shiro-setup
-        
-//        tasks.add(new MigrateUsers());
-        
         return tasks;
     }
     

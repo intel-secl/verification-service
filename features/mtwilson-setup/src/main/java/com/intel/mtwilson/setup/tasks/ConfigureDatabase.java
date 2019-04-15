@@ -70,7 +70,6 @@ public class ConfigureDatabase extends LocalSetupTask {
         getConfiguration().set("mtwilson.db.driver", databaseDriver);
         getConfiguration().set("mtwilson.db.username", databaseUsername);
         getConfiguration().set("mtwilson.db.password", databasePassword);
-//        getConfiguration().setString("mtwilson.db.url", databaseUrl);
     }
 
     @Override

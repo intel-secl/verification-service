@@ -136,14 +136,11 @@ public class JdbcPasswordRealm extends AuthorizingRealm {
         log.debug("doGetAuthenticationInfo found user login password id {}", userLoginPassword.getId());
         SimplePrincipalCollection principals = new SimplePrincipalCollection();
         principals.add(new UserId(userLoginPassword.getUserId()), getName());
-//        principals.add(new Username(username), getName());
         if( usernameWithPermissions != null ) {
             principals.add(usernameWithPermissions, getName());
         }
         principals.add(new LoginPasswordId(user.getUsername(), userLoginPassword.getUserId(), userLoginPassword.getId()), getName());
 
-        //HashedPassword hashedPassword = new HashedPassword();
-        
         PasswordAuthenticationInfo info = new PasswordAuthenticationInfo();
         info.setPrincipals(principals);
         info.setCredentials(toHashedPassword(userLoginPassword));

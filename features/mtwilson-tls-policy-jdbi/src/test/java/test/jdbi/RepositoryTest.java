@@ -34,9 +34,8 @@ public class RepositoryTest {
             TlsPolicyRecord tlsPolicyRecord = new TlsPolicyRecord();
             tlsPolicyRecord.setId(new UUID());
             tlsPolicyRecord.setName("test policy 1");
-//            tlsPolicyRecord.setImpl("TRUST_KNOWN_CERTIFICATE");
             tlsPolicyRecord.setContentType("jks");
-            tlsPolicyRecord.setContent(/* keystore */ null);
+            tlsPolicyRecord.setContent(null);
             tlsPolicyRecord.setComment(null);
             
         dao.insertTlsPolicy(tlsPolicyRecord);

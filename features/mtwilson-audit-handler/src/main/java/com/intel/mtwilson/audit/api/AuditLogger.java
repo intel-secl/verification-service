@@ -9,11 +9,9 @@ import com.intel.mtwilson.audit.helper.AuditHandlerException;
 import com.intel.mtwilson.audit.data.AuditContext;
 import com.intel.mtwilson.audit.data.AuditLog;
 import com.intel.mtwilson.audit.data.AuditLogEntry;
-//import com.intel.mtwilson.audit.helper.AuditConfig;
 import com.intel.mtwilson.audit.helper.MtWilsonThreadLocal;
 
 import java.util.Date;
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,26 +22,7 @@ import org.slf4j.LoggerFactory;
  */
 public class AuditLogger {
     private static Logger log = LoggerFactory.getLogger(AuditLogger.class);
-//    private static boolean isAsyncEnabled = true; // AuditConfig.isAsyncEnabled();
-    
-    
-//    private static String AUDIT_LOGGER_JNDI= "";
-//    static{
-//        try {
-//        	
-//            logger.info("Before the JNDILookup");
-//            AUDIT_LOGGER_JNDI = String.format("java:global/%s/AuditAsyncWorker", (String) new InitialContext().lookup("java:app/AppName"));
-//            logger.info("JNDI Name for look up : {}", AUDIT_LOGGER_JNDI);
-//            logger.info("Async Mode -" + isAsyncEnabled);
-//            
-//        } catch (NamingException ex) {
-//            logger.error("Error while setting JNDI name for AuditLogger.", ex);
-//        }
-//    }
 
-
-
-    
     public void addLog(AuditLog log) throws AuditHandlerException{
         
         try {
@@ -53,8 +32,6 @@ public class AuditLogger {
             throw new AuditHandlerException(e);
         }
     }
-
-
 
     private AuditLogEntry getAuditLogEntry(AuditLog log) {
         AuditLogEntry auditLogEntry = new AuditLogEntry();
@@ -67,31 +44,9 @@ public class AuditLogger {
         return auditLogEntry;
     }
 
-    /*private void setSecurityCredentials(AuditLogEntry auditLogEntry) {
-        AuditContext auditContext =  MtWilsonThreadLocal.get();
-        
-        log.debug("Object from thread local " + auditContext);
-        if(auditContext != null){
-            //Need to handle the old auth scheme
-            auditLogEntry.setFingerPrint(auditContext.getName());
-            auditLogEntry.setTransactionId(auditContext.getTransactionUuid());
-        }else{
-            log.warn("No Audit context. Setting user as unknown.");
-            auditLogEntry.setFingerPrint("Unknown");
-            auditLogEntry.setTransactionId("Unknown");
-        }
-    }
-*/
     private AuditWorker getAuditWorker() throws NamingException {
         
         return new AuditAsyncWorker();
-//        if(isAsyncEnabled){
-//        	
-//            return (AuditWorker) new InitialContext().lookup(AUDIT_LOGGER_JNDI);
-//        }else{
-//            return new AuditAsyncWorker();
-//        }
-        
     }
     
     public String getAuditUserName() {

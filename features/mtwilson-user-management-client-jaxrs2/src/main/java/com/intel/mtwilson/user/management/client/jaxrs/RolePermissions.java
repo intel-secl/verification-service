@@ -10,10 +10,8 @@ import com.intel.mtwilson.user.management.rest.v2.model.RolePermissionFilterCrit
 import com.intel.mtwilson.user.management.rest.v2.model.RolePermission;
 import java.util.HashMap;
 import java.util.Properties;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
