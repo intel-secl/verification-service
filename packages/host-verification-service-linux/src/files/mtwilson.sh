@@ -469,12 +469,7 @@ case "$1" in
       result=$($JAVA_CMD $JAVA_OPTS com.intel.mtwilson.launcher.console.Main $*)
       result_exit_code=$?
       IFS=
-      result_with_log=`echo $result | grep -E  "^\[EL Info\]|^\[EL Warning\]"`
-      if [ "$result_with_log" == "" ]; then
-	echo $result
-      else
-	echo $result | grep -vE "^\[EL Info\]|^\[EL Warning\]"
-      fi
+      echo $result | grep -vE "^\[EL Info\]|^\[EL Warning\]"
       exit $result_exit_code
     fi
     ;;
