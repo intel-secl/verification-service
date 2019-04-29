@@ -12,8 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import com.intel.mtwilson.datatypes.ConnectionString;
 import java.net.MalformedURLException;
+import com.intel.mtwilson.core.common.datatypes.ConnectionString;
+
 /**
  *
  * @author jbuhacoff
