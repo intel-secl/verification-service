@@ -430,33 +430,37 @@ public class FlavorVerify extends QueueOperation {
                 String privacyCaCert = My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath();
                 String tagCaCert = My.configuration().getAssetTagCaCertificateFile().getAbsolutePath();
                 Verifier verifier = new Verifier(privacyCaCert, tagCaCert);
-                TrustReport individualTrustReport = verifier.verify(hostManifest, flavor);
+                List<FlavorMatchPolicy> flavorMatchPolicies= hostTrustRequirements.getFlavorMatchPolicy().getFlavorMatchPolicies();
+                for(FlavorMatchPolicy flavorMatchPolicy : flavorMatchPolicies) {
+                    if (flavorMatchPolicy.getFlavorPart().getValue().equals(flavor.getMeta().getDescription().getFlavorPart())) {
+                        TrustReport individualTrustReport = verifier.verify(hostManifest, flavor);
 
-                // if the flavor is trusted, add it to the collective trust report
-                // and store the flavor host link in the trust cache
-                if (individualTrustReport.isTrusted()) {
-                    log.debug("Flavor [{}] is trusted for host [{}]", flavorId.toString(), hostId.toString());
-                    if (collectiveTrustReport == null) {
-                        collectiveTrustReport = individualTrustReport;
-                    } else {
-                        collectiveTrustReport = addRuleResults(collectiveTrustReport, individualTrustReport.getResults());
-                    }
-                    
-                    // create a new flavor host link (trust cache record), only if it doesn't already exist
-                    createFlavorHostLink(flavorId, hostId);
-                } else {
-                    untrustedReports.getFlavorTrustReportList().add(new FlavorTrustReport(
-                            FlavorPart.valueOf(flavor.getMeta().getDescription().getFlavorPart()),
-                            flavorId,
-                            individualTrustReport));
-                    for (RuleResult result : individualTrustReport.getResults()) {
-                        for (Fault fault : result.getFaults()) {
-                            log.debug("Flavor [{}] did not match host [{}] due to fault: {}", flavorId.toString(), hostId.toString(), fault.toString());
+                        // if the flavor is trusted, add it to the collective trust report
+                        // and store the flavor host link in the trust cache
+                        if (individualTrustReport.isTrusted()) {
+                            log.debug("Flavor [{}] is trusted for host [{}]", flavorId.toString(), hostId.toString());
+                            if (collectiveTrustReport == null) {
+                                collectiveTrustReport = individualTrustReport;
+                            } else {
+                                collectiveTrustReport = addRuleResults(collectiveTrustReport, individualTrustReport.getResults());
+                            }
+
+                            // create a new flavor host link (trust cache record), only if it doesn't already exist
+                            createFlavorHostLink(flavorId, hostId);
+                        } else {
+                            untrustedReports.getFlavorTrustReportList().add(new FlavorTrustReport(
+                                    FlavorPart.valueOf(flavor.getMeta().getDescription().getFlavorPart()),
+                                    flavorId,
+                                    individualTrustReport));
+                            for (RuleResult result : individualTrustReport.getResults()) {
+                                for (Fault fault : result.getFaults()) {
+                                    log.debug("Flavor [{}] did not match host [{}] due to fault: {}", flavorId.toString(), hostId.toString(), fault.toString());
+                                }
+                            }
                         }
                     }
                 }
             }
-            
             // associate untrusted flavors with host
             for (FlavorPart flavorPart : untrustedReports.getFlavorParts()) {
                 log.debug("Processing untrusted trust report for flavor part: {}", flavorPart.name());
