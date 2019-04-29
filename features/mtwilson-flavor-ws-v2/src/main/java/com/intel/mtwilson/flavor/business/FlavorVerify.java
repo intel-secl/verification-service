@@ -18,10 +18,8 @@ import com.intel.mtwilson.features.queue.QueueOperation;
 import com.intel.mtwilson.flavor.business.policy.rule.RequiredFlavorTypeExists;
 import com.intel.mtwilson.flavor.business.policy.rule.RuleAllOfFlavors;
 import com.intel.mtwilson.flavor.data.MwHostCredential;
-import com.intel.mtwilson.flavor.model.FlavorMatchPolicyCollection;
-import com.intel.mtwilson.flavor.model.HostStatusInformation;
-import com.intel.mtwilson.flavor.model.HostTrustCache;
-import com.intel.mtwilson.flavor.model.HostTrustRequirements;
+import com.intel.mtwilson.flavor.model.*;
+
 import static com.intel.mtwilson.flavor.model.MatchPolicy.MatchType.ALL_OF;
 import static com.intel.mtwilson.flavor.model.MatchPolicy.Required.REQUIRED;
 import static com.intel.mtwilson.flavor.model.MatchPolicy.Required.REQUIRED_IF_DEFINED;
@@ -38,9 +36,6 @@ import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupFilterCriteria;
 import com.intel.mtwilson.flavor.rest.v2.model.Host;
 import com.intel.mtwilson.flavor.rest.v2.model.HostCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.HostFilterCriteria;
-import com.intel.mtwilson.flavor.model.FlavorTrustReport;
-import com.intel.mtwilson.flavor.model.FlavorTrustReportCollection;
-import com.intel.mtwilson.flavor.model.MatchPolicy;
 import com.intel.mtwilson.flavor.model.MatchPolicy.MatchType;
 import com.intel.mtwilson.flavor.rest.v2.model.HostStatus;
 import com.intel.mtwilson.flavor.rest.v2.model.HostStatusLocator;
@@ -380,33 +375,37 @@ public class FlavorVerify extends QueueOperation {
                 String privacyCaCert = My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath();
                 String tagCaCert = My.configuration().getAssetTagCaCertificateFile().getAbsolutePath();
                 Verifier verifier = new Verifier(privacyCaCert, tagCaCert);
-                TrustReport individualTrustReport = verifier.verify(hostManifest, flavor);
+                List<FlavorMatchPolicy> flavorMatchPolicies= hostTrustRequirements.getFlavorMatchPolicy().getFlavorMatchPolicies();
+                for(FlavorMatchPolicy flavorMatchPolicy : flavorMatchPolicies) {
+                    if (flavorMatchPolicy.getFlavorPart().getValue().equals(flavor.getMeta().getDescription().getFlavorPart())) {
+                        TrustReport individualTrustReport = verifier.verify(hostManifest, flavor);
 
-                // if the flavor is trusted, add it to the collective trust report
-                // and store the flavor host link in the trust cache
-                if (individualTrustReport.isTrusted()) {
-                    log.debug("Flavor [{}] is trusted for host [{}]", flavorId.toString(), hostId.toString());
-                    if (collectiveTrustReport == null) {
-                        collectiveTrustReport = individualTrustReport;
-                    } else {
-                        collectiveTrustReport = addRuleResults(collectiveTrustReport, individualTrustReport.getResults());
-                    }
-                    
-                    // create a new flavor host link (trust cache record), only if it doesn't already exist
-                    createFlavorHostLink(flavorId, hostId);
-                } else {
-                    untrustedReports.getFlavorTrustReportList().add(new FlavorTrustReport(
-                            FlavorPart.valueOf(flavor.getMeta().getDescription().getFlavorPart()),
-                            flavorId,
-                            individualTrustReport));
-                    for (RuleResult result : individualTrustReport.getResults()) {
-                        for (Fault fault : result.getFaults()) {
-                            log.debug("Flavor [{}] did not match host [{}] due to fault: {}", flavorId.toString(), hostId.toString(), fault.toString());
+                        // if the flavor is trusted, add it to the collective trust report
+                        // and store the flavor host link in the trust cache
+                        if (individualTrustReport.isTrusted()) {
+                            log.debug("Flavor [{}] is trusted for host [{}]", flavorId.toString(), hostId.toString());
+                            if (collectiveTrustReport == null) {
+                                collectiveTrustReport = individualTrustReport;
+                            } else {
+                                collectiveTrustReport = addRuleResults(collectiveTrustReport, individualTrustReport.getResults());
+                            }
+
+                            // create a new flavor host link (trust cache record), only if it doesn't already exist
+                            createFlavorHostLink(flavorId, hostId);
+                        } else {
+                            untrustedReports.getFlavorTrustReportList().add(new FlavorTrustReport(
+                                    FlavorPart.valueOf(flavor.getMeta().getDescription().getFlavorPart()),
+                                    flavorId,
+                                    individualTrustReport));
+                            for (RuleResult result : individualTrustReport.getResults()) {
+                                for (Fault fault : result.getFaults()) {
+                                    log.debug("Flavor [{}] did not match host [{}] due to fault: {}", flavorId.toString(), hostId.toString(), fault.toString());
+                                }
+                            }
                         }
                     }
                 }
             }
-            
             // associate untrusted flavors with host
             for (FlavorPart flavorPart : untrustedReports.getFlavorParts()) {
                 log.debug("Processing untrusted trust report for flavor part: {}", flavorPart.name());
