@@ -6,7 +6,7 @@ package com.intel.mtwilson.tag.rest.v2.rpc;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.intel.dcsg.cpg.io.UUID;
-import com.intel.mtwilson.tag.model.X509AttributeCertificate;
+import com.intel.mtwilson.core.common.tag.model.X509AttributeCertificate;
 import com.intel.mtwilson.launcher.ws.ext.RPC;
 import com.intel.mtwilson.repository.RepositoryException;
 import com.intel.mtwilson.repository.RepositoryInvalidInputException;

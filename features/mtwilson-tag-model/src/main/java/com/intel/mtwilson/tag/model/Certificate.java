@@ -22,6 +22,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import org.apache.commons.codec.binary.Base64;
+import com.intel.mtwilson.core.common.tag.model.X509AttributeCertificate;
 
 /**
  *
