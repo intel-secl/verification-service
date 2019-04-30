@@ -9,7 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.intel.mtwilson.tag.model.X509AttributeCertificate;
+import com.intel.mtwilson.core.common.tag.model.X509AttributeCertificate;
 import java.io.IOException;
 
 /**

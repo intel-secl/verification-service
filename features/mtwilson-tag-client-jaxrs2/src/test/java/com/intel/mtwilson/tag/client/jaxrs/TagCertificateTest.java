@@ -13,7 +13,7 @@ import com.intel.mtwilson.core.common.tag.model.TagCertificate;
 import com.intel.mtwilson.tag.model.TagCertificateCollection;
 import com.intel.mtwilson.tag.model.TagCertificateCreateCriteria;
 import com.intel.mtwilson.tag.model.TagCertificateFilterCriteria;
-import com.intel.mtwilson.tag.model.X509AttributeCertificate;
+import com.intel.mtwilson.core.common.tag.model.X509AttributeCertificate;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.KeyPair;
