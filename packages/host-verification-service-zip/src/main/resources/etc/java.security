@@ -115,7 +115,7 @@ policy.ignoreIdentityScope=false
 #
 # Default keystore type.
 #
-keystore.type=jks
+keystore.type=pkcs12
 
 #
 # Class to instantiate as the system scope:

@@ -198,7 +198,7 @@ private static Properties getClientProperties() {
 +---
 private static Properties getClientProperties() {
 
-        String keystorePath = Folders.configuration() + File.separator + "keystore.jks";
+        String keystorePath = Folders.configuration() + File.separator + "keystore.p12";
         File keyStoreFile = new File(keystorePath);
 	Properties properties = new Properties();
 	properties.setProperty("mtwilson.api.url", "https://server.com:8443/mtwilson/v2");
