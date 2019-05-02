@@ -47,7 +47,7 @@ public class CreateSamlCertificate extends LocalSetupTask {
     public static final String SAML_KEY_PASSWORD = "saml.key.password";
 
     public String getSamlKeystoreFile() {
-        return getConfiguration().get(SAML_KEYSTORE_FILE, My.configuration().getDirectoryPath() + File.separator + "mtwilson-saml.jks");
+        return getConfiguration().get(SAML_KEYSTORE_FILE, My.configuration().getDirectoryPath() + File.separator + "mtwilson-saml.p12");
     }
 
     public void setSamlKeystoreFile(String samlKeystoreFile) {

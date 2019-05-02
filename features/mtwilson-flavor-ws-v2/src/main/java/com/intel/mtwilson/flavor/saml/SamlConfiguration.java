@@ -59,7 +59,7 @@ public class SamlConfiguration {
 
     public File getSamlKeystoreFile() {
         if (keystoreFile == null) {
-            String keystorePath = conf.getString(SAML_KEYSTORE_FILE, "SAML.jks");
+            String keystorePath = conf.getString(SAML_KEYSTORE_FILE, "SAML.p12");
             keystoreFile = new File(keystorePath);
 
             if (!keystoreFile.isAbsolute()) {
