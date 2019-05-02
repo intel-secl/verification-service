@@ -36,6 +36,26 @@
     </listener>
 -->
     <filter>
+        <filter-name>HeaderFilter</filter-name>
+        <filter-class>org.eclipse.jetty.servlets.HeaderFilter</filter-class>
+        <init-param>
+            <param-name>headerConfig</param-name>
+            <param-value>
+                set Content-Security-Policy: default-src 'none'; object-src 'none'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; connect-src 'self'; img-src 'self'; style-src 'self';,
+                set X-Frame-Options: DENY,
+                "add Cache-Control: no-cache, no-store, must-revalidate",
+                setDate Expires: 604800000,
+                addDate Date: 0
+            </param-value>
+        </init-param>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>HeaderFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
         <filter-name>RepeatableRequestFilter</filter-name>
         <filter-class>com.intel.mtwilson.servlet.RepeatableRequestFilter</filter-class>
     </filter>

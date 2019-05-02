@@ -184,6 +184,10 @@
             <groupId>com.intel.mtwilson.util</groupId>
             <artifactId>mtwilson-util-jersey2</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlets</artifactId>
+        </dependency>
         <!--        <dependency>
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-feature-xml</artifactId>
