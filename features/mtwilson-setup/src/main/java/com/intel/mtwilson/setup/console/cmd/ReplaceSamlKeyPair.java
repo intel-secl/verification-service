@@ -30,6 +30,7 @@ import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
@@ -69,7 +70,7 @@ public class ReplaceSamlKeyPair extends InteractiveCommand {
         
         String keystorePath = configuration.get(SAML_KEYSTORE_FILE, null);
         if (keystorePath == null) {
-            keystorePath = Folders.configuration() + File.separator + "SAML.jks";
+            keystorePath = Folders.configuration() + File.separator + "SAML.p12";
         } else if (!Paths.get(keystorePath).isAbsolute()) {
             keystorePath = Folders.configuration() + File.separator + keystorePath;
         }
@@ -89,7 +90,7 @@ public class ReplaceSamlKeyPair extends InteractiveCommand {
         if (samlKeyAlias == null) {
             samlKeyAlias = "samlkey1";
         }
-        try (PrivateKeyStore keystore = new PrivateKeyStore("JKS", new FileResource(keystoreFile), keystorePassword)) {
+        try (PrivateKeyStore keystore = new PrivateKeyStore(KeyStore.getDefaultType(), new FileResource(keystoreFile), keystorePassword)) {
             // remove existing keypair from keystore
             if (keystore.contains(samlKeyAlias)) {
                 try {

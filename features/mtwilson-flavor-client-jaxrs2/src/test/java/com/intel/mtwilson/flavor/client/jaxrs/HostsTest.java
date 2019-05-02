@@ -66,7 +66,7 @@ public class HostsTest {
     @Test
     public void testUpdateHosts() throws Exception {
 
-        String keystorePath = Folders.configuration() + File.separator + "keystore.jks";
+        String keystorePath = Folders.configuration() + File.separator + "keystore.p12";
         File keyStoreFile = new File(keystorePath);
         Properties properties = new Properties();
 

@@ -31,6 +31,7 @@ import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -76,7 +77,7 @@ public class ReplaceTlsKeyPair extends InteractiveCommand {
         
         String keystorePath = configuration.get(JAVAX_NET_SSL_KEYSTORE, null);
         if (keystorePath == null) {
-            keystorePath = Folders.configuration() + File.separator + "keystore.jks";
+            keystorePath = Folders.configuration() + File.separator + "keystore.p12";
         }
         File keystoreFile = new File(keystorePath);
         
@@ -96,7 +97,7 @@ public class ReplaceTlsKeyPair extends InteractiveCommand {
             throw new IllegalArgumentException("\nKeystore password is not set");
         }
         
-        try (PrivateKeyStore keystore = new PrivateKeyStore("JKS", new FileResource(keystoreFile), keystorePassword)) {
+        try (PrivateKeyStore keystore = new PrivateKeyStore(KeyStore.getDefaultType(), new FileResource(keystoreFile), keystorePassword)) {
             // remove existing keypair from keystore
             if (keystore.contains(TLS_ALIAS)) {
                 try {
