@@ -58,7 +58,7 @@ export DATABASE_VENDOR=postgres
 export POSTGRES_HOSTNAME=${DATABASE_HOSTNAME}
 export POSTGRES_PORTNUM=${DATABASE_PORTNUM}
 export POSTGRES_DATABASE=${DATABASE_SCHEMA}
-export POSTGRESQL_KEEP_PGPASS=${POSTGRESQL_KEEP_PGPASS:-true}
+export POSTGRESQL_KEEP_PGPASS=${POSTGRESQL_KEEP_PGPASS:-false}
 export INSTALL_PKGS=${INSTALL_PKGS:-"java logrotate postgres monit privacyca SERVICES PORTALS"}
 export MTWILSON_TLS_POLICY_ALLOW=${MTWILSON_TLS_POLICY_ALLOW:-"certificate,certificate-digest,public-key,public-key-digest,TRUST_FIRST_CERTIFICATE,INSECURE"}
 export MTWILSON_DEFAULT_TLS_POLICY_ID=${MTWILSON_DEFAULT_TLS_POLICY_ID:-"TRUST_FIRST_CERTIFICATE"}
@@ -497,8 +497,7 @@ if using_postgres; then
       echo "Setting postgresql shared buffers size to 400MB...";
       echo "shared_buffers = 400MB" >> $postgres_conf
     fi
-    #if [ "$POSTGRESQL_KEEP_PGPASS" != "true" ]; then   # Use this line after 2.0 GA, and verify compatibility with other commands
-    if [ "${POSTGRESQL_KEEP_PGPASS:-true}" == "false" ]; then
+    if [ "$POSTGRESQL_KEEP_PGPASS" != "true" ]; then
       if [ -f ${MTWILSON_CONFIGURATION}/.pgpass ]; then
         echo "Removing .pgpass file to prevent insecure database password storage in plaintext..."
         rm -f ${MTWILSON_CONFIGURATION}/.pgpass
