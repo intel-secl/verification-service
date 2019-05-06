@@ -4,7 +4,7 @@
  */
 package com.intel.mtwilson;
 
-import com.intel.mtwilson.crypto.Aes128;
+import com.intel.dcsg.cpg.crypto.Aes128;
 import com.intel.dcsg.cpg.crypto.CryptographyException;
 import com.intel.mtwilson.util.ASDataCipher;
 import com.intel.mtwilson.util.Aes128DataCipher;
