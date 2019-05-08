@@ -391,7 +391,6 @@ mtwilson_uninstall() {
     else
       rm -rf $MTWILSON_HOME/bin $MTWILSON_HOME/java $MTWILSON_HOME/features
     fi
-    rm -f ~/.pgpass
     groupdel $MTWILSON_USERNAME > /dev/null 2>&1
     userdel $MTWILSON_USERNAME > /dev/null 2>&1
 }

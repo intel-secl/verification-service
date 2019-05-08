@@ -981,6 +981,7 @@ mtwilson config mtwilson.host "$MTWILSON_SERVER" >/dev/null
 
 # delete the temporary setup environment variables file
 rm -f $MTWILSON_ENV/mtwilson-setup
+rm -f ~/.pgpass
 
 # 14. Register mtwilson as a startup script
 # RHEL 7.6 needs PID file for systemd startup service
