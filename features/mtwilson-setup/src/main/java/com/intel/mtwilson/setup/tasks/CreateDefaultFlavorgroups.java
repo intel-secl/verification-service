@@ -86,22 +86,32 @@ public class CreateDefaultFlavorgroups extends LocalSetupTask {
             validation("Automatic flavorgroup policy does not match");
         }
         
-        // look for unique flavorgroup
-        FlavorgroupCollection uniqueFlavorgroups = getFlavorgroupCollection(Flavorgroup.UNIQUE_FLAVORGROUP);
+        // look for host_unique flavorgroup
+        FlavorgroupCollection uniqueFlavorgroups = getFlavorgroupCollection(Flavorgroup.HOST_UNIQUE_FLAVORGROUP);
         
-        // validation fault if the automatic flavorgroup does not exist
+        // validation fault if the host_unique flavorgroup does not exist
         if (isFlavorgroupCollectionEmpty(uniqueFlavorgroups)) {
-            validation("Unique flavorgroup does not exist");
+            validation("host_unique flavorgroup does not exist");
         }
 
-        // look for unique flavorgroup
-        FlavorgroupCollection defaultSoftwareFlavorgroups = getFlavorgroupCollection(Flavorgroup.DEFAULT_SOFTWARE_FLAVORGROUP);
+        // look for platform_software flavorgroup
+        FlavorgroupCollection defaultSoftwareFlavorgroups = getFlavorgroupCollection(Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP);
 
-        // validation fault if the automatic flavorgroup does not exist
+        // validation fault if the platform_software flavorgroup does not exist
         if (isFlavorgroupCollectionEmpty(defaultSoftwareFlavorgroups)) {
             validation("Default software flavorgroup does not exist");
         } else if (!Flavorgroup.getIseclSoftwareFlavorMatchPolicy().equals(defaultSoftwareFlavorgroups.getFlavorgroups().get(0).getFlavorMatchPolicyCollection())) {
             validation("Default software flavorgroup policy does not match");
+        }
+
+        // look for workload_software flavorgroup
+        FlavorgroupCollection defaultWorkloadSoftwareFlavorgroups = getFlavorgroupCollection(Flavorgroup.WORKLOAD_SOFTWARE_FLAVORGROUP);
+
+        // validation fault if the workload_software flavorgroup does not exist
+        if (isFlavorgroupCollectionEmpty(defaultWorkloadSoftwareFlavorgroups)) {
+            validation("Default workload software flavorgroup does not exist");
+        } else if (!Flavorgroup.getIseclSoftwareFlavorMatchPolicy().equals(defaultWorkloadSoftwareFlavorgroups.getFlavorgroups().get(0).getFlavorMatchPolicyCollection())) {
+            validation("Default workload software flavorgroup policy does not match");
         }
     }
 
@@ -118,10 +128,11 @@ public class CreateDefaultFlavorgroups extends LocalSetupTask {
 
     @Override
     protected void execute() throws Exception {
-        // create the automatic and unique flavorgroups
+        // create the automatic, host_unique, platform_software and workload_software flavorgroups
         createOrUpdateFlavorgroup(Flavorgroup.AUTOMATIC_FLAVORGROUP, Flavorgroup.getAutomaticFlavorMatchPolicy());
-        createOrUpdateFlavorgroup(Flavorgroup.UNIQUE_FLAVORGROUP, null);
-        createOrUpdateFlavorgroup(Flavorgroup.DEFAULT_SOFTWARE_FLAVORGROUP, Flavorgroup.getIseclSoftwareFlavorMatchPolicy());
+        createOrUpdateFlavorgroup(Flavorgroup.HOST_UNIQUE_FLAVORGROUP, null);
+        createOrUpdateFlavorgroup(Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP, Flavorgroup.getIseclSoftwareFlavorMatchPolicy());
+        createOrUpdateFlavorgroup(Flavorgroup.WORKLOAD_SOFTWARE_FLAVORGROUP, Flavorgroup.getIseclSoftwareFlavorMatchPolicy());
     }
     
     private boolean testConnection() {

@@ -27,9 +27,10 @@ import static com.intel.mtwilson.flavor.model.MatchPolicy.Required.REQUIRED_IF_D
  */
 @JacksonXmlRootElement(localName="flavorgroup")
 public class Flavorgroup extends Document {
-    public static final String AUTOMATIC_FLAVORGROUP = "mtwilson_automatic";
-    public static final String UNIQUE_FLAVORGROUP = "mtwilson_unique";
-    public static final String DEFAULT_SOFTWARE_FLAVORGROUP = "mtwilson_default_software";
+    public static final String AUTOMATIC_FLAVORGROUP = "automatic";
+    public static final String HOST_UNIQUE_FLAVORGROUP = "host_unique";
+    public static final String PLATFORM_SOFTWARE_FLAVORGROUP = "platform_software";
+    public static final String WORKLOAD_SOFTWARE_FLAVORGROUP = "workload_software";
 
     private String name;
     private FlavorMatchPolicyCollection flavorMatchPolicyCollection;

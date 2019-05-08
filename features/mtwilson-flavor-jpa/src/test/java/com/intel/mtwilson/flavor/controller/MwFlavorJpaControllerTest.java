@@ -96,9 +96,9 @@ public class MwFlavorJpaControllerTest {
         System.out.println(String.format("Successfully deserialized file to host manifest with host name: %s", hostManifest.getHostInfo().getHostName()));
         PlatformFlavorFactory factory = new PlatformFlavorFactory();
         PlatformFlavor platformFlavor = factory.getPlatformFlavor(hostManifest, null);
-        Flavor flavorPlatform = mapper.readValue(platformFlavor.getFlavorPart(PLATFORM.getValue()), Flavor.class);
-        Flavor flavorOs = mapper.readValue(platformFlavor.getFlavorPart(OS.getValue()), Flavor.class);
-        Flavor flavorHostUnique = mapper.readValue(platformFlavor.getFlavorPart(HOST_UNIQUE.getValue()), Flavor.class);
+        Flavor flavorPlatform = mapper.readValue(platformFlavor.getFlavorPart(PLATFORM.getValue()).get(0), Flavor.class);
+        Flavor flavorOs = mapper.readValue(platformFlavor.getFlavorPart(OS.getValue()).get(0), Flavor.class);
+        Flavor flavorHostUnique = mapper.readValue(platformFlavor.getFlavorPart(HOST_UNIQUE.getValue()).get(0), Flavor.class);
 
         for (int i = 1; i <= 5; i++) {
             // PLATFORM

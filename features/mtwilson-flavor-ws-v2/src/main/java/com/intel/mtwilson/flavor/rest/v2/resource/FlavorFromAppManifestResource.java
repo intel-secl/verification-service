@@ -23,7 +23,6 @@ import com.intel.wml.manifest.xml.Manifest;
 import com.intel.wml.manifest.xml.ManifestRequest;
 import com.intel.wml.measurement.xml.Measurement;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
-
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -31,8 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.intel.mtwilson.core.flavor.SoftwareFlavor.DEFAULT_FLAVOR_PREFIX;
+import com.intel.mtwilson.core.common.model.SoftwareFlavorPrefix;
 /**
  *
  *
@@ -66,14 +64,17 @@ public class FlavorFromAppManifestResource {
             Flavor flavor = mapper.readValue(softwareFlavor.getSoftwareFlavor(), Flavor.class);
 
             // Add Flavor to the Flavorgroup
-            Map<String, Flavor> flavorPartFlavorMap = new HashMap<>();
-            flavorPartFlavorMap.put(FlavorPart.SOFTWARE.getValue(), flavor);
+            Map<String, List<Flavor>> flavorPartFlavorMap = new HashMap<>();
+            List<Flavor> flavors = new ArrayList();
+            flavors.add(flavor);
+            flavorPartFlavorMap.put(FlavorPart.SOFTWARE.getValue(), flavors);
             List<String> partialFlavorTypes = new ArrayList();
             partialFlavorTypes.add(FlavorPart.SOFTWARE.getValue());
 
             Flavorgroup flavorgroup = FlavorGroupUtils.getFlavorGroupByName(HostConnectorUtils.getFlavorgroupName(manifestRequest.getFlavorgroupName()));
             if(flavorgroup == null) {
-                flavorgroup = FlavorGroupUtils.createFlavorGroupByName(manifestRequest.getFlavorgroupName());            }
+                flavorgroup = FlavorGroupUtils.createFlavorGroupByName(manifestRequest.getFlavorgroupName());            
+            }
             new FlavorResource().addFlavorToFlavorgroup(flavorPartFlavorMap, flavorgroup.getId());
             return flavor;
         } catch(Exception ex) {
@@ -92,7 +93,8 @@ public class FlavorFromAppManifestResource {
     }
 
     private void validateDefaultManifest(Manifest manifest){
-        if (manifest.getLabel().startsWith(DEFAULT_FLAVOR_PREFIX)){
+        if (manifest.getLabel().contains(SoftwareFlavorPrefix.DEFAULT_APPLICATION_FLAVOR_PREFIX.getValue())
+                || manifest.getLabel().contains(SoftwareFlavorPrefix.DEFAULT_WORKLOAD_FLAVOR_PREFIX.getValue())){
             log.error("Default manifest cannot be provided for flavor creation");
             throw new WebApplicationException("Default manifest cannot be provided for flavor creation", 400);
         }

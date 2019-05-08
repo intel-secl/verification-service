@@ -75,8 +75,8 @@ public class Flavors extends MtWilsonClient {
      * If the flavor content is provided, the flavor parameter must be set in the request. If the flavor is being imported from a 
      * host, the host connection string must be specified.
      * 
-     * If a flavor group is not specified, the flavor(s) created will be assigned to the default “mtwilson_automatic” flavor group, 
-     * with the exception of the host unique flavors, which are associated with the “mtwilson_unique” flavor group. If a flavor group 
+     * If a flavor group is not specified, the flavor(s) created will be assigned to the default “automatic” flavor group, 
+     * with the exception of the host unique flavors, which are associated with the “host_unique” flavor group. If a flavor group 
      * is specified and does not already exist, it will be created with a default flavor match policy.
      * 
      * Partial flavor types can be specified as an array input. In this fashion, the user can choose which flavor types to import from 
@@ -113,7 +113,7 @@ public class Flavors extends MtWilsonClient {
      *                                          needed in this case.
      * 
      *          flavorgroup_name(optional)      Flavor group name that the created flavor(s) will be associated with. If not provided, 
-     *                                          created flavor will be associated with mtwilson_automatic flavor group.
+     *                                          created flavor will be associated with automatic flavor group.
      * 
      *          partial_flavor_types(optional)  List array input of flavor types to be imported from a host. Partial flavor type can be 
      *                                          any of the following: PLATFORM, OS, ASSET_TAG, HOST_UNIQUE, SOFTWARE (BIOS is deprecated). Can be provided

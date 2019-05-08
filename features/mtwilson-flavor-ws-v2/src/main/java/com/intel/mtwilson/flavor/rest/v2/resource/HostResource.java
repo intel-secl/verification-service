@@ -66,13 +66,9 @@ import com.intel.mtwilson.flavor.rest.v2.model.FlavorHostLinkFilterCriteria;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkFilterCriteria;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorHostLinkRepository;
 import com.intel.mtwilson.i18n.HostState;
-
 import static com.intel.mtwilson.i18n.HostState.QUEUE;
-
 import com.intel.mtwilson.core.common.datatypes.ConnectionString;
-
 import static com.intel.mtwilson.features.queue.model.QueueState.NEW;
-
 import com.intel.mtwilson.flavor.controller.MwHostStatusJpaController;
 import com.intel.mtwilson.flavor.controller.MwQueueJpaController;
 import com.intel.mtwilson.flavor.data.MwHostStatus;
@@ -87,7 +83,7 @@ import com.intel.mtwilson.tls.policy.model.HostTlsPolicy;
 import com.intel.mtwilson.tls.policy.model.HostTlsPolicyLocator;
 import com.intel.mtwilson.tls.policy.TlsPolicyDescriptor;
 import com.intel.mtwilson.tls.policy.TlsProtection;
-
+import com.intel.mtwilson.core.common.model.HostComponents;
 import java.net.MalformedURLException;
 import java.security.PublicKey;
 import java.util.ArrayList;
@@ -186,9 +182,13 @@ public class HostResource {
                 }
             }
 
-            // Link to default software group if host is linux
-            if (hostInfo != null && validateIseclSoftwareFlavor(hostInfo.getOsName()))
-                flavorgroupNames.add(Flavorgroup.DEFAULT_SOFTWARE_FLAVORGROUP);
+            // Link to default software and workload groups if host is linux
+            if (hostInfo != null && validateIseclSoftwareFlavor(hostInfo.getOsName())){
+                if(hostInfo.getInstalledComponents().contains(HostComponents.TAGENT.getValue()))
+                    flavorgroupNames.add(Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP);
+                if(hostInfo.getInstalledComponents().contains(HostComponents.WLAGENT.getValue()))
+                    flavorgroupNames.add(Flavorgroup.WORKLOAD_SOFTWARE_FLAVORGROUP);
+            }
 
             FlavorgroupLocator flavorgroupLocator = new FlavorgroupLocator();
             for (String flavorgroupName : flavorgroupNames) {

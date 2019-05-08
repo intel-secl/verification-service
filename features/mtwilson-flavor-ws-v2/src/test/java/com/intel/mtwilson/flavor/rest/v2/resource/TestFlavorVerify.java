@@ -68,9 +68,11 @@ public class TestFlavorVerify {
         //TODO: add code to retrieve tag certificate from mw_tag_certificate
         PlatformFlavor platformFlavor = factory.getPlatformFlavor(hostManifest, null);
         for (String flavorPart : platformFlavor.getFlavorPartNames()){
-            Flavor flavor = mapper.readValue(platformFlavor.getFlavorPart(flavorPart), Flavor.class);
-            flavors.add(flavor);  
-            System.out.println(mapper.writeValueAsString(flavor));
+             for(String flavorStr : platformFlavor.getFlavorPart(flavorPart)) {
+                Flavor flavor = mapper.readValue(flavorStr, Flavor.class);
+                System.out.println(mapper.writeValueAsString(flavor));
+                flavors.add(flavor);
+            } 
         }
     }
     

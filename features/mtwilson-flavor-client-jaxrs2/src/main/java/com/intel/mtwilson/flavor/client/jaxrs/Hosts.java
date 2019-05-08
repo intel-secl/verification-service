@@ -68,7 +68,7 @@ public class Hosts extends MtWilsonClient {
      * A connection string and name for the host must be specified. This name is the value the Host Verification Service 
      * (HVS) uses to keep track of the host. It does not have to be the actual host name or IP address of the server.
      * 
-     * If a flavor group is not specified, the host created will be assigned to the default “mtwilson_automatic” flavor 
+     * If a flavor group is not specified, the host created will be assigned to the default “automatic” flavor 
      * group. If a flavor group is specified and does not already exist, it will be created with a default flavor match 
      * policy.
      * 

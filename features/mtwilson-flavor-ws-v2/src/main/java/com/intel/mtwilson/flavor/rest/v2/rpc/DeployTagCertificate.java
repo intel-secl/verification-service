@@ -36,8 +36,7 @@ import com.intel.mtwilson.core.common.tag.model.X509AttributeCertificate;
 import com.intel.mtwilson.tag.rest.v2.repository.TagCertificateRepository;
 import com.intel.mtwilson.tls.policy.TlsPolicyDescriptor;
 import com.intel.mtwilson.tls.policy.factory.TlsPolicyFactoryUtil;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.intel.mtwilson.core.flavor.common.FlavorPart.ASSET_TAG;
 
@@ -123,12 +122,18 @@ public class DeployTagCertificate implements Runnable{
                 PlatformFlavorFactory flavorFactory = new PlatformFlavorFactory();
                 PlatformFlavor platformFlavor = flavorFactory.getPlatformFlavor(connectionString.getVendor().toString(), attrcert);
                 ObjectMapper mapper = JacksonObjectMapperProvider.createDefaultMapper(); 
-                Flavor flavor = mapper.readValue(platformFlavor.getFlavorPart(ASSET_TAG.getValue()), Flavor.class);
-                
-                // Add Flavor to the Flavorgroup
-                Map<String, Flavor> flavorPartFlavorMap = new HashMap<>();
-                flavorPartFlavorMap.put(ASSET_TAG.getValue(), flavor);
-                new FlavorResource().addFlavorToFlavorgroup(flavorPartFlavorMap, null);
+                if (!platformFlavor.getFlavorPart(ASSET_TAG.getValue()).get(0).isEmpty()) {
+                    Flavor flavor = mapper.readValue(platformFlavor.getFlavorPart(ASSET_TAG.getValue()).get(0), Flavor.class);
+                    // Add Flavor to the Flavorgroup
+                    Map<String, List<Flavor>> flavorPartFlavorMap = new HashMap<>();
+                    List<Flavor> flavors = new ArrayList();
+                    flavors.add(flavor);
+                    flavorPartFlavorMap.put(ASSET_TAG.getValue(), flavors);
+                    new FlavorResource().addFlavorToFlavorgroup(flavorPartFlavorMap, null);                    
+                } else {
+                    log.error("RPC: DeployTagCertificate - Failed to get platform flavor from asset tag certificate");
+                    throw new RepositoryInvalidInputException(locator);
+                }
             } else {
                 log.error("RPC: DeployTagCertificate - Failed to retreive certificate while trying to discover host by certificate ID.");
                 throw new RepositoryInvalidInputException(locator);

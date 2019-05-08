@@ -95,7 +95,7 @@ public class MwFlavorgroupJpaControllerTest {
         
         MwFlavorgroup mwFlavorgroupUnique = new MwFlavorgroup();
         mwFlavorgroupUnique.setId(new UUID().toString());
-        mwFlavorgroupUnique.setName(Flavorgroup.UNIQUE_FLAVORGROUP);
+        mwFlavorgroupUnique.setName(Flavorgroup.HOST_UNIQUE_FLAVORGROUP);
         mwFlavorgroupJpaController.create(mwFlavorgroupUnique);
         System.out.println(String.format("Unique flavorgroup [%s] created with name: %s", mwFlavorgroupUnique.getId(), mwFlavorgroupUnique.getName()));
 

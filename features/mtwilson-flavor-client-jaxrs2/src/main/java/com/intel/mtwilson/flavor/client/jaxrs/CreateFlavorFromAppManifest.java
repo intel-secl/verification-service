@@ -20,7 +20,7 @@ import java.util.Properties;
  * When a flavor is created, it is associated with a flavor group. This means that the measurements for that flavor type are deemed
  * acceptable to obtain a trusted status. If a host, associated with the same flavor group, matches the measurements contained within
  * that flavor, the host is trusted for that particular flavor category (dependent on the flavor group policy). If no flavor group name
- * is defined in input, flavor is, by default, associated with mtwilson_automatic flavor group.
+ * is defined in input, flavor is, by default, associated with automatic flavor group.
  *
  * A manifest is a list of files/directories/symlinks that are to be measured. The manifest provided can be used to create SOFTWARE
  * flavor only.
@@ -67,7 +67,7 @@ public class CreateFlavorFromAppManifest extends MtWilsonClient {
      * @param hostId id of the host on which the manifest needs to be deployed. If not used, connectionString must be provided.
      * @param manifest a XML with list of files, directories and symlinks.
      * @param flavorgroupName name of the flavor group to which the newly created flavor is to be associated. If not provided,
-     *                        newly created flavor is associated with mtwilson_automatic flavor group(Optional)
+     *                        newly created flavor is associated with automatic flavor group(Optional)
      *
      * @return <pre>SoftwareFlavor in JSON/YAML format with list of files, directories
      *  and symlinks with respective hash</pre>

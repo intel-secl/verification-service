@@ -13,12 +13,8 @@ import com.intel.mtwilson.core.flavor.PlatformFlavorFactory;
 import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.core.flavor.common.PlatformFlavorException;
 import com.intel.mtwilson.core.flavor.model.Flavor;
-
-import static com.intel.mtwilson.core.flavor.SoftwareFlavor.DEFAULT_FLAVOR_PREFIX;
 import static com.intel.mtwilson.core.flavor.common.FlavorPart.*;
-
 import com.intel.mtwilson.core.flavor.model.Meta;
-import com.intel.mtwilson.flavor.model.FlavorMatchPolicyCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorCreateCriteria;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorFilterCriteria;
@@ -52,6 +48,7 @@ import com.intel.mtwilson.jaxrs2.provider.JacksonObjectMapperProvider;
 import com.intel.mtwilson.launcher.ws.ext.V2;
 import com.intel.mtwilson.core.common.datatypes.ConnectionString;
 import com.intel.mtwilson.core.common.model.HostManifest;
+import com.intel.mtwilson.core.common.model.SoftwareFlavorPrefix;
 import com.intel.mtwilson.core.common.tag.model.X509AttributeCertificate;
 import com.intel.mtwilson.core.common.tag.model.TagCertificate;
 import com.intel.mtwilson.flavor.runnable.AddFlavorgroupHostsToFlavorVerifyQueue;
@@ -74,10 +71,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
 import org.apache.shiro.authz.annotation.RequiresPermissions;
-
-import static com.intel.mtwilson.core.flavor.common.FlavorPart.*;
 
 /**
  *
@@ -229,7 +223,7 @@ public class FlavorResource {
     
     private FlavorCollection createOne(FlavorCreateCriteria item) throws IOException, Exception {
         X509AttributeCertificate attributeCertificate = null;
-        Map<String, Flavor> flavorPartFlavorMap = new HashMap<>();
+        Map<String, List<Flavor>> flavorPartFlavorMap = new HashMap<>();
         List<String> partialFlavorTypes = new ArrayList();
         // get flavor from host or from input
         PlatformFlavor platformFlavor = null;
@@ -276,9 +270,14 @@ public class FlavorResource {
                     if(flavor.getMeta().getDescription().getFlavorPart().equalsIgnoreCase(DEPRECATED_FLAVOR_PART_BIOS)) {
                         flavor.getMeta().getDescription().setFlavorPart(FlavorPart.PLATFORM.getValue());
                     }
-
                     validateFlavorMetaContent(flavor.getMeta());
-                    flavorPartFlavorMap.put(flavor.getMeta().getDescription().getFlavorPart(), flavor);
+                    if(flavorPartFlavorMap.containsKey(flavor.getMeta().getDescription().getFlavorPart())) {
+                        flavorPartFlavorMap.get(flavor.getMeta().getDescription().getFlavorPart()).add(flavor);
+                    } else {
+                        List<Flavor> flavorsList = new ArrayList();
+                        flavorsList.add(flavor);
+                        flavorPartFlavorMap.put(flavor.getMeta().getDescription().getFlavorPart(), flavorsList);
+                    }
                     partialFlavorTypes.add(flavor.getMeta().getDescription().getFlavorPart());
                 }
             }
@@ -424,26 +423,31 @@ public class FlavorResource {
      * associated
      * @return createdFlavor Created flavor
      */
-    public FlavorCollection addFlavorToFlavorgroup(Map<String, Flavor> flavorObjCollection, UUID flavorgroupId) {
+    public FlavorCollection addFlavorToFlavorgroup(Map<String, List<Flavor>> flavorObjCollection, UUID flavorgroupId) {
         FlavorCollection returnFlavors = new FlavorCollection();
         Collection<UUID> flavorIds = new ArrayList<>();
 
-        for (Map.Entry<String, Flavor> flavorObj : flavorObjCollection.entrySet()) {
-            Flavor flavorPart = new FlavorRepository().create(flavorObj.getValue());
-            returnFlavors.getFlavors().add(flavorPart);
-
-            // If the flavor part is HOST_UNIQUE OR ASSET_TAG, then we associate it with the mtwilson_unique group name
-            if (flavorObj.getKey().equalsIgnoreCase(ASSET_TAG.getValue())) {
-                addFlavorToUniqueFlavorgroup(flavorPart, true);
-            } else if (flavorObj.getKey().equalsIgnoreCase(HOST_UNIQUE.getValue())) {
-                addFlavorToUniqueFlavorgroup(flavorPart, false);
-            } else if (flavorObj.getKey().equalsIgnoreCase(FlavorPart.SOFTWARE.getValue()) &&
-                    flavorObj.getValue().getMeta().getDescription().getLabel().startsWith(DEFAULT_FLAVOR_PREFIX)) {
-                addFlavorToIseclSoftwareFlavorgroup(flavorPart);
-            } else {
-                // For other flavor parts, we just store all the individual flavors first and finally do the association below.
-                // Other flavor parts include OS, PLATFORM, SOFTWARE
-                flavorIds.add(UUID.valueOf(flavorPart.getMeta().getId()));
+        for (Map.Entry<String, List<Flavor>> flavorObj : flavorObjCollection.entrySet()) {
+            for(Flavor flavor : flavorObj.getValue()) {
+                Flavor flavorCreated = new FlavorRepository().create(flavor);
+                returnFlavors.getFlavors().add(flavorCreated);      
+                // If the flavor part is HOST_UNIQUE OR ASSET_TAG, then we associate it with the host_unique group name
+                if (flavorObj.getKey().equalsIgnoreCase(ASSET_TAG.getValue())) {
+                    addFlavorToUniqueFlavorgroup(flavorCreated, true);
+                } else if (flavorObj.getKey().equalsIgnoreCase(HOST_UNIQUE.getValue())) {
+                    addFlavorToUniqueFlavorgroup(flavorCreated, false);
+                } else if (flavorObj.getKey().equalsIgnoreCase(SOFTWARE.getValue())) {
+                    if (flavor.getMeta().getDescription().getLabel().contains(SoftwareFlavorPrefix.DEFAULT_APPLICATION_FLAVOR_PREFIX.getValue())) {
+                        addFlavorToIseclSoftwareFlavorgroup(flavorCreated, Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP);
+                    }
+                    if (flavor.getMeta().getDescription().getLabel().contains(SoftwareFlavorPrefix.DEFAULT_WORKLOAD_FLAVOR_PREFIX.getValue())) {
+                        addFlavorToIseclSoftwareFlavorgroup(flavorCreated, Flavorgroup.WORKLOAD_SOFTWARE_FLAVORGROUP);
+                    }
+                } else {
+                    // For other flavor parts, we just store all the individual flavors first and finally do the association below.
+                    // Other flavor parts include OS, PLATFORM, SOFTWARE
+                    flavorIds.add(UUID.valueOf(flavorCreated.getMeta().getId()));
+                }
             }
         }
 
@@ -453,7 +457,7 @@ public class FlavorResource {
         }
 
         // For flavor parts other than HOST_UNIQUE & ASSET_TAG, we associate it with the specified flavor group, which can be either 
-        // mtwilson_automatic or a custom group name spcified by the end user.
+        // automatic or a custom group name spcified by the end user.
         for (UUID flavorId : flavorIds) {
             FlavorFlavorgroupLink flavorFlavorgroupLink = new FlavorFlavorgroupLink();
             flavorFlavorgroupLink.setFlavorId(flavorId);
@@ -463,7 +467,6 @@ public class FlavorResource {
 
         // Add hosts matching the flavorgroup to flavor verify queue in background
         new Thread(new AddFlavorgroupHostsToFlavorVerifyQueue(flavorgroupId, false)).start();
-
         return returnFlavors;
     }
     
@@ -478,14 +481,13 @@ public class FlavorResource {
     private void addFlavorToUniqueFlavorgroup(Flavor flavor, boolean forceUpdate) {
         // get flavor ID
         UUID flavorId = UUID.valueOf(flavor.getMeta().getId());
-        
         // find unique flavorgroup
         FlavorgroupLocator flavorgroupLocator = new FlavorgroupLocator();
-        flavorgroupLocator.name = Flavorgroup.UNIQUE_FLAVORGROUP;
+        flavorgroupLocator.name = Flavorgroup.HOST_UNIQUE_FLAVORGROUP;
         Flavorgroup uniqueFlavorgroup = new FlavorgroupRepository().retrieve(flavorgroupLocator);
         if (uniqueFlavorgroup == null) {
             Flavorgroup newFlavorgroup = new Flavorgroup();
-            newFlavorgroup.setName(Flavorgroup.UNIQUE_FLAVORGROUP);
+            newFlavorgroup.setName(Flavorgroup.HOST_UNIQUE_FLAVORGROUP);
             newFlavorgroup.setFlavorMatchPolicyCollection(null);
             uniqueFlavorgroup = new FlavorgroupRepository().create(newFlavorgroup);
         }
@@ -540,15 +542,15 @@ public class FlavorResource {
      * @param flavor Complete flavor.
      * report to be generated from the host directly
      */
-    private void addFlavorToIseclSoftwareFlavorgroup(Flavor flavor) {
+    private void addFlavorToIseclSoftwareFlavorgroup(Flavor flavor, String flavorgroupName) {
         // get flavor ID
         UUID flavorId = UUID.valueOf(flavor.getMeta().getId());
 
         // find unique flavorgroup
-        Flavorgroup iseclSoftwareFlavorgroup = FlavorGroupUtils.getFlavorGroupByName(Flavorgroup.DEFAULT_SOFTWARE_FLAVORGROUP);
+        Flavorgroup iseclSoftwareFlavorgroup = FlavorGroupUtils.getFlavorGroupByName(flavorgroupName);
         if (iseclSoftwareFlavorgroup == null) {
             Flavorgroup newFlavorgroup = new Flavorgroup();
-            newFlavorgroup.setName(Flavorgroup.DEFAULT_SOFTWARE_FLAVORGROUP);
+            newFlavorgroup.setName(flavorgroupName);
             newFlavorgroup.setFlavorMatchPolicyCollection(Flavorgroup.getIseclSoftwareFlavorMatchPolicy());
             iseclSoftwareFlavorgroup = new FlavorgroupRepository().create(newFlavorgroup);
         }
@@ -558,7 +560,7 @@ public class FlavorResource {
         flavorFlavorgroupLink.setFlavorId(flavorId);
         flavorFlavorgroupLink.setFlavorgroupId(iseclSoftwareFlavorgroup.getId());
         new FlavorFlavorgroupLinkRepository().create(flavorFlavorgroupLink);
-
+        
         // Add hosts matching the default flavorgroup to flavor verify queue in background and get updated host manifest
         new Thread(new AddFlavorgroupHostsToFlavorVerifyQueue(iseclSoftwareFlavorgroup.getId(), true)).start();
     }
@@ -570,8 +572,8 @@ public class FlavorResource {
      * @param flavorParts
      * @return 
      */
-    private Map<String, Flavor> retrieveFlavorCollection(PlatformFlavor platformFlavor, String flavorgroupId, Collection<String> flavorParts) {
-        Map<String, Flavor> flavorCollection = new HashMap<>();
+    private Map<String, List<Flavor>> retrieveFlavorCollection(PlatformFlavor platformFlavor, String flavorgroupId, Collection<String> flavorParts) {
+        Map<String, List<Flavor>> flavorCollection = new HashMap<>();
 
         if (platformFlavor == null || flavorgroupId == null) {
             throw new IllegalArgumentException("Platform flavor and flavorgroup ID must be specified");
@@ -584,8 +586,16 @@ public class FlavorResource {
         for (String flavorPart : flavorParts) {
             try {
                 ObjectMapper mapper = JacksonObjectMapperProvider.createDefaultMapper();
-                Flavor flavor = mapper.readValue(platformFlavor.getFlavorPart(flavorPart), Flavor.class);
-                flavorCollection.put(flavorPart, flavor);
+                for(String flavorStr : platformFlavor.getFlavorPart(flavorPart)) {
+                    Flavor flavor = mapper.readValue(flavorStr, Flavor.class);
+                    if(flavorCollection.containsKey(flavorPart)) {
+                        flavorCollection.get(flavorPart).add(flavor);                        
+                    } else {
+                        List<Flavor> flavors = new ArrayList();
+                        flavors.add(flavor);
+                        flavorCollection.put(flavorPart, flavors);
+                    }
+                }
             } catch (PlatformFlavorException pe) {
                 // This should be changed to warn , but Flavor library is throwing an exception when it does not find all flavor 
                 // types in the content provided. Bug# ISECL-2210.
@@ -594,7 +604,6 @@ public class FlavorResource {
                 throw new IllegalStateException("Error during creation of the flavors for the specified flavor parts", ex);
             }
         }
-        
         return flavorCollection;
     }  
 }

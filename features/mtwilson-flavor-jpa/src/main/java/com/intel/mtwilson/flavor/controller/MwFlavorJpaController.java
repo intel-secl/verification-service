@@ -433,7 +433,7 @@ public class MwFlavorJpaController implements Serializable {
                     "FROM mw_flavor as f " +
                     "INNER JOIN mw_link_flavor_flavorgroup as l ON f.id = l.flavor_id " +
                     "INNER JOIN mw_flavorgroup as fg ON l.flavorgroup_id = fg.id " +
-                    "WHERE fg.name = 'mtwilson_unique' " +
+                    "WHERE fg.name = 'host_unique' " +
                     "AND (" + buildFlavorPartQueryString(flavorType) + " " +
                     "AND LOWER(f.content -> 'meta' -> 'description' ->> 'hardware_uuid') = ?)");
             query.setParameter(1, hardwareUuid.toLowerCase());

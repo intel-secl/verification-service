@@ -164,7 +164,7 @@ public class FlavorgroupRepository {
         FlavorgroupLocator locator = new FlavorgroupLocator();
         locator.id = flavorgroupId;
 
-        if (item.getName() == null || (item.getFlavorMatchPolicyCollection() == null && !item.getName().equals(Flavorgroup.UNIQUE_FLAVORGROUP))) {
+        if (item.getName() == null || (item.getFlavorMatchPolicyCollection() == null && !item.getName().equals(Flavorgroup.HOST_UNIQUE_FLAVORGROUP))) {
             log.error("flavorgroup:create - flavorgroup name and flavor match policy must be specified");
             throw new RepositoryInvalidInputException(locator);
         }
@@ -201,8 +201,8 @@ public class FlavorgroupRepository {
         try {
             Flavorgroup obj = retrieve(locator);
             if (obj != null) {
-                if (obj.getName().equalsIgnoreCase(Flavorgroup.AUTOMATIC_FLAVORGROUP) || obj.getName().equalsIgnoreCase(Flavorgroup.UNIQUE_FLAVORGROUP)) {
-                    log.error("The flavorgroup is either mtwilson_automatic or mtwilson_unique, which cannot be deleted");
+                if (obj.getName().equalsIgnoreCase(Flavorgroup.AUTOMATIC_FLAVORGROUP) || obj.getName().equalsIgnoreCase(Flavorgroup.HOST_UNIQUE_FLAVORGROUP)) {
+                    log.error("The flavorgroup is either automatic or host_unique, which cannot be deleted");
                     throw new RepositoryDeleteException();
                 }
 

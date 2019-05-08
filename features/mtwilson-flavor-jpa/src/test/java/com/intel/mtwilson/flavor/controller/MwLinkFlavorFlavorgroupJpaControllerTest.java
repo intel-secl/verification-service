@@ -10,6 +10,8 @@ import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.flavor.data.MwFlavor;
 import com.intel.mtwilson.flavor.data.MwFlavorgroup;
 import com.intel.mtwilson.flavor.data.MwLinkFlavorFlavorgroup;
+import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
+import com.intel.mtwilson.repository.RepositorySearchException;
 import java.util.List;
 import java.util.Properties;
 import javax.persistence.EntityManagerFactory;
@@ -80,7 +82,7 @@ public class MwLinkFlavorFlavorgroupJpaControllerTest {
     @Test
     public void createTestData() throws Exception {
         MwFlavorgroup mwFlavorgroupAutomatic = mwFlavorgroupJpaController.findMwFlavorgroupByName(Flavorgroup.AUTOMATIC_FLAVORGROUP);
-        MwFlavorgroup mwFlavorgroupUnique = mwFlavorgroupJpaController.findMwFlavorgroupByName(Flavorgroup.UNIQUE_FLAVORGROUP);
+        MwFlavorgroup mwFlavorgroupUnique = mwFlavorgroupJpaController.findMwFlavorgroupByName(Flavorgroup.HOST_UNIQUE_FLAVORGROUP);
         List<MwFlavor> mwFlavorEntries = mwFlavorJpaController.findMwFlavorEntities();
         for (MwFlavor mwFlavor : mwFlavorEntries) {
             String flavorgroupId = null;
