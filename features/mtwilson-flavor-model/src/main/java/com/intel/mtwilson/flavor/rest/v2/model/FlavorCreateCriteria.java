@@ -6,8 +6,12 @@
 package com.intel.mtwilson.flavor.rest.v2.model;
 
 import com.intel.dcsg.cpg.validation.Validator;
+<<<<<<< HEAD
 import com.intel.mtwilson.validators.ConnectionStringValidator;
 
+=======
+import com.intel.mtwilson.core.common.validators.ConnectionStringValidator;
+>>>>>>> 7f025a7... Removed cyclic dependency of ConnectionString
 import java.util.List;
 
 /**

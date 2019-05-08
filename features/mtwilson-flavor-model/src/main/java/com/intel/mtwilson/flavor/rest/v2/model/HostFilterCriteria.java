@@ -9,7 +9,7 @@ import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.validation.Validator;
 import com.intel.mtwilson.jaxrs2.DefaultFilterCriteria;
 import com.intel.mtwilson.repository.FilterCriteria;
-import com.intel.mtwilson.validators.ConnectionStringValidator;
+import com.intel.mtwilson.core.common.validators.ConnectionStringValidator;
 import javax.ws.rs.QueryParam;
 
 /**
