@@ -6,7 +6,8 @@
 package com.intel.mtwilson.flavor.rest.v2.model;
 
 import com.intel.dcsg.cpg.validation.Validator;
-import com.intel.mtwilson.core.common.validators.ConnectionStringValidator;
+import com.intel.mtwilson.validators.ConnectionStringValidator;
+
 import java.util.List;
 
 /**
