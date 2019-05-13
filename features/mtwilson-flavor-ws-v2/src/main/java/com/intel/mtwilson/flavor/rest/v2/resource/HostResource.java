@@ -172,7 +172,6 @@ public class HostResource {
             }
 
             List<String> flavorgroupNames = new ArrayList<>();
-            List<UUID> flavorgroupIds = new ArrayList<>();
 
             if ((hostCreateCriteria.getFlavorgroupName() == null || hostCreateCriteria.getFlavorgroupName().isEmpty())) {
                 flavorgroupNames.add(Flavorgroup.AUTOMATIC_FLAVORGROUP);
@@ -188,20 +187,7 @@ public class HostResource {
                     flavorgroupNames.add(Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP);
                 if(hostInfo.getInstalledComponents().contains(HostComponents.WLAGENT.getValue()))
                     flavorgroupNames.add(Flavorgroup.WORKLOAD_SOFTWARE_FLAVORGROUP);
-            }
-
-            FlavorgroupLocator flavorgroupLocator = new FlavorgroupLocator();
-            for (String flavorgroupName : flavorgroupNames) {
-                flavorgroupLocator.name = flavorgroupName;
-                Flavorgroup flavorgroup = new FlavorgroupRepository().retrieve(flavorgroupLocator);
-
-                if (flavorgroup != null) {
-                    flavorgroupIds.add(flavorgroup.getId());
-                } else {
-                    flavorgroup = createNewFlavorGroup(flavorgroupName);
-                    flavorgroupIds.add(flavorgroup.getId());
-                }
-            }
+            }          
 
             // set all host parameters and create the host
             log.debug("Setting all the host obj parameters");
@@ -222,11 +208,8 @@ public class HostResource {
                 createTlsPolicy(tlsPolicyDescriptor.getPolicyType(), hostId);
             }
 
-            for (UUID flavorgroupId : flavorgroupIds) {
-                log.debug("Linking host {} with flavorgroup {}", host.getHostName(), flavorgroupId);
-                linkFlavorGroupToHost(flavorgroupId, hostId);
-            }
-
+            getFlavorIdsAndLinkToHost(flavorgroupNames, host.getId());
+            
             log.debug("Adding host to flavor-verify queue");
             // Since we are adding a new host, the forceUpdate flag should be set to true so that
             // we connect to the host and get the latest host manifest to verify against.
@@ -750,7 +733,7 @@ public class HostResource {
         return hostTlsPolicy;
     }
 
-    private boolean validateIseclSoftwareFlavor(String osName) {
+    public boolean validateIseclSoftwareFlavor(String osName) {
         String formattedOsName = osName.trim().toUpperCase();
         return (formattedOsName.equals("RHEL") || formattedOsName.equals("REDHATENTERPRISESERVER"));
     }
@@ -781,5 +764,23 @@ public class HostResource {
         }
         return tlsPolicyDescriptor;
     }
-
+    
+    public void getFlavorIdsAndLinkToHost(List<String> flavorgroupNames, UUID hostId) {
+        FlavorgroupLocator flavorgroupLocator = new FlavorgroupLocator();
+        List<UUID> flavorgroupIds = new ArrayList();
+        for (String flavorgroupName : flavorgroupNames) {
+            flavorgroupLocator.name = flavorgroupName;
+            Flavorgroup flavorgroup = new FlavorgroupRepository().retrieve(flavorgroupLocator);
+            if (flavorgroup != null) {
+                flavorgroupIds.add(flavorgroup.getId());
+            } else {
+                flavorgroup = createNewFlavorGroup(flavorgroupName);
+                flavorgroupIds.add(flavorgroup.getId());
+            }
+        }
+        for (UUID flavorgroupId : flavorgroupIds) {
+            log.debug("Linking host {} with flavorgroup {}", hostId, flavorgroupId);
+            linkFlavorGroupToHost(flavorgroupId, hostId);
+        }
+    }
 }

@@ -55,6 +55,7 @@ import com.intel.mtwilson.i18n.HostState;
 import static com.intel.mtwilson.i18n.HostState.CONNECTED;
 import static com.intel.mtwilson.i18n.HostState.QUEUE;
 import com.intel.mtwilson.core.common.datatypes.ConnectionString;
+import com.intel.mtwilson.core.common.model.HostComponents;
 import com.intel.mtwilson.core.common.model.HostManifest;
 import static com.intel.mtwilson.features.queue.model.QueueState.COMPLETED;
 import static com.intel.mtwilson.features.queue.model.QueueState.TIMEOUT;
@@ -237,12 +238,22 @@ public class FlavorVerify extends QueueOperation {
                     this.setQueueState(ERROR);
             }
             
-            // update host record with hardware UUID
+            // update host record with hardware UUID and default software flavorgroups
             if (hostManifest != null && hostManifest.getHostInfo() != null
                     && hostManifest.getHostInfo().getHardwareUuid() != null
-                    && !hostManifest.getHostInfo().getHardwareUuid().isEmpty()) {
+                    && !hostManifest.getHostInfo().getHardwareUuid().isEmpty()
+                    && !hostManifest.getHostInfo().getInstalledComponents().isEmpty()) {
+                List<String> flavorgroupNames = new ArrayList();
+                if (new HostResource().validateIseclSoftwareFlavor(hostManifest.getHostInfo().getOsName())){
+                    if(hostManifest.getHostInfo().getInstalledComponents().contains(HostComponents.TAGENT.getValue()))
+                        flavorgroupNames.add(Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP);
+                    if(hostManifest.getHostInfo().getInstalledComponents().contains(HostComponents.WLAGENT.getValue()))
+                        flavorgroupNames.add(Flavorgroup.WORKLOAD_SOFTWARE_FLAVORGROUP);
+                }
+                host.setFlavorgroupNames(flavorgroupNames);
                 host.setHardwareUuid(UUID.valueOf(hostManifest.getHostInfo().getHardwareUuid()));
                 new HostRepository().store(host);
+                new HostResource().getFlavorIdsAndLinkToHost(flavorgroupNames, host.getId());
             }
             
             // build host status info model for database insertion
