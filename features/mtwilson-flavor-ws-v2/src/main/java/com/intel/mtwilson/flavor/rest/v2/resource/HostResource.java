@@ -208,7 +208,7 @@ public class HostResource {
                 createTlsPolicy(tlsPolicyDescriptor.getPolicyType(), hostId);
             }
 
-            getFlavorIdsAndLinkToHost(flavorgroupNames, host.getId());
+            linkFlavorgroupsToHost(flavorgroupNames, host.getId());
             
             log.debug("Adding host to flavor-verify queue");
             // Since we are adding a new host, the forceUpdate flag should be set to true so that
@@ -765,7 +765,7 @@ public class HostResource {
         return tlsPolicyDescriptor;
     }
     
-    public void getFlavorIdsAndLinkToHost(List<String> flavorgroupNames, UUID hostId) {
+    public void linkFlavorgroupsToHost(List<String> flavorgroupNames, UUID hostId) {
         FlavorgroupLocator flavorgroupLocator = new FlavorgroupLocator();
         List<UUID> flavorgroupIds = new ArrayList();
         for (String flavorgroupName : flavorgroupNames) {

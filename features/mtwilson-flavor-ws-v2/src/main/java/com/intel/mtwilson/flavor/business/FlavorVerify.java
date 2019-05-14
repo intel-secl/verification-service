@@ -253,7 +253,7 @@ public class FlavorVerify extends QueueOperation {
                 host.setFlavorgroupNames(flavorgroupNames);
                 host.setHardwareUuid(UUID.valueOf(hostManifest.getHostInfo().getHardwareUuid()));
                 new HostRepository().store(host);
-                new HostResource().getFlavorIdsAndLinkToHost(flavorgroupNames, host.getId());
+                new HostResource().linkFlavorgroupsToHost(flavorgroupNames, host.getId());
             }
             
             // build host status info model for database insertion
