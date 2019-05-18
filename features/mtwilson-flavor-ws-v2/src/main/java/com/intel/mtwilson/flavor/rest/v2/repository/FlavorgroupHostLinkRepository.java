@@ -81,7 +81,11 @@ public class FlavorgroupHostLinkRepository {
     
     public FlavorgroupHostLink retrieve(FlavorgroupHostLinkLocator locator) {
         log.debug("Received request to retrieve flavorgroup host link");
-        if (locator == null || (locator.id == null && locator.pathId == null)) { return null; }
+        if (locator == null || (locator.id == null
+                && locator.pathId == null
+                && (locator.flavorgroupId == null || locator.hostId == null))) {
+            return null;
+        }
         
         try {
             MwLinkFlavorgroupHostJpaController mwLinkFlavorgroupHostJpaController = My.jpa().mwLinkFlavorgroupHost();

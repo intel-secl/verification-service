@@ -18,8 +18,6 @@ import com.intel.mtwilson.core.host.connector.HostConnector;
 import com.intel.mtwilson.core.host.connector.HostConnectorFactory;
 import com.intel.mtwilson.flavor.model.HostStatusInformation;
 import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupCollection;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupFilterCriteria;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLink;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkLocator;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupLocator;
@@ -29,7 +27,6 @@ import com.intel.mtwilson.flavor.rest.v2.model.HostFilterCriteria;
 import com.intel.mtwilson.flavor.rest.v2.model.HostLocator;
 import com.intel.mtwilson.flavor.rest.v2.model.HostStatus;
 import com.intel.mtwilson.flavor.rest.v2.model.HostStatusLocator;
-import com.intel.mtwilson.flavor.rest.v2.repository.FlavorRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorgroupHostLinkRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorgroupRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.HostRepository;
@@ -779,8 +776,16 @@ public class HostResource {
             }
         }
         for (UUID flavorgroupId : flavorgroupIds) {
-            log.debug("Linking host {} with flavorgroup {}", hostId, flavorgroupId);
-            linkFlavorGroupToHost(flavorgroupId, hostId);
+            if(!flavorGroupHostLinkExists(flavorgroupId, hostId)) {
+                log.debug("Linking host {} with flavorgroup {}", hostId, flavorgroupId);
+                linkFlavorGroupToHost(flavorgroupId, hostId);
+            }
         }
+    }
+
+    private boolean flavorGroupHostLinkExists(UUID flavorgroupId, UUID hostId) {
+        FlavorgroupHostLinkLocator locator = new FlavorgroupHostLinkLocator(flavorgroupId, hostId);
+        FlavorgroupHostLink link = new FlavorgroupHostLinkRepository().retrieve(locator);
+        return link != null;
     }
 }
