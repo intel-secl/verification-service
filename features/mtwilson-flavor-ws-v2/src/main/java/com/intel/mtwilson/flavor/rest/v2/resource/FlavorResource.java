@@ -132,7 +132,7 @@ public class FlavorResource {
     public Flavor retrieveFlavorXML(@BeanParam FlavorLocator locator, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse) {
         ValidationUtil.validate(locator);
         Flavor flavor = repository.retrieve(locator);
-        if (flavor.getMeta().getDescription().getFlavorPart().equals("SOFTWARE")) {
+        if (flavor != null && flavor.getMeta().getDescription().getFlavorPart().equals("SOFTWARE")) {
             flavor = FlavorUtils.updatePathSeparatorForXML(flavor);
         }
         return flavor;
@@ -184,7 +184,10 @@ public class FlavorResource {
     public FlavorCollection createFlavorsXML(FlavorCreateCriteria item) throws IOException, Exception {
         ValidationUtil.validate(item);
         FlavorCollection flavorCollection = createFlavors(item);
-        return FlavorGroupUtils.updatePathSeparatorForXML(flavorCollection);
+        if (flavorCollection != null) {
+            flavorCollection = FlavorGroupUtils.updatePathSeparatorForXML(flavorCollection);
+        }
+        return flavorCollection;
     }
 
     // TODO: Additional support for backward compatibility
