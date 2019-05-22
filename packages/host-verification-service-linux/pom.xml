@@ -9,7 +9,7 @@
     <parent>
         <groupId>com.intel.mtwilson.packages</groupId>
         <artifactId>mtwilson-packages</artifactId>
-        <version>5.0-SNAPSHOT</version>
+        <version>4.5-SNAPSHOT</version>
     </parent>
     
     <properties>
