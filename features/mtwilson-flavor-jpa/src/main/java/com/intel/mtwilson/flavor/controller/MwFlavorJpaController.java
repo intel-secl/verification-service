@@ -443,9 +443,10 @@ public class MwFlavorJpaController implements Serializable {
             Query query = em.createNativeQuery("SELECT COUNT(*) " +
                     "FROM mw_flavor as f " +
                     "INNER JOIN mw_link_flavor_flavorgroup as l ON f.id = l.flavor_id " +
-                    "INNER JOIN mw_flavorgroup as fg ON l.flavorgroup_id = fg.id " +
-                    "WHERE fg.id = ? AND " + buildFlavorPartQueryString(flavorType));
+                    "INNER JOIN mw_flavorgroup as fg ON l.flavorgroup_id = fg.id, json_array_elements(fg.flavor_type_match_policy ->'flavor_match_policies') policies " +
+                    "WHERE fg.id = ? AND policies ->> 'flavor_part' = ? AND " + buildFlavorPartQueryString(flavorType));
             query.setParameter(1, flavorgroupId.toString());
+            query.setParameter(2, flavorType);
             Long flavorCount = (Long) query.getResultList().get(0);
             if (flavorCount > 0) {
                 return true;
