@@ -55,7 +55,7 @@ public class CreateCertificateAuthorityKey extends AbstractSetupTask {
     
     private void createCaKey() throws NoSuchAlgorithmException, CertificateEncodingException, UnsupportedEncodingException, FileNotFoundException, IOException {
         // create a new key pair
-        KeyPair cakey = RsaUtil.generateRsaKeyPair(2048); // throws NoSuchAlgorithmException
+        KeyPair cakey = RsaUtil.generateRsaKeyPair(3072); // throws NoSuchAlgorithmException
         X509Builder builder = X509Builder.factory();
         X509Certificate cacert = builder.selfSigned(caDistinguishedName, cakey).build();
         if( cacert == null ) {

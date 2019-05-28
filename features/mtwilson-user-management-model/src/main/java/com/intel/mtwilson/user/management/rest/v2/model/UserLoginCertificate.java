@@ -11,6 +11,7 @@ import java.security.cert.X509Certificate;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.intel.dcsg.cpg.crypto.Sha1Digest;
 import com.intel.dcsg.cpg.crypto.Sha256Digest;
+import com.intel.dcsg.cpg.crypto.Sha384Digest;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.validation.Regex;
 import com.intel.dcsg.cpg.validation.RegexPatterns;
@@ -27,6 +28,7 @@ import java.util.List;
   certificate bytea NOT NULL,
   sha1_hash bytea NOT NULL,
   sha256_hash bytea NOT NULL,
+  sha384_hash bytea NOT NULL,
   expires timestamp DEFAULT NULL,
   enabled boolean NOT NULL DEFAULT '0',
   status varchar(128) NOT NULL DEFAULT 'Pending',
@@ -44,6 +46,7 @@ public class UserLoginCertificate extends CertificateDocument {
     private byte[] certificate;
     private byte[] sha1Hash;
     private byte[] sha256Hash;
+    private byte[] sha384Hash;
     private Date expires;
     private boolean enabled;
     private Status status;
@@ -88,12 +91,17 @@ public class UserLoginCertificate extends CertificateDocument {
         return sha256Hash;
     }
 
-    public void setSha256Hash(byte[] sha256Hash) {
-        this.sha256Hash = sha256Hash;
+    public void setSha256Hash(byte[] sha256Hash) { 
+	this.sha256Hash = sha256Hash; 
     }
 
-    
+    public byte[] getSha384Hash() {
+        return sha384Hash;
+    }
 
+    public void setSha384Hash(byte[] sha384Hash) { 
+	this.sha384Hash = sha384Hash; 
+    }
     
     public Date getExpires() {
         return expires;
@@ -161,6 +169,7 @@ public class UserLoginCertificate extends CertificateDocument {
             this.certificate = certificate.getEncoded();
             this.sha1Hash = Sha1Digest.digestOf(this.certificate).toByteArray();
             this.sha256Hash = Sha256Digest.digestOf(this.certificate).toByteArray();
+            this.sha384Hash = Sha384Digest.digestOf(this.certificate).toByteArray();
         }
         catch(CertificateEncodingException ce) {
             throw new X509CertificateEncodingException(ce, certificate);

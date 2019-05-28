@@ -6,6 +6,7 @@ package com.intel.mtwilson.shiro.jdbi;
 
 import com.intel.dcsg.cpg.crypto.Sha1Digest;
 import com.intel.dcsg.cpg.crypto.Sha256Digest;
+import com.intel.dcsg.cpg.crypto.Sha384Digest;
 import com.intel.mtwilson.shiro.*;
 import com.intel.dcsg.cpg.net.NetUtils;
 import com.intel.dcsg.cpg.rfc822.Rfc822Date;
@@ -180,9 +181,12 @@ public class JdbcCertificateRealm extends AuthorizingRealm {
                     log.debug("Cannot insert request log entry", e); // probably a duplicate, but could also be database connection issue
                     return null;
                 }
-                
-                if( Sha256Digest.isValid(fingerprint.getBytes())) {
-                    userLoginCertificate = dao.findUserLoginCertificateBySha256(fingerprint.getBytes()); 
+
+                if( Sha384Digest.isValid(fingerprint.getBytes())) {
+                    userLoginCertificate = dao.findUserLoginCertificateBySha384(fingerprint.getBytes());
+                }
+                else if( Sha256Digest.isValid(fingerprint.getBytes())) {
+                    userLoginCertificate = dao.findUserLoginCertificateBySha256(fingerprint.getBytes());
                 }
                 else if( Sha1Digest.isValid(fingerprint.getBytes())) {
                     userLoginCertificate = dao.findUserLoginCertificateBySha1(fingerprint.getBytes()); 

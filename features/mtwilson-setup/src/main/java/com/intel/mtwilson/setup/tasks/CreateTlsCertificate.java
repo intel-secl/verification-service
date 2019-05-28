@@ -153,7 +153,7 @@ public class CreateTlsCertificate extends LocalSetupTask {
         X509Certificate cacert = X509Util.decodePemCertificate(new String(combinedPrivateKeyAndCertPemBytes));
         
         // create a new key pair for TLS
-        KeyPair tlskey = RsaUtil.generateRsaKeyPair(2048);
+        KeyPair tlskey = RsaUtil.generateRsaKeyPair(3072);
         X509Builder builder = X509Builder.factory();
         builder.issuerName(cacert);
         builder.issuerPrivateKey(cakey);

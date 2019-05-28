@@ -6,6 +6,7 @@ package com.intel.mtwilson.user.management.rest.v2.repository;
 
 import com.intel.dcsg.cpg.crypto.Sha1Digest;
 import com.intel.dcsg.cpg.crypto.Sha256Digest;
+import com.intel.dcsg.cpg.crypto.Sha384Digest;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.mtwilson.user.management.rest.v2.model.UserLoginCertificate;
 import com.intel.mtwilson.user.management.rest.v2.model.UserLoginCertificateCollection;
@@ -54,7 +55,7 @@ public class UserLoginCertificateRepository implements DocumentRepository<UserLo
                 if (obj != null) {
                     if (criteria.filter == false) {
                         obj.setRoles(getAssociateRolesForLoginCertificateId(obj.getId()));
-                        objCollection.getUserLoginCertificates().add(obj);                                                
+                        objCollection.getUserLoginCertificates().add(obj);
                     } else if (criteria.id != null) {
                         if (obj.getId().equals(criteria.id)) {
                             obj.setRoles(getAssociateRolesForLoginCertificateId(obj.getId()));
@@ -85,10 +86,14 @@ public class UserLoginCertificateRepository implements DocumentRepository<UserLo
                             obj.setRoles(getAssociateRolesForLoginCertificateId(obj.getId()));
                             objCollection.getUserLoginCertificates().add(obj);
                         }
-                    } 
+                    } else if (criteria.sha384 != null) {
+                        if (Arrays.equals(obj.getSha384Hash(), criteria.sha384)) {
+                            obj.setRoles(getAssociateRolesForLoginCertificateId(obj.getId()));
+                            objCollection.getUserLoginCertificates().add(obj);
+                        }
+                    }
                 }
             }
-            
         } catch (Exception ex) {
             log.error("Error during user keystore search.", ex);
             throw new RepositorySearchException(ex, criteria);
@@ -190,8 +195,9 @@ public class UserLoginCertificateRepository implements DocumentRepository<UserLo
                 obj.setExpires(item.getX509Certificate().getNotAfter());
                 obj.setSha1Hash(Sha1Digest.digestOf(item.getCertificate()).toByteArray());
                 obj.setSha256Hash(Sha256Digest.digestOf(item.getCertificate()).toByteArray());
+                obj.setSha384Hash(Sha384Digest.digestOf(item.getCertificate()).toByteArray());
                 obj.setStatus(Status.PENDING);
-                loginDAO.insertUserLoginCertificate(obj.getId(), obj.getUserId(), obj.getCertificate(), obj.getSha1Hash(), obj.getSha256Hash(),
+                loginDAO.insertUserLoginCertificate(obj.getId(), obj.getUserId(), obj.getCertificate(), obj.getSha1Hash(), obj.getSha256Hash(), obj.getSha384Hash(),
                         obj.getExpires(), obj.isEnabled(), obj.getStatus(), obj.getComment());
                 log.debug("UserLoginCertificate:Create - Created the user login certificate for user with id {} successfully.", obj.getUserId());
             } else {

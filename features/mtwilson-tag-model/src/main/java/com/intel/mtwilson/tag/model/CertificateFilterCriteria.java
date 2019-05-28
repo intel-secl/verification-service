@@ -6,6 +6,7 @@ package com.intel.mtwilson.tag.model;
 
 import com.intel.dcsg.cpg.crypto.Sha1Digest;
 import com.intel.dcsg.cpg.crypto.Sha256Digest;
+import com.intel.dcsg.cpg.crypto.Sha384Digest;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.mtwilson.repository.FilterCriteria;
 import com.intel.mtwilson.jaxrs2.DefaultFilterCriteria;
@@ -50,6 +51,9 @@ public class CertificateFilterCriteria extends DefaultFilterCriteria implements 
     @Unchecked
     @QueryParam("sha256")
     public Sha256Digest sha256;
+    @Unchecked
+    @QueryParam("sha384")
+    public Sha384Digest sha384;
     @QueryParam("revoked")
     public Boolean revoked;
     

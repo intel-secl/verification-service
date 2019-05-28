@@ -7,7 +7,7 @@ package com.intel.mtwilson.flavor.rest.v2.rpc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import com.intel.dcsg.cpg.crypto.Sha256Digest;
+import com.intel.dcsg.cpg.crypto.Sha384Digest;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
 import com.intel.mtwilson.core.flavor.common.FlavorPart;
@@ -104,7 +104,7 @@ public class DeployTagCertificate implements Runnable{
                     throw new RepositoryInvalidInputException(locator);
                 }
 
-                Sha256Digest tagSha256 = Sha256Digest.digestOf(obj.getCertificate());
+                Sha384Digest tagSha384 = Sha384Digest.digestOf(obj.getCertificate());
                 String tlsPolicyId = hostObj.getTlsPolicyId();
                 //TlsPolicyFactory tlsPolicyFactory = TlsPolicyFactory.createFactory(hostInfo);
                 //TODO: replace tls policy with actual policy
@@ -113,7 +113,7 @@ public class DeployTagCertificate implements Runnable{
                 TlsPolicyDescriptor tlsPolicyDescriptor = new HostResource().getTlsPolicy(tlsPolicyId, connectionString, true);
                 TlsPolicy tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(tlsPolicyDescriptor);
                 //call asset tag provisioner to deploy asset tag to host (it will call host connector to deploy it)
-                deployAssetTagToHost(tagSha256, hostObj, tlsPolicy);
+                deployAssetTagToHost(tagSha384, hostObj, tlsPolicy);
                 
                 X509AttributeCertificate attrcert = X509AttributeCertificate.valueOf(obj.getCertificate());
                 
@@ -147,14 +147,14 @@ public class DeployTagCertificate implements Runnable{
         
     }
 
-    private void deployAssetTagToHost(Sha256Digest tagSha256, Host host, TlsPolicy tlsPolicy) throws IOException, Exception {
-        String certSha256 = tagSha256.toHexString();
+    private void deployAssetTagToHost(Sha384Digest tagSha384, Host host, TlsPolicy tlsPolicy) throws IOException, Exception {
+        String certSha384 = tagSha384.toHexString();
         try {
             //Assettag provisioner core library method call
             ProvisionAssetTag provisionTag = new ProvisionAssetTag();
             MwHostCredential  credential = My.jpa().mwHostCredential().findByHostId(host.getId().toString());
             provisionTag.provisionTagCertificate(String.format("%s;%s",host.getConnectionString(), credential.getCredential()),
-                                                 certSha256,
+                                                 certSha384,
                                                  tlsPolicy);
 
         } catch (IOException ex) {

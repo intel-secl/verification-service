@@ -52,7 +52,7 @@ public class TagCreateCaKey extends TagCommand {
         }
         
         // create a new key pair
-        KeyPair cakey = RsaUtil.generateRsaKeyPair(2048);
+        KeyPair cakey = RsaUtil.generateRsaKeyPair(3072);
         X509Builder builder = X509Builder.factory();
         X509Certificate cacert = builder.selfSigned(dn, cakey).expires(3650, TimeUnit.DAYS).build();
         if( cacert == null ) {

@@ -29,28 +29,31 @@ import com.intel.mtwilson.jdbi.util.UUIDArgument;
 @RegisterArgumentFactory({UUIDArgument.class,DateArgument.class})
 @RegisterMapper(CertificateResultMapper.class)
 public interface CertificateDAO extends Closeable {
-    @SqlUpdate("create table mw_tag_certificate (id char(36) primary key, certificate blob, sha1 char(40), sha256 char(64), subject varchar(255), issuer varchar(255), notBefore timestamp, notAfter timestamp, revoked boolean)")
+    @SqlUpdate("create table mw_tag_certificate (id char(36) primary key, certificate blob, sha1 char(40), sha256 char(64), sha384 char(96) subject varchar(255), issuer varchar(255), notBefore timestamp, notAfter timestamp, revoked boolean)")
     void create();
     
-    @SqlUpdate("insert into mw_tag_certificate (id, certificate, sha1, sha256, subject, issuer, notBefore, notAfter, revoked) "
-            + "values (:id, :certificate, :sha1, :sha256, :subject, :issuer, :notBefore, :notAfter, false)")
+    @SqlUpdate("insert into mw_tag_certificate (id, certificate, sha1, sha256, sha384, subject, issuer, notBefore, notAfter, revoked) "
+            + "values (:id, :certificate, :sha1, :sha256, :sha384, :subject, :issuer, :notBefore, :notAfter, false)")
     void insert(@Bind("id") UUID id, @Bind("certificate") byte[] certificate, @Bind("sha1") String sha1,
-    @Bind("sha256") String sha256, @Bind("subject") String subject, @Bind("issuer") String issuer, @Bind("notBefore") Date notBefore, @Bind("notAfter") Date notAfter);
+    @Bind("sha256") String sha256, @Bind("sha384") String sha384, @Bind("subject") String subject, @Bind("issuer") String issuer, @Bind("notBefore") Date notBefore, @Bind("notAfter") Date notAfter);
 
     @SqlUpdate("update mw_tag_certificate set revoked=:revoked where id=:id")
     void updateRevoked(@Bind("id") UUID id, @Bind("revoked") boolean revoked);
     
-    @SqlQuery("select id,certificate,sha1,sha256,subject,issuer,notBefore,notAfter,revoked from mw_tag_certificate where id=:id")
+    @SqlQuery("select id,certificate,sha1,sha256,sha384,subject,issuer,notBefore,notAfter,revoked from mw_tag_certificate where id=:id")
     Certificate findById(@Bind("id") UUID id);
     
     @SqlQuery("select * from mw_tag_certificate where LOWER(subject)=LOWER(:subject) order by notbefore desc limit 1")
     Certificate findLatestBySubject(@Bind("subject") String subject);
 
-    @SqlQuery("select id,certificate,sha1,sha256,subject,issuer,notBefore,notAfter,revoked from mw_tag_certificate where sha1=:sha1")
+    @SqlQuery("select id,certificate,sha1,sha256,sha384,subject,issuer,notBefore,notAfter,revoked from mw_tag_certificate where sha1=:sha1")
     Certificate findBySha1(@Bind("sha1") String sha1);
 
-    @SqlQuery("select id,certificate,sha1,sha256,subject,issuer,notBefore,notAfter,revoked from mw_tag_certificate where sha256=:sha256")
+    @SqlQuery("select id,certificate,sha1,sha256,sha384,subject,issuer,notBefore,notAfter,revoked from mw_tag_certificate where sha256=:sha256")
     Certificate findBySha256(@Bind("sha256") String sha256);
+
+    @SqlQuery("select id,certificate,sha1,sha256,sha384,subject,issuer,notBefore,notAfter,revoked from mw_tag_certificate where sha384=:sha384")
+    Certificate findBySha384(@Bind("sha384") String sha384);
     
     @SqlUpdate("delete from mw_tag_certificate where id=:id")
     void delete(@Bind("id") UUID id);

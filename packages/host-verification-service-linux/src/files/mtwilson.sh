@@ -174,8 +174,8 @@ mtwilson_saml_cert_report() {
 }
 
 mtwilson_tls_fingerprint() {
-  local sha256=`read_property_from_file tls.cert.sha256 "${MTWILSON_CONFIGURATION}/https.properties"`
-  echo "SHA256: $sha256"
+  local sha384=`read_property_from_file tls.cert.sha384 "${MTWILSON_CONFIGURATION}/https.properties"`
+  echo "SHA384: $sha384"
 }
 
 mtwilson_run() {
@@ -274,7 +274,7 @@ mtwilson_setup_keystore() {
   if [ -n "${samlkey_exists}" ]; then
     echo "SAML key with alias ${SAML_KEY_ALIAS} already exists in ${SAML_KEYSTORE_FILE}"
   else
-    $keytool -genkey -alias ${SAML_KEY_ALIAS} -keyalg RSA  -keysize 2048 -keystore ${SAML_KEYSTORE_FILE} -storepass ${SAML_KEYSTORE_PASSWORD} -dname "CN=mtwilson, OU=Mt Wilson, O=Intel, L=Folsom, ST=CA, C=US" -validity 3650  -keypass ${SAML_KEY_PASSWORD}
+    $keytool -genkey -alias ${SAML_KEY_ALIAS} -keyalg RSA  -keysize 3072 -keystore ${SAML_KEYSTORE_FILE} -storepass ${SAML_KEYSTORE_PASSWORD} -dname "CN=mtwilson, OU=Mt Wilson, O=Intel, L=Folsom, ST=CA, C=US" -validity 3650  -keypass ${SAML_KEY_PASSWORD}
   fi
   chmod 600 ${SAML_KEYSTORE_FILE}
   # export the SAML certificate so it can be easily provided to API clients

@@ -288,4 +288,4 @@ networkaddress.cache.negative.ttl=10
 krb5.kdc.bad.policy = tryLast
 
 # Do not disable ECDHE to avoid DH vulnerabilities; ISECL-2188, ISECL-2188, ISECL-3482
-jdk.tls.disabledAlgorithms=ECC, ECDH, DHE keySize < 2048, ECDHE keySize < 2048, RSA keySize < 2048
+jdk.tls.disabledAlgorithms=ECC, ECDH, DHE keySize < 2048, ECDHE keySize < 2048, RSA keySize < 3072

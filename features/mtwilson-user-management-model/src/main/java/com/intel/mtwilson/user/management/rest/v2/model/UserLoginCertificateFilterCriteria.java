@@ -28,5 +28,7 @@ public class UserLoginCertificateFilterCriteria extends DefaultFilterCriteria im
     public byte[] sha1;
     @QueryParam("sha256")
     public byte[] sha256;
+    @QueryParam("sha384")
+    public byte[] sha384;
     
 }

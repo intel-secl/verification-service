@@ -60,7 +60,7 @@ public class CreateEndorsementCA extends LocalSetupTask {
 
     @Override
     protected void execute() throws Exception {
-        TpmUtils.createCaP12(2048, endorsementIssuer, endorsementPassword, endorsementP12.getAbsolutePath(), endorsementCertificateValidityDays);
+        TpmUtils.createCaP12(3072, endorsementIssuer, endorsementPassword, endorsementP12.getAbsolutePath(), endorsementCertificateValidityDays);
         X509Certificate pcaCert = TpmUtils.certFromP12(endorsementP12.getAbsolutePath(), endorsementPassword);
         String self = X509Util.encodePemCertificate(pcaCert);
         

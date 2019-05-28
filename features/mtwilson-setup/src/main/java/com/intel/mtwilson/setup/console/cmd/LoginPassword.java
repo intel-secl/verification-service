@@ -160,7 +160,7 @@ public class LoginPassword implements Command {
                 userLoginPassword = new UserLoginPassword();
                 userLoginPassword.setId(new UUID());
                 userLoginPassword.setUserId(user.getId());
-                userLoginPassword.setAlgorithm("SHA256");
+                userLoginPassword.setAlgorithm("SHA384");
                 userLoginPassword.setIterations(1);
                 userLoginPassword.setSalt(RandomUtil.randomByteArray(8));
                 userLoginPassword.setPasswordHash(PasswordUtil.hash(guardedPassword.getInsPassword().getBytes(), userLoginPassword));
@@ -173,7 +173,7 @@ public class LoginPassword implements Command {
                 log.debug("Stored UserLoginPassword with ID: {}", userLoginPassword.getId());
             } else {
                 userLoginPassword.setUserId(user.getId());
-                userLoginPassword.setAlgorithm("SHA256");
+                userLoginPassword.setAlgorithm("SHA384");
                 userLoginPassword.setIterations(1);
                 userLoginPassword.setSalt(RandomUtil.randomByteArray(8));
                 userLoginPassword.setPasswordHash(PasswordUtil.hash(guardedPassword.getInsPassword().getBytes(), userLoginPassword));

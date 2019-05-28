@@ -11,6 +11,7 @@ import com.intel.dcsg.cpg.crypto.Md5Digest;
 import com.intel.dcsg.cpg.crypto.RsaUtil;
 import com.intel.dcsg.cpg.crypto.Sha1Digest;
 import com.intel.dcsg.cpg.crypto.Sha256Digest;
+import com.intel.dcsg.cpg.crypto.Sha384Digest;
 import com.intel.dcsg.cpg.crypto.key.password.Password;
 import com.intel.dcsg.cpg.io.FileResource;
 import com.intel.dcsg.cpg.iso8601.Iso8601Date;
@@ -138,6 +139,7 @@ public class ReplaceTlsKeyPair extends InteractiveCommand {
         properties.setProperty("tls.cert.md5", Md5Digest.digestOf(publicKeyCert.getEncoded()).toString());
         properties.setProperty("tls.cert.sha1", Sha1Digest.digestOf(publicKeyCert.getEncoded()).toString());
         properties.setProperty("tls.cert.sha256", Sha256Digest.digestOf(publicKeyCert.getEncoded()).toString());
+        properties.setProperty("tls.cert.sha384", Sha384Digest.digestOf(publicKeyCert.getEncoded()).toString());
         StringWriter writer = new StringWriter();
         properties.store(writer, String.format("updated on %s", Iso8601Date.format(new Date())));
         FileUtils.write(propertiesFile, writer.toString(), Charset.forName("UTF-8"));

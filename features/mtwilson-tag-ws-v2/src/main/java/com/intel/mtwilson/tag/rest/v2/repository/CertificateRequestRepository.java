@@ -135,9 +135,9 @@ public class CertificateRequestRepository implements DocumentRepository<Certific
     
     // similar to ImportConfig command in mtwilson-configuration
     public PasswordProtection getPasswordProtection() {
-            PasswordProtection protection = PasswordProtectionBuilder.factory().aes(256).block().sha256().pbkdf2WithHmacSha1().saltBytes(8).iterations(1000).build();
+            PasswordProtection protection = PasswordProtectionBuilder.factory().aes(256).block().sha384().pbkdf2WithHmacSha256().saltBytes(16).iterations(2000).build();
             if( !protection.isAvailable() ) {
-                protection = PasswordProtectionBuilder.factory().aes(128).block().sha256().pbkdf2WithHmacSha1().saltBytes(8).iterations(1000).build();
+                protection = PasswordProtectionBuilder.factory().aes(128).block().sha384().pbkdf2WithHmacSha256().saltBytes(16).iterations(2000).build();
             }
         return protection;
     }

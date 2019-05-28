@@ -7,6 +7,7 @@ package com.intel.mtwilson.tag.dao.jdbi;
 import com.intel.mtwilson.tag.model.Certificate;
 import com.intel.dcsg.cpg.crypto.Sha1Digest;
 import com.intel.dcsg.cpg.crypto.Sha256Digest;
+import com.intel.dcsg.cpg.crypto.Sha384Digest;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import com.intel.dcsg.cpg.io.UUID;
@@ -27,6 +28,7 @@ public class CertificateResultMapper implements ResultSetMapper<Certificate> {
         certificate.setCertificate(content);
         certificate.setSha1(Sha1Digest.digestOf(content));
         certificate.setSha256(Sha256Digest.digestOf(content));
+        certificate.setSha384(Sha384Digest.digestOf(content));
         certificate.setSubject(rs.getString("subject"));
         certificate.setIssuer(rs.getString("issuer"));
         certificate.setNotBefore(rs.getTimestamp("notBefore"));
