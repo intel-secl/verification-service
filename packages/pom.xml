@@ -19,7 +19,6 @@
         <module>host-verification-service-linux</module>
         <module>host-verification-service-zip</module>
         <module>log-rotate-linux</module>
-        <module>monit-linux</module>
         <module>host-verification-service-docker</module>
     </modules>
     

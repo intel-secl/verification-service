@@ -13,8 +13,7 @@
 # 5.1 Install Java
 # 5.2 Install prerequisites
 # 5.3 Install logrotate
-# 5.4 Install monit
-# 5.5 Install postgres
+# 5.4 Install postgres
 # 6. Copy scripts to application
 # 7. extract mtwilson
 # 8. configure mtwilson TLS policies
@@ -22,7 +21,7 @@
 # 10. ASCTL SETUP
 # 11. setup the director, unless the NOSETUP variable is defined
 # 12. tag service installation
-# 13. config logrotate and monit
+# 13. config logrotate
 # 14. Register mtwilson as a startup script
 # 15. Start mtwilson service
 
@@ -59,7 +58,7 @@ export POSTGRES_HOSTNAME=${DATABASE_HOSTNAME}
 export POSTGRES_PORTNUM=${DATABASE_PORTNUM}
 export POSTGRES_DATABASE=${DATABASE_SCHEMA}
 export POSTGRESQL_KEEP_PGPASS=${POSTGRESQL_KEEP_PGPASS:-true}
-export INSTALL_PKGS=${INSTALL_PKGS:-"java logrotate postgres monit privacyca SERVICES PORTALS"}
+export INSTALL_PKGS=${INSTALL_PKGS:-"java logrotate postgres privacyca SERVICES PORTALS"}
 export MTWILSON_TLS_POLICY_ALLOW=${MTWILSON_TLS_POLICY_ALLOW:-"certificate,certificate-digest,public-key,public-key-digest,TRUST_FIRST_CERTIFICATE,INSECURE"}
 export MTWILSON_DEFAULT_TLS_POLICY_ID=${MTWILSON_DEFAULT_TLS_POLICY_ID:-"TRUST_FIRST_CERTIFICATE"}
 export JAVA_REQUIRED_VERSION=${JAVA_REQUIRED_VERSION:-1.8}
@@ -200,19 +199,7 @@ if [ "$(whoami)" != "root" ]; then
   fi
 fi
 
-# if monit is running and
-# if there's a monit configuration for mtwilson, remove it to prevent
-# monit from trying to restart mtwilson while we are setting up
-echo "Checking for active Monit service..." >>$INSTALL_LOG_FILE
-service monit status >>$INSTALL_LOG_FILE 2>&1
-if [ $? -eq 0 ] && [ "$(whoami)" == "root" ] && [ -d /etc/monit/conf.d ]; then
-  datestr=`date +%Y%m%d.%H%M`
-  backupdir=$MTWILSON_BACKUP/monit.configuration.$datestr
-  echo "Backing up Monit configuration files to $backupdir" >> $INSTALL_LOG_FILE
-  mkdir -p $backupdir 2>>$INSTALL_LOG_FILE
-  mv /etc/monit/conf.d/*.mtwilson $backupdir 2>>$INSTALL_LOG_FILE
-  service monit restart
-fi
+
 
 # if an existing mtwilson is already running, stop it while we install
 echo "Checking for previously-installed Mt Wilson..." >>$INSTALL_LOG_FILE
@@ -345,14 +332,9 @@ find_installer() {
   echo $binfile
 }
 
-monit_installer=`find_installer monit`
+
 logrotate_installer=`find_installer log-rotate`
 
-# Verify the installers we need are present before we start installing
-if [ -n "$opt_monit" ] && [ ! -e "$monit_installer" ]; then
-  echo_warning "Monit installer marked for install but missing. Please verify you are using the right installer"
-  exit -1;
-fi
 
 # 5.3 Install logrotate
 if [ ! -z "$opt_logrotate" ]; then
@@ -362,15 +344,9 @@ if [ ! -z "$opt_logrotate" ]; then
   #echo "Log Rotate installed" | tee -a  $INSTALL_LOG_FILE
 fi
 
-# 5.4 Install monit
-if [ ! -z "$opt_monit" ] && [ -n "$monit_installer" ]; then
-  echo "Installing Monit..." | tee -a  $INSTALL_LOG_FILE
-  ./$monit_installer  #>> $INSTALL_LOG_FILE
-  if [ $? -ne 0 ]; then echo_failure "Failed to install monit"; exit -1; fi
-  #echo "Monit installed" | tee -a  $INSTALL_LOG_FILE
-fi
 
-# 5.5 Install postgres
+
+# 5.4 Install postgres
 if [[ -z "$opt_postgres" && -z "$opt_mysql" ]]; then
  echo_warning "Relying on an existing database installation"
 fi
@@ -925,7 +901,7 @@ chmod 755 /opt/mtwilson/features/tag/bin/encrypt.sh
 chmod 755 /opt/mtwilson/features/tag/bin/decrypt.sh
 
 ########################################################################################################################
-# 13. config logrotate and monit
+# 13. config logrotate
 mkdir -p /etc/logrotate.d
 
 if [ ! -a /etc/logrotate.d/mtwilson ]; then
@@ -947,31 +923,7 @@ semodule -i /tmp/mylogrotate.pp
 rm -rf /tmp/mylogrotate.mod /tmp/mylogrotate.pp
 
 
-mkdir -p /opt/mtwilson/monit/conf.d
 
-# create the monit rc files
-
-if [ -z "$NO_POSTGRES_MONIT" ]; then 
-  if [ ! -a /opt/mtwilson/monit/conf.d/postgres.mtwilson ]; then 
-    echo "check process postgres matching \"postgresql\"
-      group pg-db
-      start program = \"/usr/sbin/service postgresql start\"
-      stop program = \"/usr/sbin/service postgresql stop\"
-      if failed unixsocket /var/run/postgresql/.s.PGSQL.${POSTGRES_PORTNUM:-5432} protocol pgsql 
-      then restart
-      if failed host 127.0.0.1 port ${POSTGRES_PORTNUM:-5432} protocol pgsql then restart
-      if 5 restarts within 5 cycles then timeout
-      depends on pg_bin
-  
-      check file pg_bin with path \"/usr/bin/psql\"
-      group pg-db
-      if does not exist then unmonitor" > /opt/mtwilson/monit/conf.d/postgres.mtwilson
-  fi
-fi
-
-echo  -n "Restarting monit service so new configs take effect... "
-service monit restart > /dev/null 2>&1
-echo "Done"
 
 set_owner_for_mtwilson_directories
 

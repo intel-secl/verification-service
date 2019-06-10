@@ -34,13 +34,6 @@
             
             <!-- these dependencies are only for including the api client, they are not needed for the core shell script functions. the maven-dependency-plugin copies these dependencies and all their dependencies into a folder for distribution -->
             <dependencies>
-                <!-- Monit -->
-                <dependency>
-                    <groupId>com.intel.mtwilson.packages</groupId>
-                    <artifactId>monit-linux</artifactId>
-                    <version>5.5</version>
-                    <type>bin</type>
-                </dependency>
                 <dependency>
                     <groupId>com.intel.mtwilson.packages</groupId>
                     <artifactId>log-rotate-linux</artifactId>
@@ -98,13 +91,6 @@
                                 </goals>
                                 <configuration>
                                     <artifactItems>
-                                        <!-- Monit -->
-                                        <artifactItem>
-                                            <groupId>com.intel.mtwilson.packages</groupId>
-                                            <artifactId>monit-linux</artifactId>
-                                            <version>5.5</version>
-                                            <type>bin</type>
-                                        </artifactItem>
                                         <!-- other -->
                                         <artifactItem>
                                             <groupId>com.intel.mtwilson.linux</groupId>
@@ -287,7 +273,6 @@
                                 <require>wget >= 1.14</require>
                                 <require>xmlstarlet >= 1.6</require>
                                 <require>logrotate >= 3.7</require>
-                                <require>monit</require>
                                 <require>openssl-devel</require>
                                 <require>make</require>
                                 <require>gcc</require>
