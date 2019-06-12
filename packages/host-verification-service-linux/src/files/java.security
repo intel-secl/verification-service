@@ -52,6 +52,7 @@ security.provider.6=com.sun.security.sasl.Provider
 security.provider.7=org.jcp.xml.dsig.internal.dom.XMLDSigRI
 security.provider.8=sun.security.smartcardio.SunPCSC
 security.provider.9=org.bouncycastle.jce.provider.BouncyCastleProvider
+security.provider.10=sun.security.ec.SunEC
 
 #
 # Select the source of seed data for SecureRandom. By default an
@@ -288,4 +289,4 @@ networkaddress.cache.negative.ttl=10
 krb5.kdc.bad.policy = tryLast
 
 # Do not disable ECDHE to avoid DH vulnerabilities; ISECL-2188, ISECL-2188, ISECL-3482
-jdk.tls.disabledAlgorithms=ECC, ECDH, DHE keySize < 2048, ECDHE keySize < 2048, RSA keySize < 3072
+jdk.tls.disabledAlgorithms=SSLv3, RC4, MD5withRSA, EC, ECDH, DHE keySize < 2048, ECDHE keySize < 2048, RSA keySize < 3072
