@@ -174,7 +174,7 @@ public class FlavorgroupRepository {
             MwFlavorgroup mwFlavorgroup = mwFlavorgroupJpaController.findMwFlavorgroupByName(item.getName());
             if (mwFlavorgroup != null) {
                 log.error("flavorgroup:create - flavorgroup specified {} already exists", item.getName());
-                throw new RepositoryInvalidInputException(locator);
+                throw new RepositoryCreateConflictException(locator);
             }
 
             // create the flavor
