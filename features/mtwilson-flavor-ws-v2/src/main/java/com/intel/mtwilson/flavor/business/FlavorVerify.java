@@ -242,6 +242,7 @@ public class FlavorVerify extends QueueOperation {
             if (hostManifest != null && hostManifest.getHostInfo() != null
                     && hostManifest.getHostInfo().getHardwareUuid() != null
                     && !hostManifest.getHostInfo().getHardwareUuid().isEmpty()
+                    && hostManifest.getHostInfo().getInstalledComponents() != null
                     && !hostManifest.getHostInfo().getInstalledComponents().isEmpty()) {
                 List<String> flavorgroupNames = new ArrayList();
                 if (new HostResource().validateIseclSoftwareFlavor(hostManifest.getHostInfo().getOsName())){
