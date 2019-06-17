@@ -73,7 +73,7 @@ public class FlavorMatchPolicyCollection extends DocumentCollection<FlavorMatchP
     @Override
     public String toString() {
         return "FlavorMatchPolicyCollection{" +
-                "flavorMatchPolicies=" + flavorMatchPolicies +
+                "flavorMatchPolicies:" + flavorMatchPolicies +
                 '}';
     }
 

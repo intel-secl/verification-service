@@ -50,8 +50,8 @@ public class FlavorMatchPolicy extends Document {
     @Override
     public String toString() {
         return "FlavorMatchPolicy{" +
-                "flavorPart=" + flavorPart +
-                ", matchPolicy=" + matchPolicy +
+                "flavorPart:" + flavorPart +
+                ", matchPolicy:" + matchPolicy +
                 '}';
     }
 

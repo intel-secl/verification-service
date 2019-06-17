@@ -47,6 +47,7 @@ public class MatchPolicy extends Document {
         return required;
     }
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -59,8 +60,8 @@ public class MatchPolicy extends Document {
     @Override
     public String toString() {
         return "MatchPolicy{" +
-                "matchType=" + matchType +
-                ", required=" + required +
+                "matchType:" + matchType +
+                ", required:" + required +
                 '}';
     }
 
