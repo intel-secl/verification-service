@@ -439,13 +439,10 @@ public class FlavorResource {
                     addFlavorToUniqueFlavorgroup(flavorCreated, true);
                 } else if (flavorObj.getKey().equalsIgnoreCase(HOST_UNIQUE.getValue())) {
                     addFlavorToUniqueFlavorgroup(flavorCreated, false);
-                } else if (flavorObj.getKey().equalsIgnoreCase(SOFTWARE.getValue())) {
-                    if (flavor.getMeta().getDescription().getLabel().contains(SoftwareFlavorPrefix.DEFAULT_APPLICATION_FLAVOR_PREFIX.getValue())) {
-                        addFlavorToIseclSoftwareFlavorgroup(flavorCreated, Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP);
-                    }
-                    if (flavor.getMeta().getDescription().getLabel().contains(SoftwareFlavorPrefix.DEFAULT_WORKLOAD_FLAVOR_PREFIX.getValue())) {
-                        addFlavorToIseclSoftwareFlavorgroup(flavorCreated, Flavorgroup.WORKLOAD_SOFTWARE_FLAVORGROUP);
-                    }
+                } else if (flavorObj.getKey().equalsIgnoreCase(SOFTWARE.getValue()) && flavor.getMeta().getDescription().getLabel().contains(SoftwareFlavorPrefix.DEFAULT_APPLICATION_FLAVOR_PREFIX.getValue())) {
+                    addFlavorToIseclSoftwareFlavorgroup(flavorCreated, Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP);
+                } else if (flavorObj.getKey().equalsIgnoreCase(SOFTWARE.getValue()) && flavor.getMeta().getDescription().getLabel().contains(SoftwareFlavorPrefix.DEFAULT_WORKLOAD_FLAVOR_PREFIX.getValue())) {
+                    addFlavorToIseclSoftwareFlavorgroup(flavorCreated, Flavorgroup.WORKLOAD_SOFTWARE_FLAVORGROUP);
                 } else {
                     // For other flavor parts, we just store all the individual flavors first and finally do the association below.
                     // Other flavor parts include OS, PLATFORM, SOFTWARE
