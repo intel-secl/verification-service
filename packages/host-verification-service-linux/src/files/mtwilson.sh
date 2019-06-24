@@ -308,14 +308,9 @@ mtwilson_start() {
   # the subshell allows the java process to have a reasonable current working
   # directory without affecting the user's working directory. 
   # the last background process pid $! must be stored from the subshell.
-  prog="$JAVA_CMD"
-  if [ -n "$MTWILSON_USERNAME" ] && [ "$MTWILSON_USERNAME" != "root" ] && [ $(whoami) != "root" ] && [ -n "$(which authbind 2>/dev/null)" ]; then
-    prog="authbind $JAVA_CMD"
-    JAVA_OPTS="$JAVA_OPTS -Djava.net.preferIPv4Stack=true"
-  fi
   (
     cd $MTWILSON_HOME
-    $prog $JAVA_OPTS com.intel.mtwilson.launcher.console.Main jetty-start >>$MTWILSON_APPLICATION_LOG_FILE 2>&1 &      
+    "$JAVA_CMD" $JAVA_OPTS com.intel.mtwilson.launcher.console.Main jetty-start >>$MTWILSON_APPLICATION_LOG_FILE 2>&1 &
     echo $! > $MTWILSON_PID_FILE
   )
   echo_success "Started Host Verification Service"

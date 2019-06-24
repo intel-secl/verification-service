@@ -298,9 +298,9 @@ if [ "$(whoami)" == "root" ]; then
   if [ "$IS_RPM" != "true" ]; then
     MTWILSON_YUM_PACKAGES="zip unzip openssl xmlstarlet wget net-tools policycoreutils-python"
   fi
-  MTWILSON_APT_PACKAGES="zip unzip authbind openssl xmlstarlet policycoreutils "
-  MTWILSON_YAST_PACKAGES="zip unzip authbind openssl xmlstarlet"
-  MTWILSON_ZYPPER_PACKAGES="zip unzip authbind openssl xmlstarlet"
+  MTWILSON_APT_PACKAGES="zip unzip openssl xmlstarlet policycoreutils "
+  MTWILSON_YAST_PACKAGES="zip unzip openssl xmlstarlet"
+  MTWILSON_ZYPPER_PACKAGES="zip unzip openssl xmlstarlet"
   if [ "$IS_RPM" != "true" ]; then
     install_packages "Installer requirements" "MTWILSON"
     if [ $? -ne 0 ]; then echo_failure "Failed to install prerequisites through package manager"; exit 1; fi
@@ -610,29 +610,6 @@ fi
 
 MTWILSON_PORT_HTTP=${MTWILSON_PORT_HTTP:-${JETTY_PORT:-8442}}
 MTWILSON_PORT_HTTPS=${MTWILSON_PORT_HTTPS:-${JETTY_SECURE_PORT:-8443}}
-
-# setup authbind to allow non-root mtwilson to listen on ports 80 and 443
-if [ -d /etc/authbind ]; then
-  if [ -n "$MTWILSON_USERNAME" ] && [ "$MTWILSON_USERNAME" != "root" ] && [ -d /etc/authbind/byport ] && [ "$MTWILSON_PORT_HTTP" -lt "1024" ]; then
-    touch /etc/authbind/byport/$MTWILSON_PORT_HTTP
-    chmod 500 /etc/authbind/byport/$MTWILSON_PORT_HTTP
-    chown $MTWILSON_USERNAME /etc/authbind/byport/$MTWILSON_PORT_HTTP
-  fi
-  if [ -n "$MTWILSON_USERNAME" ] && [ "$MTWILSON_USERNAME" != "root" ] && [ -d /etc/authbind/byport ] && [ "$MTWILSON_PORT_HTTPS" -lt "1024" ]; then
-    touch /etc/authbind/byport/$MTWILSON_PORT_HTTPS
-    chmod 500 /etc/authbind/byport/$MTWILSON_PORT_HTTPS
-    chown $MTWILSON_USERNAME /etc/authbind/byport/$MTWILSON_PORT_HTTPS
-  fi
-else
-  if [ "$MTWILSON_PORT_HTTP" -lt "1024" ]; then
-    echo_failure "HTTP port [$MTWILSON_PORT_HTTP] cannot be less than 1024"
-    exit 5
-  fi
-  if [ "$MTWILSON_PORT_HTTPS" -lt "1024" ]; then
-    echo_failure "HTTPS port [$MTWILSON_PORT_HTTPS] cannot be less than 1024"
-    exit 5
-  fi
-fi
 
 # delete existing java files, to prevent a situation where the installer copies
 # a newer file but the older file is also there
