@@ -312,7 +312,7 @@ public class MwFlavorJpaController implements Serializable {
                         break;
                     case SOFTWARE:
                         jsonSoftwareQueryText = buildFlavorPartQueryStringWithFlavorParts(flavorType, flavorgroupId);
-                        if (hostManifest != null && hostManifest.getPcrManifest() != null && hostManifest.getPcrManifest().getMeasurementXmls() != null && !HostMeasurementUtils.getMeasurementLabels(hostManifest).isEmpty()) {
+                        if (hostManifest != null && hostManifest.getPcrManifest() != null && hostManifest.getMeasurementXmls() != null && !HostMeasurementUtils.getMeasurementLabels(hostManifest).isEmpty()) {
                             jsonSoftwareQueryText = String.format("%s\nAND f.label in ('%s')",
                                     jsonSoftwareQueryText, StringUtils.join(HostMeasurementUtils.getMeasurementLabels(hostManifest), "','"));
                         }

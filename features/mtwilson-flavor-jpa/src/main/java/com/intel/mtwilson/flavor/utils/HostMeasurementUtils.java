@@ -17,7 +17,7 @@ import java.util.List;
 public class HostMeasurementUtils {
     public static List<String> getMeasurementLabels(HostManifest hostManifest) {
         List<String> measurementLabels = new ArrayList<>();
-        for(String measurementXml : hostManifest.getPcrManifest().getMeasurementXmls()) {
+        for(String measurementXml : hostManifest.getMeasurementXmls()) {
             Measurement measurement;
             try {
                 measurement = MeasurementUtils.parseMeasurementXML(measurementXml);
