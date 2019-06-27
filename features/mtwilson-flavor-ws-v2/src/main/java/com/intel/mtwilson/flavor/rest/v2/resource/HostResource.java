@@ -179,7 +179,7 @@ public class HostResource {
             }
 
             // Link to default software and workload groups if host is linux
-            if (hostInfo != null && validateIseclSoftwareFlavor(hostInfo.getOsName())){
+            if (hostInfo != null && validateIseclSoftwareFlavor(hostInfo)){
                 if(hostInfo.getInstalledComponents().contains(HostComponents.TAGENT.getValue()))
                     flavorgroupNames.add(Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP);
                 if(hostInfo.getInstalledComponents().contains(HostComponents.WLAGENT.getValue()))
@@ -707,9 +707,9 @@ public class HostResource {
         return hostTlsPolicy;
     }
 
-    public boolean validateIseclSoftwareFlavor(String osName) {
-        String formattedOsName = osName.trim().toUpperCase();
-        return (formattedOsName.equals("RHEL") || formattedOsName.equals("REDHATENTERPRISESERVER"));
+    public boolean validateIseclSoftwareFlavor(HostInfo hostInfo) {
+        String formattedOsName = hostInfo.getOsName().trim().toUpperCase();
+        return (formattedOsName.equals("RHEL") || formattedOsName.equals("REDHATENTERPRISESERVER")) && !Boolean.valueOf(hostInfo.getIsDockerEnv());
     }
 
     private Flavorgroup createNewFlavorGroup(String flavorgroupName) {

@@ -245,7 +245,7 @@ public class FlavorVerify extends QueueOperation {
                     && hostManifest.getHostInfo().getInstalledComponents() != null
                     && !hostManifest.getHostInfo().getInstalledComponents().isEmpty()) {
                 List<String> flavorgroupNames = new ArrayList();
-                if (new HostResource().validateIseclSoftwareFlavor(hostManifest.getHostInfo().getOsName())){
+                if (new HostResource().validateIseclSoftwareFlavor(hostManifest.getHostInfo())){
                     if(hostManifest.getHostInfo().getInstalledComponents().contains(HostComponents.TAGENT.getValue()))
                         flavorgroupNames.add(Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP);
                     if(hostManifest.getHostInfo().getInstalledComponents().contains(HostComponents.WLAGENT.getValue()))
