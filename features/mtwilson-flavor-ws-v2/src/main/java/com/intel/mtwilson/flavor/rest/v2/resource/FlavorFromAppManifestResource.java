@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2019 Intel Corporation
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.intel.mtwilson.flavor.rest.v2.resource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.intel.mtwilson.core.common.model.SoftwareFlavorPrefix;
+
 /**
  *
  *

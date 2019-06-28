@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2019 Intel Corporation
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.intel.mtwilson.flavor.controller;
 
 import com.intel.dcsg.cpg.io.UUID;
@@ -13,7 +17,6 @@ import java.io.Serializable;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static com.intel.mtwilson.core.flavor.common.FlavorPart.*;
 import static java.util.Optional.ofNullable;
