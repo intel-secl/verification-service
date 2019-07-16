@@ -26,6 +26,7 @@ import com.intel.mtwilson.flavor.controller.exceptions.NonexistentEntityExceptio
 import static com.intel.mtwilson.core.flavor.common.FlavorPart.*;
 import static com.intel.mtwilson.flavor.model.MatchPolicy.MatchType.LATEST;
 import com.intel.mtwilson.repository.RepositoryDeleteException;
+import javax.ws.rs.WebApplicationException;
 
 import java.io.IOException;
 import java.util.ArrayList;
