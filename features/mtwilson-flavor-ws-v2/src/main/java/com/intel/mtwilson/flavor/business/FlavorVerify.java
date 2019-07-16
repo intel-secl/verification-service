@@ -6,7 +6,10 @@
 package com.intel.mtwilson.flavor.business;
 
 import com.intel.dcsg.cpg.io.UUID;
+import com.intel.dcsg.cpg.x509.X509Util;
 import com.intel.mtwilson.My;
+import com.intel.mtwilson.core.common.model.HardwareFeature;
+import com.intel.mtwilson.core.common.model.HardwareFeatureDetails;
 import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.core.flavor.model.Flavor;
 import com.intel.mtwilson.core.verifier.Verifier;
@@ -52,12 +55,15 @@ import com.intel.mtwilson.i18n.HostState;
 import static com.intel.mtwilson.i18n.HostState.CONNECTED;
 import static com.intel.mtwilson.i18n.HostState.QUEUE;
 import com.intel.mtwilson.core.common.datatypes.ConnectionString;
+import com.intel.mtwilson.core.common.model.HostComponents;
 import com.intel.mtwilson.core.common.model.HostManifest;
 import static com.intel.mtwilson.features.queue.model.QueueState.COMPLETED;
 import static com.intel.mtwilson.features.queue.model.QueueState.TIMEOUT;
 import static com.intel.mtwilson.features.queue.model.QueueState.ERROR;
 import com.intel.mtwilson.flavor.rest.v2.resource.HostStatusResource;
 import static com.intel.mtwilson.i18n.HostState.CONNECTION_TIMEOUT;
+
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -81,9 +87,9 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamReader;
 import org.apache.commons.beanutils.BeanMap;
 import org.apache.commons.lang.WordUtils;
+import org.apache.shiro.util.CollectionUtils;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
-
 /**
  *
  * @author rksavino
@@ -137,11 +143,37 @@ public class FlavorVerify extends QueueOperation {
                 log.warn("Error communicating with host, cannot retrieve host manifest");
                 return false;
             }
-            UUID hardwareUuid = UUID.valueOf(hostManifest.getHostInfo().getHardwareUuid());
 
-            HostTrustRequirements trustRequirements = getTrustRequirementsForHost(hostId, hardwareUuid);
-            HostTrustCache hostTrustCache = retrieveAndValidateFlavorsInTrustCache(hostId, hostManifest);
-            createTrustReportFromTrustCache(hostManifest, trustRequirements, hostTrustCache);
+            // retrieve the flavorgroups
+            List<Flavorgroup> flavorGroupsToVerify = getFlavorgroupsToVerify(hostId);
+            UUID hardwareUuid = UUID.valueOf(hostManifest.getHostInfo().getHardwareUuid());
+            boolean isCollectiveTrustReportValid = true;
+            // create collective trust report from hostgroups individual trustreport
+            TrustReport collectiveTrustReport = null;
+            for(Flavorgroup flavorgroup: flavorGroupsToVerify) {
+                HostTrustRequirements trustRequirementsForFlavorGroup = getHostTrustRequirementsForFlavorgroup(hostId, hardwareUuid, flavorgroup);
+                List<Flavor> cachedFlavorsForFlavorgroup = retrieveCachedFlavorsForFlavorgroupToMatch(hostId, flavorgroup);
+                if(cachedFlavorsForFlavorgroup != null) {
+                    HostTrustCache hostTrustCacheForFlavorgroup = validateCachedFlavorsAgainstHostManifest(hostId, hostManifest, cachedFlavorsForFlavorgroup);
+                    TrustReport hostTrustReportForFlavorgroup = hostTrustCacheForFlavorgroup.getTrustReport();
+                    if (!isHostTrustReportValidForFlavorgroup(trustRequirementsForFlavorGroup, hostTrustCacheForFlavorgroup)) {
+                        isCollectiveTrustReportValid = false;
+                        // Generate Host Trust Report for Flavor Group by verifying flavors against Host Manifest
+                        hostTrustReportForFlavorgroup = createHostTrustReportForFlavorgroup(hostManifest, trustRequirementsForFlavorGroup, hostTrustCacheForFlavorgroup);
+                    }
+
+                    log.debug("Trust status for host {} for flavor group {} is {}", hostId.toString(), flavorgroup.getName(), hostTrustReportForFlavorgroup.isTrusted());
+                    if (collectiveTrustReport == null) {
+                        collectiveTrustReport = hostTrustReportForFlavorgroup;
+                    } else {
+                        addRuleResults(collectiveTrustReport, hostTrustReportForFlavorgroup.getResults());
+                    }
+                }
+            }
+            if (collectiveTrustReport != null && (!isCollectiveTrustReportValid || forceUpdate)) {
+                log.debug("Trust cache update called, generating new SAML and saving new report for host: {}", hostId.toString());
+                storeTrustReport(hostId, collectiveTrustReport);
+            }
             // update host_status so not in QUEUE state
             new HostResource().updateHostStatus(hostId, CONNECTED, hostManifest);
             this.setQueueState(COMPLETED);
@@ -154,7 +186,14 @@ public class FlavorVerify extends QueueOperation {
             return false;
         }
     }
-    
+
+    private List<Flavorgroup> getFlavorgroupsToVerify(UUID hostId) {
+        FlavorgroupFilterCriteria flavorgroupFilterCriteria = new FlavorgroupFilterCriteria();
+        flavorgroupFilterCriteria.hostId = hostId;
+        FlavorgroupCollection flavorgroupCollection = new FlavorgroupRepository().search(flavorgroupFilterCriteria);
+        return flavorgroupCollection.getFlavorgroups();
+    }
+
     private HostManifest retrieveHostManifest(UUID hostId, boolean forceUpdate) {
         try {
             // retrieve the host
@@ -199,12 +238,23 @@ public class FlavorVerify extends QueueOperation {
                     this.setQueueState(ERROR);
             }
             
-            // update host record with hardware UUID
+            // update host record with hardware UUID and default software flavorgroups
             if (hostManifest != null && hostManifest.getHostInfo() != null
                     && hostManifest.getHostInfo().getHardwareUuid() != null
-                    && !hostManifest.getHostInfo().getHardwareUuid().isEmpty()) {
+                    && !hostManifest.getHostInfo().getHardwareUuid().isEmpty()
+                    && hostManifest.getHostInfo().getInstalledComponents() != null
+                    && !hostManifest.getHostInfo().getInstalledComponents().isEmpty()) {
+                List<String> flavorgroupNames = new ArrayList();
+                if (new HostResource().validateIseclSoftwareFlavor(hostManifest.getHostInfo())){
+                    if(hostManifest.getHostInfo().getInstalledComponents().contains(HostComponents.TAGENT.getValue()))
+                        flavorgroupNames.add(Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP);
+                    if(hostManifest.getHostInfo().getInstalledComponents().contains(HostComponents.WLAGENT.getValue()))
+                        flavorgroupNames.add(Flavorgroup.WORKLOAD_SOFTWARE_FLAVORGROUP);
+                }
+                host.setFlavorgroupNames(flavorgroupNames);
                 host.setHardwareUuid(UUID.valueOf(hostManifest.getHostInfo().getHardwareUuid()));
                 new HostRepository().store(host);
+                new HostResource().linkFlavorgroupsToHost(flavorgroupNames, host.getId());
             }
             
             // build host status info model for database insertion
@@ -228,14 +278,9 @@ public class FlavorVerify extends QueueOperation {
         }
     }
     
-    private HostTrustRequirements getTrustRequirementsForHost(UUID hostId, UUID hardwareUuid) {
+    private HostTrustRequirements getHostTrustRequirementsForFlavorgroup(UUID hostId, UUID hardwareUuid, Flavorgroup flavorgroup) {
         HostTrustRequirements hostTrustRequirements = new HostTrustRequirements();
         try {
-            // retrieve the flavorgroup
-            FlavorgroupFilterCriteria flavorgroupFilterCriteria = new FlavorgroupFilterCriteria();
-            flavorgroupFilterCriteria.hostId = hostId;
-            FlavorgroupCollection flavorgroupCollection = new FlavorgroupRepository().search(flavorgroupFilterCriteria);
-            Flavorgroup flavorgroup = flavorgroupCollection.getFlavorgroups().get(0);
             hostTrustRequirements.setFlavorgroupId(flavorgroup.getId());
             
             // check for ALL_OF flavors for the hosts flavorgroup
@@ -244,8 +289,10 @@ public class FlavorVerify extends QueueOperation {
             if (!flavorMatchPolicy.getFlavorPartsByMatchType(ALL_OF).isEmpty()) {
                 FlavorFilterCriteria flavorFilterCriteria = new FlavorFilterCriteria();
                 flavorFilterCriteria.flavorgroupId = flavorgroup.getId();
-                flavorFilterCriteria.flavorParts = flavorMatchPolicy.getFlavorPartsByMatchType(ALL_OF);
+                List<FlavorPart> allOfFlavorParts = flavorMatchPolicy.getFlavorPartsByMatchType(ALL_OF);
+                flavorFilterCriteria.flavorParts = allOfFlavorParts;
                 FlavorCollection allOfFlavors = new FlavorRepository().search(flavorFilterCriteria);
+                hostTrustRequirements.setAllOfFlavorsTypes(allOfFlavorParts);
                 hostTrustRequirements.setAllOfFlavors(allOfFlavors);
             }
             
@@ -295,29 +342,38 @@ public class FlavorVerify extends QueueOperation {
             }
         }
     }
-    
-    private HostTrustCache retrieveAndValidateFlavorsInTrustCache(UUID hostId, HostManifest hostManifest) {
+
+    private List<Flavor> retrieveCachedFlavorsForFlavorgroupToMatch(UUID hostId, Flavorgroup flavorgroup) {
+        List<Flavor> flavorsToMatch = new ArrayList<>();
+        // retrieve the trusted cached flavors for the host
+        FlavorHostLinkFilterCriteria flavorHostLinkFilterCriteria = new FlavorHostLinkFilterCriteria();
+        flavorHostLinkFilterCriteria.hostId = hostId;
+        flavorHostLinkFilterCriteria.flavorgroupId = flavorgroup.getId();
+        FlavorHostLinkCollection flavorHostLinkCollection = new FlavorHostLinkRepository().search(flavorHostLinkFilterCriteria);
+
+        // return null if no trusted flavors were found
+        if (flavorHostLinkCollection == null || flavorHostLinkCollection.getFlavorHostLinks() == null) {
+            log.debug("No cached flavors exist for host: {}", hostId.toString());
+            return null;
+        }
+
+        for (FlavorHostLink flavorHostLink : flavorHostLinkCollection.getFlavorHostLinks()) {
+            // retrieve the trusted flavor
+            FlavorLocator flavorLocator = new FlavorLocator();
+            flavorLocator.id = flavorHostLink.getFlavorId();
+            Flavor cachedFlavor = new FlavorRepository().retrieve(flavorLocator);
+            flavorsToMatch.add(cachedFlavor);
+        }
+
+        return flavorsToMatch;
+    }
+
+    private HostTrustCache validateCachedFlavorsAgainstHostManifest(UUID hostId, HostManifest hostManifest, List<Flavor> cachedFlavors) {
         HostTrustCache hostTrustCache = new HostTrustCache();
         hostTrustCache.setHostId(hostId);
         TrustReport collectiveTrustReport = null;
         try {
-            // retrieve the trusted cached flavors for the host
-            FlavorHostLinkFilterCriteria flavorHostLinkFilterCriteria = new FlavorHostLinkFilterCriteria();
-            flavorHostLinkFilterCriteria.hostId = hostId;
-            FlavorHostLinkCollection flavorHostLinkCollection = new FlavorHostLinkRepository().search(flavorHostLinkFilterCriteria);
-
-            // return null if no trusted flavors were found
-            if (flavorHostLinkCollection == null || flavorHostLinkCollection.getFlavorHostLinks() == null) {
-                log.debug("No cached flavors exist for host: {}", hostId.toString());
-                return null;
-            }
-
-            for (FlavorHostLink flavorHostLink : flavorHostLinkCollection.getFlavorHostLinks()) {
-                // retrieve the trusted flavor
-                FlavorLocator flavorLocator = new FlavorLocator();
-                flavorLocator.id = flavorHostLink.getFlavorId();
-                Flavor cachedFlavor = new FlavorRepository().retrieve(flavorLocator);
-
+            for (Flavor cachedFlavor : cachedFlavors) {
                 // call verifier
                 String privacyCaCert = My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath();
                 String tagCaCert = My.configuration().getAssetTagCaCertificateFile().getAbsolutePath();
@@ -327,8 +383,6 @@ public class FlavorVerify extends QueueOperation {
                 // if the flavor is trusted, add it to the collective trust report and to the return object
                 // else, delete it from the trust cache
                 if (individualTrustReport.isTrusted()) {
-                    hostTrustCache.getTrustedFlavors();
-                    hostTrustCache.getTrustedFlavors().getFlavors();
                     hostTrustCache.getTrustedFlavors().getFlavors().add(cachedFlavor);
                     if (collectiveTrustReport == null) {
                         collectiveTrustReport = individualTrustReport;
@@ -336,8 +390,10 @@ public class FlavorVerify extends QueueOperation {
                         collectiveTrustReport = addRuleResults(collectiveTrustReport, individualTrustReport.getResults());
                     }
                 } else {
-                    FlavorHostLinkLocator flavorHostLinkLocator = new FlavorHostLinkLocator(flavorHostLink.getId());
-                    new FlavorHostLinkRepository().delete(flavorHostLinkLocator);
+                    FlavorHostLinkFilterCriteria flavorHostLinkFilterCriteria = new FlavorHostLinkFilterCriteria();
+                    flavorHostLinkFilterCriteria.hostId = hostId;
+                    flavorHostLinkFilterCriteria.flavorId = UUID.valueOf(cachedFlavor.getMeta().getId());
+                    new FlavorHostLinkRepository().delete(flavorHostLinkFilterCriteria);
                 }
             }
             hostTrustCache.setTrustReport(collectiveTrustReport);
@@ -475,39 +531,108 @@ public class FlavorVerify extends QueueOperation {
         return false;
     }
 
-    private void createTrustReport(HostTrustRequirements hostTrustRequirements, TrustReport trustReport, HostTrustCache trustCache) {
-        List<FlavorPart> reqAndDefFlavorTypes = hostTrustRequirements.getDefinedAndRequiredFlavorTypes();
-        FlavorCollection allOfFlavors = hostTrustRequirements.getAllOfFlavors();
-        
-        if (trustCache != null && trustCache.getTrustedFlavors() != null && trustCache.getTrustedFlavors().getFlavors() != null
-                && !trustCache.getTrustedFlavors().getFlavors().isEmpty()) {
+    private TrustReport createTrustReport(HostManifest hostManifest, HostTrustRequirements hostTrustRequirements,
+                                          HostTrustCache trustCache, HashMap<String, Boolean> latestReqAndDefFlavorTypes) {
+        // Fetch flavors needed to verify
+        FlavorCollection flavorsToVerify = findFlavors(hostTrustRequirements.getFlavorgroupId(), hostManifest, latestReqAndDefFlavorTypes);
+        // Verify flavor collection against host report
+        TrustReport trustReport = verify(hostId, flavorsToVerify, hostManifest, hostTrustRequirements);
+
+        // add results found in trust cache
+        if (!isTrustCacheEmpty(trustCache)) {
             for (RuleResult rule : trustCache.getTrustReport().getResults()) {
                 trustReport.addResult(rule);
             }
         }
-        
+
         // add required and defined flavor check rules to the trust report
+        List<FlavorPart> reqAndDefFlavorTypes = hostTrustRequirements.getDefinedAndRequiredFlavorTypes();
         for (FlavorPart flavorPart : reqAndDefFlavorTypes) {
             RequiredFlavorTypeExists rule = new RequiredFlavorTypeExists(flavorPart);
             trustReport = rule.apply(trustReport);
         }
-        
+
         // add all of flavors check rule to the trust report
+        FlavorCollection allOfFlavors = hostTrustRequirements.getAllOfFlavors();
         RuleAllOfFlavors ruleAllOfFlavors = new RuleAllOfFlavors(allOfFlavors,
                 My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath(),
                 My.configuration().getAssetTagCaCertificateFile().getAbsolutePath());
+        ruleAllOfFlavors.setMarkers(getAllOfMarkers(hostTrustRequirements));
         trustReport = ruleAllOfFlavors.addFaults(trustReport);  // Add faults if every 'All of' flavors are not present
         
-        createReport(hostId, trustReport);
+        return trustReport;
     }
 
-    private void createTrustReportFromTrustCache(HostManifest hostManifest, HostTrustRequirements hostTrustRequirements, HostTrustCache trustCache) {
-       
+    private String[] getAllOfMarkers(HostTrustRequirements hostTrustRequirements) {
+        String markers[] = new String[hostTrustRequirements.getAllOfFlavorsTypes().size()];
+        for(int i=0 ; i <hostTrustRequirements.getAllOfFlavorsTypes().size(); i++) {
+            markers[i] = hostTrustRequirements.getAllOfFlavorsTypes().get(i).name();
+        }
+        return markers;
+    }
+
+    private boolean isHostTrustReportValidForFlavorgroup(HostTrustRequirements hostTrustRequirements, HostTrustCache trustCache) {
+        // No results found in Trust Cache
+        if (isTrustCacheEmpty(trustCache)) {
+            log.debug("No results found in trust cache for host: {}", hostId.toString());
+            return false;
+        }
+
+        // Missing Required and Defined Flavors
+        TrustReport cachedTrustReport = trustCache.getTrustReport();
         List<FlavorPart> reqAndDefFlavorTypes = hostTrustRequirements.getDefinedAndRequiredFlavorTypes();
+        HashMap<String, Boolean> missingRequiredFlavorPartsWithLatest = getMissingRequiredFlavorPartsWithLatest(hostTrustRequirements, reqAndDefFlavorTypes, cachedTrustReport);
+        if (!missingRequiredFlavorPartsWithLatest.isEmpty()) {
+            log.debug("Host [{}] has missing required and defined flavor parts: {}", hostId.toString(), missingRequiredFlavorPartsWithLatest.keySet());
+            return false;
+        }
 
-        //create a hashMap with latest match policy 
+        // All Of Flavors present
+        FlavorCollection allOfFlavors = hostTrustRequirements.getAllOfFlavors();
+        RuleAllOfFlavors ruleAllOfFlavors = new RuleAllOfFlavors(allOfFlavors,
+                My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath(),
+                My.configuration().getAssetTagCaCertificateFile().getAbsolutePath());
+        ruleAllOfFlavors.setMarkers(getAllOfMarkers(hostTrustRequirements));
+        if (areAllOfFlavorsMissingInCachedTrustReport(cachedTrustReport, ruleAllOfFlavors)) {
+            log.debug("All of flavors exist in policy for host: {}", hostId.toString());
+            log.debug("Some all of flavors do not match what is in the trust cache for host: {}", hostId.toString());
+            return false;
+        }
+        log.debug("Trust cache valid for host: {}", hostId.toString());
+        return true;
+    }
+
+    private TrustReport createHostTrustReportForFlavorgroup(HostManifest hostManifest, HostTrustRequirements hostTrustRequirements, HostTrustCache trustCache) {
+        //create a hashMap with latest match policy
+        List<FlavorPart> reqAndDefFlavorTypes = hostTrustRequirements.getDefinedAndRequiredFlavorTypes();
+        HashMap<String, Boolean> latestReqAndDefFlavorTypes = getLatestFlavorTypeMap(hostTrustRequirements, reqAndDefFlavorTypes);
+
+        // No results found in Trust Cache
+        if (isTrustCacheEmpty(trustCache)) {
+            return createTrustReport(hostManifest, hostTrustRequirements, trustCache, latestReqAndDefFlavorTypes);
+        }
+
+        // Missing Required and Defined Flavors
+        TrustReport cachedTrustReport = trustCache.getTrustReport();
+        HashMap<String, Boolean> missingRequiredFlavorPartsWithLatest = getMissingRequiredFlavorPartsWithLatest(hostTrustRequirements, reqAndDefFlavorTypes, cachedTrustReport);
+        if (!missingRequiredFlavorPartsWithLatest.isEmpty()) {
+            return createTrustReport(hostManifest, hostTrustRequirements, trustCache, missingRequiredFlavorPartsWithLatest);
+        }
+        
+        // All Of Flavors present
+        FlavorCollection allOfFlavors = hostTrustRequirements.getAllOfFlavors();
+        RuleAllOfFlavors ruleAllOfFlavors = new RuleAllOfFlavors(allOfFlavors,
+                My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath(),
+                My.configuration().getAssetTagCaCertificateFile().getAbsolutePath());
+        ruleAllOfFlavors.setMarkers(getAllOfMarkers(hostTrustRequirements));
+        if (areAllOfFlavorsMissingInCachedTrustReport(cachedTrustReport, ruleAllOfFlavors)) {
+            return createTrustReport(hostManifest, hostTrustRequirements, trustCache, latestReqAndDefFlavorTypes);
+        }
+        return cachedTrustReport;
+    }
+
+    private HashMap<String, Boolean> getLatestFlavorTypeMap(HostTrustRequirements hostTrustRequirements, List<FlavorPart> reqAndDefFlavorTypes) {
         HashMap<String, Boolean> latestMap = new HashMap<>();
-
         if (!reqAndDefFlavorTypes.isEmpty()) {
             for (FlavorPart flavorPart : reqAndDefFlavorTypes) {
                 MatchPolicy matchPolicy = hostTrustRequirements.getFlavorMatchPolicy().getmatchPolicy(flavorPart);
@@ -518,29 +643,19 @@ public class FlavorVerify extends QueueOperation {
                 }
             }
         }
-        FlavorCollection allOfFlavors = hostTrustRequirements.getAllOfFlavors();
-        UUID flavorgroupId = hostTrustRequirements.getFlavorgroupId();
-        
-        // No results found in Trust Cache
-        if (trustCache == null || trustCache.getTrustedFlavors() == null || trustCache.getTrustedFlavors().getFlavors() == null
-                || trustCache.getTrustedFlavors().getFlavors().isEmpty()) {
-            log.debug("No results found in trust cache for host: {}", hostId.toString());
-            FlavorCollection flavorsToVerify = findFlavors(flavorgroupId, hostManifest, latestMap);
-            TrustReport cachedTrustReport = verify(hostId, flavorsToVerify, hostManifest, hostTrustRequirements);
-            createTrustReport(hostTrustRequirements, cachedTrustReport, trustCache);
-            return;
-        }
-        
-        TrustReport cachedTrustReport = trustCache.getTrustReport();
-        // Missing Required and Defined Flavors
+        return latestMap;
+    }
+
+    private boolean areAllOfFlavorsMissingInCachedTrustReport(TrustReport cachedTrustReport, RuleAllOfFlavors ruleAllOfFlavors) {
+        return !ruleAllOfFlavors.allOfFlavorsEmpty() && !ruleAllOfFlavors.checkAllOfFlavorsExist(cachedTrustReport);
+    }
+
+    private HashMap<String, Boolean> getMissingRequiredFlavorPartsWithLatest(HostTrustRequirements hostTrustRequirements, List<FlavorPart> reqAndDefFlavorTypes, TrustReport cachedTrustReport) {
         HashMap<String, Boolean> missingRequiredFlavorPartsWithLatest = new HashMap<>();
-        List<FlavorPart> missingRequiredFlavorParts = new ArrayList();
         for (FlavorPart requiredFlavorType : reqAndDefFlavorTypes) {
             log.debug("Checking if required flavor type [{}] for host [{}] is missing", requiredFlavorType.name(), hostId.toString());
-            if (cachedTrustReport.getResultsForMarker(requiredFlavorType.name()) == null
-                    || cachedTrustReport.getResultsForMarker(requiredFlavorType.name()).isEmpty()) {
+            if (areRequiredFlavorsMissing(cachedTrustReport, requiredFlavorType)) {
                 log.debug("Required flavor type [{}] for host [{}] is missing", requiredFlavorType.name(), hostId.toString());
-                missingRequiredFlavorParts.add(requiredFlavorType);
                 MatchPolicy matchPolicyMissing = hostTrustRequirements.getFlavorMatchPolicy().getmatchPolicy(requiredFlavorType);
                 if (matchPolicyMissing != null && matchPolicyMissing.getMatchType() == MatchType.LATEST) {
                     missingRequiredFlavorPartsWithLatest.put(requiredFlavorType.name(), true);
@@ -549,34 +664,17 @@ public class FlavorVerify extends QueueOperation {
                 }
             }
         }
-        if (!missingRequiredFlavorParts.isEmpty()) {
-            log.debug("Host [{}] has missing required and defined flavor parts: {}", hostId.toString(), missingRequiredFlavorParts);
-            FlavorCollection flavorsToVerify = findFlavors(flavorgroupId, hostManifest, missingRequiredFlavorPartsWithLatest);
-            cachedTrustReport = verify(hostId, flavorsToVerify, hostManifest, hostTrustRequirements);
-            createTrustReport(hostTrustRequirements, cachedTrustReport, trustCache);
-            return;
-        }
-        
-        // All Of Flavors present
-        RuleAllOfFlavors ruleAllOfFlavors = new RuleAllOfFlavors(allOfFlavors,
-                My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath(),
-                My.configuration().getAssetTagCaCertificateFile().getAbsolutePath());
-        if (!ruleAllOfFlavors.allOfFlavorsEmpty()) {
-            log.debug("All of flavors exist in policy for host: {}", hostId.toString());
-            if (!ruleAllOfFlavors.checkAllOfFlavorsExist(cachedTrustReport)) {
-                log.debug("Some all of flavors do not match what is in the trust cache for host: {}", hostId.toString());
-                FlavorCollection flavorsToVerify = findFlavors(flavorgroupId, hostManifest, latestMap);
-                cachedTrustReport = verify(hostId, flavorsToVerify, hostManifest, hostTrustRequirements);
-                createTrustReport(hostTrustRequirements, cachedTrustReport, trustCache);
-                return;
-            }
-        }
-        log.debug("Trust cache valid for host: {}", hostId.toString());
-        
-        if (forceUpdate) {
-            log.debug("Force update called, generating new SAML and saving new report for host: {}", hostId.toString());
-            createReport(hostId, cachedTrustReport);
-        }       
+        return missingRequiredFlavorPartsWithLatest;
+    }
+
+    private boolean areRequiredFlavorsMissing(TrustReport cachedTrustReport, FlavorPart requiredFlavorType) {
+        return cachedTrustReport.getResultsForMarker(requiredFlavorType.name()) == null
+                || cachedTrustReport.getResultsForMarker(requiredFlavorType.name()).isEmpty();
+    }
+
+    private boolean isTrustCacheEmpty(HostTrustCache trustCache) {
+        return trustCache == null || trustCache.getTrustedFlavors() == null || trustCache.getTrustedFlavors().getFlavors() == null
+                || trustCache.getTrustedFlavors().getFlavors().isEmpty();
     }
 
     private FlavorCollection findFlavors(UUID flavorgroupId, HostManifest hostManifest, HashMap<String, Boolean> latestFlavorMap) {
@@ -586,8 +684,7 @@ public class FlavorVerify extends QueueOperation {
         flavorFilterCriteria.flavorPartsWithLatest = latestFlavorMap;
         
         FlavorRepository flavorRepository = new FlavorRepository();
-        FlavorCollection flavors = flavorRepository.search(flavorFilterCriteria);
-        return flavors;
+        return flavorRepository.search(flavorFilterCriteria);
     }
 
     private String generateSamlReport(TrustReport trustReport) {
@@ -597,13 +694,33 @@ public class FlavorVerify extends QueueOperation {
             BeanMap map = new BeanMap(trustReport.getHostManifest().getHostInfo());
             Map<String, String> samlMap = new LinkedHashMap();
             Iterator<String> it = map.keyIterator();
+            X509Certificate aikCertificate = trustReport.getHostManifest().getAikCertificate();
+            X509Certificate bindingKeyCertificate = trustReport.getHostManifest().getBindingKeyCertificate();
             while (it.hasNext()) {
                 String key = it.next();
-                if (map.get(key) != null && !key.equals("class")) {
+                if (map.get(key) != null && !key.equals("class") && !key.equals("hardwareFeatures")) {
                     String value = map.get(key).toString();
                     samlMap.put(key, value);
                 }
             }
+            Map<HardwareFeature, HardwareFeatureDetails> hardwareFeatures = trustReport.getHostManifest().getHostInfo().getHardwareFeatures();
+            if(!CollectionUtils.isEmpty(hardwareFeatures)) {
+                for (HardwareFeature feature : HardwareFeature.values()) {
+                    HardwareFeatureDetails details = hardwareFeatures.get(feature);
+                    if(details != null) {
+                        String key = "FEATURE_" + feature.getValue();
+                        String value = String.valueOf(details.getEnabled());
+                        samlMap.put(key, value);
+                        if(HardwareFeature.CBNT.equals(feature)) {
+                            samlMap.put("FEATURE_cbntProfile", details.getMeta().get("profile"));
+                        }
+                        if(HardwareFeature.MKTME.equals(feature)) {
+                            samlMap.put("FEATURE_mktmeAlgorithm", details.getMeta().get("encryption_algorithm"));
+                        }
+                    }
+                }
+            }
+
             for (TrustMarker marker : TrustMarker.values()) {
                 String markerName = marker.name();
                 if (!trustReport.getResultsForMarker(markerName).isEmpty()) {
@@ -613,6 +730,14 @@ public class FlavorVerify extends QueueOperation {
                 }
             }
             samlMap.put("TRUST_OVERALL", String.valueOf(trustReport.isTrusted()));
+            
+            if (bindingKeyCertificate != null){
+                samlMap.put("Binding_Key_Certificate", X509Util.encodePemCertificate(bindingKeyCertificate));
+            }
+            if (aikCertificate != null){
+                samlMap.put("AIK_Certificate", X509Util.encodePemCertificate(aikCertificate));
+            }
+
             for (Map.Entry<String, String> tag : trustReport.getTags().entrySet()) {
                 samlMap.put("TAG_" + WordUtils.capitalize(tag.getKey()), WordUtils.capitalize(tag.getValue()));
             }
@@ -624,10 +749,10 @@ public class FlavorVerify extends QueueOperation {
         return mapSamlAssertion.assertion;
     }
     
-    private void createReport(UUID hostId, TrustReport trustReport) {
+    private void storeTrustReport(UUID hostId, TrustReport trustReport) {
         String samlReport = generateSamlReport(trustReport);
         Map<String, Date> dates = parseDatesFromSaml(samlReport);
-        
+        log.debug("flavorverify: {}", samlReport); 
         // Save Report in DB
         Report report = new Report();
         report.setHostId(hostId);

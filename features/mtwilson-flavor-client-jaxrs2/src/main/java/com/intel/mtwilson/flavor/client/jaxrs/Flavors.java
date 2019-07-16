@@ -16,6 +16,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.intel.wml.manifest.xml.Manifest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,10 +29,10 @@ import org.slf4j.LoggerFactory;
  * measurements included in the flavor pertain to various hardware, software and feature categories, and their respective metadata 
  * sections provide descriptive information.
  * 
- * The four current flavor categories:
+ * The four current flavor categories: (BIOS is deprecated)
  * PLATFORM, OS, ASSET_TAG, HOST_UNIQUE (See the product guide for a detailed explanation)
- * 
- * When a flavor is created, it is associated with a flavor group. This means that the measurements for that flavor type are deemed
+ *
+ * When a flavor is created, it is associated with a flavor group. This means that the measurements for that flavor type are deemed 
  * acceptable to obtain a trusted status. If a host, associated with the same flavor group, matches the measurements contained within 
  * that flavor, the host is trusted for that particular flavor category (dependent on the flavor group policy).
  * </pre>
@@ -66,8 +67,7 @@ public class Flavors extends MtWilsonClient {
     public Flavors(Properties properties) throws Exception {
         super(properties);
     }
-    
-    
+
     /**
      * Creates a flavor(s).
      * <pre>
@@ -75,8 +75,8 @@ public class Flavors extends MtWilsonClient {
      * If the flavor content is provided, the flavor parameter must be set in the request. If the flavor is being imported from a 
      * host, the host connection string must be specified.
      * 
-     * If a flavor group is not specified, the flavor(s) created will be assigned to the default “mtwilson_automatic” flavor group, 
-     * with the exception of the host unique flavors, which are associated with the “mtwilson_unique” flavor group. If a flavor group 
+     * If a flavor group is not specified, the flavor(s) created will be assigned to the default “automatic” flavor group, 
+     * with the exception of the host unique flavors, which are associated with the “host_unique” flavor group. If a flavor group 
      * is specified and does not already exist, it will be created with a default flavor match policy.
      * 
      * Partial flavor types can be specified as an array input. In this fashion, the user can choose which flavor types to import from 
@@ -95,7 +95,8 @@ public class Flavors extends MtWilsonClient {
      * </pre>
      * @param createCriteria The serialized FlavorCreateCriteria java model object represents the content of the request body.
      * <pre> 
-     *          connection_string               The host connection string. 
+     *          connection_string               The host connection string. flavorgroup_name, partial_flavor_types, tls_policy_id
+     *                                          can be provided as optional parameters along with the host connection string. 
      * 
      *                                          For INTEL & MICROSOFT hosts, this would have the vendor name, the IP addresses, 
      *                                          or DNS host name and credentials.
@@ -108,14 +109,19 @@ public class Flavors extends MtWilsonClient {
      *                                          i.e.: "vmware:https://vCenterServer.com:443/sdk;h=trustagent.server.com;u=
      *                                          vCenterUsername;p=vCenterPassword"
      * 
-     *          flavor_collection               A collection of flavors in the defined flavor format.
+     *          flavor_collection               A collection of flavors in the defined flavor format. No other parameters are
+     *                                          needed in this case.
      * 
-     *          flavorgroup_name                Flavor group name that the created flavor(s) will be associated.
+     *          flavorgroup_name(optional)      Flavor group name that the created flavor(s) will be associated with. If not provided, 
+     *                                          created flavor will be associated with automatic flavor group.
      * 
-     *          partial_flavor_types            List array input of flavor types to be imported from a host. See the product guide 
-     *                                          for more details on how flavor types are broken down for each host type.
+     *          partial_flavor_types(optional)  List array input of flavor types to be imported from a host. Partial flavor type can be 
+     *                                          any of the following: PLATFORM, OS, ASSET_TAG, HOST_UNIQUE, SOFTWARE (BIOS is deprecated). Can be provided
+     *                                          with the host connection string. See the product guide for more details on how flavor 
+     *                                          types are broken down for each host type.
      * 
-     *          tls_policy_id                   ID of the TLS policy for connection from the HVS to the host.
+     *          tls_policy_id(optional)         ID of the TLS policy for connection from the HVS to the host. Can be provided along with
+     *                                          host connection string.
      * 
      * Only one of the above parameters can be specified. The parameters listed here are in the order of priority that will be evaluated.
      * </pre>
@@ -129,12 +135,15 @@ public class Flavors extends MtWilsonClient {
      * @mtwSampleRestCall
      * <div style="word-wrap: break-word; width: 1024px"><pre>
      * https://server.com:8443/mtwilson/v2/flavors
-     * input: 
+     *
+     * <b>Example 1:</b>
+     *
+     * Input:
      * { 
      *    "connection_string": "intel:https://trustagent.server.com:1443;u=trustagentUsername;p=trustagentPassword"
      * }
      * 
-     * output:
+     * Output:
      * {
      *     "flavors": [
      *         {
@@ -875,4 +884,40 @@ public class Flavors extends MtWilsonClient {
         Response obj = getTarget().path("flavors/{id}").resolveTemplates(map).request(MediaType.APPLICATION_JSON).delete();
         log.debug(obj.toString());
     }
+
+    /**
+     * Generates manifest from software flavor.
+     * @param filterCriteria - The content models of the FlavorFilterCriteria java model object can be used as query parameters.
+     * <pre>
+     *          uuid                            flavor id which needs to be converted to manifest
+     *
+     *          label                           flavor label which needs to be converted to manifest
+     *
+     * Only one of the above parameters can be specified.
+     * </pre>
+     *
+     * @return <pre>Manifest in XML format is retrieved</pre>
+     * @since ISecL 1.0
+     * @mtwRequiresPermissions flavors:search
+     * @mtwContentTypeReturned XML
+     * @mtwMethodType GET
+     * @mtwSampleRestCall
+     * <div style="word-wrap: break-word; width: 1024px"><pre>
+     * https://server.com:8443/mtwilson/v2/manifests?id=834076cd-f733-4cca-a417-113fac90adc7
+     * output:
+     *{@code 
+     * <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+     * <Manifest xmlns="lib:wml:manifests:1.0" DigestAlg="SHA256" Label="ISecL_Default_Applicaton_Flavor_v2.0" Uuid="834076cd-f733-4cca-a417-113fac90adc7">
+     *     <Dir Include=".*" Exclude="" Path="/opt/trustagent/hypertext/WEB-INF"></Dir>
+     *     <Symlink Path="/opt/trustagent/bin/tpm_nvinfo"></Symlink>
+     *     <File Path="/opt/trustagent/bin/module_analysis_da.sh"></File>
+     * </Manifest>
+     *}
+    */
+    public Manifest getManifestFromFlavor(FlavorFilterCriteria filterCriteria) {
+        log.debug("target: {}", getTarget().getUri().toString());
+        Manifest manifest = getTargetPathWithQueryParams("manifests", filterCriteria).request(MediaType.APPLICATION_XML).get(Manifest.class);
+        return manifest;
+    }
+
 }

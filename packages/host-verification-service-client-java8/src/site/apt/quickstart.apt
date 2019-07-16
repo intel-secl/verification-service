@@ -8,7 +8,7 @@
 Background
 
     The Host Verification Service component of Intel® Security Libraries (ISecL) performs remote
-attestation of physical servers by comparing Intel® TXT measurements of BIOS,
+attestation of physical servers by comparing Intel® TXT measurements of PLATFORM,
 OS, Asset Tag, and other components against a database of known-good values.
 The attested trust status of each server is used to make policy decisions 
 for workload placement.
@@ -37,7 +37,7 @@ on the devices.  This assurance would then drive policy decisions for
 
     Here are some key aspects of the Attestation solution:
 
-	[[1]]The first generation solution would be targeted to 'Attest to' the trust of the platform (Firmware and BIOS)
+	[[1]]The first generation solution would be targeted to 'Attest to' the trust of the platform (Firmware and PLATFORM)
              and Hypervisor/OS, on Intel Architecture-based Servers that have a 'Measured Launch' of the OS/Hypervisor 
              using Intel TXT.  Future versions would support the attestation of IA-based Network and Storage devices
              (OpenFiler, OpenNFS running on IA-based Servers), and TXT-based clients
@@ -239,11 +239,11 @@ HostTlsPolicy createTlsPolicy = client.createTlsPolicy(tlsPolicy);
         These measurements correspond to specific system components, and are used as the basis of comparison to generate trust attestations.
         
         Flavors are automatically matched to hosts based on the flavorgroup used by the host and the flavors, and the flavor match policies 
-        of the flavorgroup.  The ISecL Host Verification Service creates a default flavorgroups during installation called “mtwilson_automatic”.
+        of the flavorgroup.  The ISecL Host Verification Service creates a default flavorgroups during installation called “automatic”.
         This flavorgroup is configured to be used as a pool of all acceptable Flavors in a given environment, and will automatically match the 
-        appropriate Flavor parts[BIOS, OS, ASSET_TAG and HOST_UNIQUE] to the correct host.  This flavorgroup is used by default and is
-        expected to be useful for the majority of deployments. If no flavorgroup is specified when creating a flavor, it will be placed in the 
-        mtwilson_automatic flavorgroup. 
+        appropriate Flavor parts[PLATFORM, OS, ASSET_TAG, HOST_UNIQUE, SOFTWARE] to the correct host.  This flavorgroup is used by default and is
+        expected to be useful for the majority of deployments. If no flavorgroup is specified when creating a flavor, it will be placed in the
+        automatic flavorgroup. 
 
         HOST_UNIQUE Flavor parts, used by Red Hat Enterprise Linux and VMWare ESXi host types, MUST be created for each registered host of that
         type, and should in general be imported from that host.  This means that importing the HOST_UNIQUE flavor should always be done for each
@@ -267,7 +267,7 @@ FlavorCollection objCollection = client.createFlavor(obj);
 
     The host registration creates a host record with connectivity details and other host information in the Host Verification Service database. 
     This host record will be used by the Host Verification Service to retrieve TPM attestation quotes from the Trust Agent to generate an attestation report.
-    If a flavorgroup for the host is not specified during the registration, the host is assigned to a the default flavorgroup "mtwilson_automatic". 
+    If a flavorgroup for the host is not specified during the registration, the host is assigned to a the default flavorgroup "automatic". 
 
 +---
 // Instantiate the api client object for host creation with the specified properties

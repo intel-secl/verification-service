@@ -36,6 +36,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
+import java.util.concurrent.FutureTask;
+
 /**
  *
  * @author srege
@@ -167,8 +169,10 @@ public class ReportResource {
         if (host == null) {
             throw new WebApplicationException("Host doesn't exist", 400);
         }
-        new FlavorVerify(host.getId(), true).call();
-        
+        Thread flavorVerify = new Thread(new FutureTask(new FlavorVerify(host.getId(), true)));
+        flavorVerify.run();
+        flavorVerify.join(5000); // Wait for thread to finish or for 5 seconds
+
         // verify host is in connected state
         HostStatusLocator hostStatusLocator = new HostStatusLocator();
         hostStatusLocator.hostId = host.getId();

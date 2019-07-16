@@ -9,7 +9,7 @@
     <parent>
         <groupId>com.intel.mtwilson.maven</groupId>
         <artifactId>mtwilson-core-feature-zip</artifactId>
-        <version>4.4-SNAPSHOT</version>
+        <version>4.5-SNAPSHOT</version>
         <relativePath/>
     </parent>
     
@@ -72,7 +72,6 @@
             <groupId>com.intel.mtwilson.util</groupId>
             <artifactId>mtwilson-util-jaxrs2-server</artifactId>
         </dependency>
-        
         <!-- mtwilson -->
         <dependency>
             <groupId>com.intel.mtwilson.features</groupId>

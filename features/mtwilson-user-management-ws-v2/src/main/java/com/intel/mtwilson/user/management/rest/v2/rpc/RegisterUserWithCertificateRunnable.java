@@ -7,6 +7,7 @@ package com.intel.mtwilson.user.management.rest.v2.rpc;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.intel.dcsg.cpg.crypto.Sha1Digest;
 import com.intel.dcsg.cpg.crypto.Sha256Digest;
+import com.intel.dcsg.cpg.crypto.Sha384Digest;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.mtwilson.user.management.rest.v2.model.User;
 import com.intel.mtwilson.launcher.ws.ext.RPC;
@@ -82,6 +83,7 @@ public class RegisterUserWithCertificateRunnable implements Runnable{
                 userCertObj.setCertificate(getUserLoginCertificate().getCertificate());
                 userCertObj.setSha1Hash(Sha1Digest.digestOf(getUserLoginCertificate().getCertificate()).toByteArray());
                 userCertObj.setSha256Hash(Sha256Digest.digestOf(getUserLoginCertificate().getCertificate()).toByteArray());
+                userCertObj.setSha384Hash(Sha384Digest.digestOf(getUserLoginCertificate().getCertificate()).toByteArray());
                 userCertObj.setComment(getUser().getComment());
                 userCertObj.setExpires(getUserLoginCertificate().getX509Certificate().getNotAfter());
                 userLoginCertRepo.create(userCertObj);

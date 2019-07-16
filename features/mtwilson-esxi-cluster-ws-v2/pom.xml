@@ -9,7 +9,7 @@
     <parent>
         <groupId>com.intel.mtwilson.maven</groupId>
         <artifactId>mtwilson-core-feature-zip</artifactId>
-        <version>4.4-SNAPSHOT</version>
+        <version>4.5-SNAPSHOT</version>
         <relativePath/>
     </parent>
     
@@ -67,7 +67,7 @@
         <dependency>
             <groupId>com.intel.mtwilson.core</groupId>
             <artifactId>lib-host-connector</artifactId>
-            <version>1.2.2</version>
+            <version>1.3</version>
         </dependency>
         
         <!-- mtwilson -->

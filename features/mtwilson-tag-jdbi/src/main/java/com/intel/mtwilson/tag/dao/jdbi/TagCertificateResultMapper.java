@@ -21,7 +21,7 @@ public class TagCertificateResultMapper implements ResultSetMapper<TagCertificat
     public TagCertificate map(int i, ResultSet rs, StatementContext sc) throws SQLException {
         byte[] content = rs.getBytes("certificate");
         TagCertificate certificate = new TagCertificate();
-        java.util.UUID id_uuid =  java.util.UUID.fromString(rs.getString("id"));
+        java.util.UUID id_uuid = java.util.UUID.fromString(rs.getString("id"));
         certificate.setId(UUID.valueOf(id_uuid.toString()));
         certificate.setCertificate(content);
         certificate.setSubject(rs.getString("subject"));

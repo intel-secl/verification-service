@@ -20,7 +20,7 @@ public class FlavorCreateCriteria {
     private FlavorCollection flavorCollection;
     private String flavorgroupName;
     private List<String> partialFlavorTypes;
-    
+
     @Validator(ConnectionStringValidator.class)
     public String getConnectionString() {
         return connectionString;
@@ -30,9 +30,7 @@ public class FlavorCreateCriteria {
         this.connectionString = connectionString;
     }
     
-    public String getTlsPolicyId() {
-        return tlsPolicyId;
-    }
+    public String getTlsPolicyId() { return tlsPolicyId; }
     
     public void setTlsPolicyId(String tlsPolicyId) {
         this.tlsPolicyId = tlsPolicyId;

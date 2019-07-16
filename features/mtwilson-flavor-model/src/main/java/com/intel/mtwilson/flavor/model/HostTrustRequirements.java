@@ -20,6 +20,7 @@ public class HostTrustRequirements {
     private UUID flavorgroupId;
     private FlavorMatchPolicyCollection flavorMatchPolicy;
     private FlavorCollection allOfFlavors;
+    private List<FlavorPart> allOfFlavorsTypes = new ArrayList<>();
     private List<FlavorPart> definedAndRequiredFlavorTypes = new ArrayList();
     
     public HostTrustRequirements() { }
@@ -75,5 +76,13 @@ public class HostTrustRequirements {
     
     public void removeDefinedAndRequiredFlavorType(FlavorPart flavorPart) {
         definedAndRequiredFlavorTypes.remove(flavorPart);
+    }
+
+    public List<FlavorPart> getAllOfFlavorsTypes() {
+        return allOfFlavorsTypes;
+    }
+
+    public void setAllOfFlavorsTypes(List<FlavorPart> allOfFlavorsTypes) {
+        this.allOfFlavorsTypes = allOfFlavorsTypes;
     }
 }

@@ -172,7 +172,7 @@ public class CreateSamlCertificate extends LocalSetupTask {
         }
 
         // create a new key pair for SAML
-        KeyPair samlkey = RsaUtil.generateRsaKeyPair(2048);
+        KeyPair samlkey = RsaUtil.generateRsaKeyPair(3072);
         X509Builder builder = X509Builder.factory();
         builder.issuerName(cacert);
         builder.issuerPrivateKey(cakey);

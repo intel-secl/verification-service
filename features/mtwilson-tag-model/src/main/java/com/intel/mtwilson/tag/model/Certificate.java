@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.intel.dcsg.cpg.crypto.Sha1Digest;
 import com.intel.dcsg.cpg.crypto.Sha256Digest;
+import com.intel.dcsg.cpg.crypto.Sha384Digest;
 import com.intel.dcsg.cpg.validation.Regex;
 import com.intel.dcsg.cpg.validation.RegexPatterns;
 import com.intel.dcsg.cpg.validation.Unchecked;
@@ -36,6 +37,7 @@ public class Certificate extends CertificateDocument{
     private byte[] certificate;
     private Sha1Digest sha1; // 20 bytes      SHA1(CERTIFICATE)  the certificate fingerprint
     private Sha256Digest sha256; // 32 bytes      SHA256(CERTIFICATE)  the certificate fingerprint
+    private Sha384Digest sha384; // 48 bytes      SHA384(CERTIFICATE)  the certificate fingerprint
     private String subject;
     private String issuer;
     private Date notBefore;
@@ -64,8 +66,17 @@ public class Certificate extends CertificateDocument{
         return sha256;
     }
 
-    public void setSha256(Sha256Digest sha256) {
-        this.sha256 = sha256;
+    public void setSha256(Sha256Digest sha256) { 
+	this.sha256 = sha256; 
+    }
+
+    @Unchecked
+    public Sha384Digest getSha384() {
+        return sha384;
+    }
+
+    public void setSha384(Sha384Digest sha384) {
+        this.sha384 = sha384;
     }
 
     public String getSubject() {
@@ -123,6 +134,7 @@ public class Certificate extends CertificateDocument{
         certificate.setCertificate(data);
         certificate.setSha1(Sha1Digest.digestOf(data)); // throws UnsupportedEncodingException
         certificate.setSha256(Sha256Digest.digestOf(data)); // throws UnsupportedEncodingException
+        certificate.setSha384(Sha384Digest.digestOf(data)); // throws UnsupportedEncodingException
         X509AttributeCertificate attrcert = X509AttributeCertificate.valueOf(data);
         certificate.setIssuer(attrcert.getIssuer());
         certificate.setSubject(attrcert.getSubject());

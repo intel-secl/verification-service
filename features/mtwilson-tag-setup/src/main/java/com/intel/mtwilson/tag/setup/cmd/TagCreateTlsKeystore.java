@@ -55,7 +55,7 @@ public class TagCreateTlsKeystore extends TagCommand {
         dnsAlternativeName = getOptions().getString("dns");
         
         // create a new key pair
-        KeyPair cakey = RsaUtil.generateRsaKeyPair(2048);
+        KeyPair cakey = RsaUtil.generateRsaKeyPair(3072);
         X509Builder builder = X509Builder.factory();
         builder.selfSigned(dn, cakey);
         if( dnsAlternativeName != null ) {

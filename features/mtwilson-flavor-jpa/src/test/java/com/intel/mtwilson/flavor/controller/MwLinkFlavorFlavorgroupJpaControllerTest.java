@@ -10,6 +10,8 @@ import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.flavor.data.MwFlavor;
 import com.intel.mtwilson.flavor.data.MwFlavorgroup;
 import com.intel.mtwilson.flavor.data.MwLinkFlavorFlavorgroup;
+import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
+import com.intel.mtwilson.repository.RepositorySearchException;
 import java.util.List;
 import java.util.Properties;
 import javax.persistence.EntityManagerFactory;
@@ -18,6 +20,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.*;
 import org.junit.After;
 import org.junit.AfterClass;
+import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -76,8 +79,8 @@ public class MwLinkFlavorFlavorgroupJpaControllerTest {
     
     @Test
     public void createTestData() throws Exception {
-        MwFlavorgroup mwFlavorgroupAutomatic = mwFlavorgroupJpaController.findMwFlavorgroupByName("mtwilson_automatic");
-        MwFlavorgroup mwFlavorgroupUnique = mwFlavorgroupJpaController.findMwFlavorgroupByName("mtwilson_unique");
+        MwFlavorgroup mwFlavorgroupAutomatic = mwFlavorgroupJpaController.findMwFlavorgroupByName(Flavorgroup.AUTOMATIC_FLAVORGROUP);
+        MwFlavorgroup mwFlavorgroupUnique = mwFlavorgroupJpaController.findMwFlavorgroupByName(Flavorgroup.HOST_UNIQUE_FLAVORGROUP);
         List<MwFlavor> mwFlavorEntries = mwFlavorJpaController.findMwFlavorEntities();
         for (MwFlavor mwFlavor : mwFlavorEntries) {
             String flavorgroupId = null;

@@ -50,7 +50,7 @@ public class CreatePrivacyCA extends LocalSetupTask {
 
     @Override
     protected void execute() throws Exception {
-        TpmUtils.createCaP12(2048, identityIssuer, identityPassword, identityP12.getAbsolutePath(), identityCertificateValidityDays);
+        TpmUtils.createCaP12(3072, identityIssuer, identityPassword, identityP12.getAbsolutePath(), identityCertificateValidityDays);
         X509Certificate pcaCert = TpmUtils.certFromP12(identityP12.getAbsolutePath(), identityPassword);
         String self = X509Util.encodePemCertificate(pcaCert);
         String existingPrivacyAuthorities = "";

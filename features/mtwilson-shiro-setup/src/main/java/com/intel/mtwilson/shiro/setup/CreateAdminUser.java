@@ -16,6 +16,7 @@ import com.intel.dcsg.cpg.crypto.RsaCredentialX509;
 import com.intel.dcsg.cpg.crypto.RsaUtil;
 import com.intel.dcsg.cpg.crypto.Sha1Digest;
 import com.intel.dcsg.cpg.crypto.Sha256Digest;
+import com.intel.dcsg.cpg.crypto.Sha384Digest;
 import com.intel.dcsg.cpg.crypto.SimpleKeystore;
 import com.intel.dcsg.cpg.io.Platform;
 import com.intel.mtwilson.crypto.password.PasswordUtil;
@@ -206,7 +207,7 @@ public class CreateAdminUser extends DatabaseSetupTask {
             userLoginPassword = new UserLoginPassword();
             userLoginPassword.setId(new UUID());
             userLoginPassword.setUserId(user.getId());
-            userLoginPassword.setAlgorithm("SHA256");
+            userLoginPassword.setAlgorithm("SHA384");
             userLoginPassword.setIterations(1);
             userLoginPassword.setSalt(RandomUtil.randomByteArray(8));
             userLoginPassword.setPasswordHash(PasswordUtil.hash(password.getBytes(), userLoginPassword));
@@ -296,10 +297,11 @@ public class CreateAdminUser extends DatabaseSetupTask {
             userLoginCertificate.setExpires(certificate.getNotAfter());
             userLoginCertificate.setSha1Hash(Sha1Digest.digestOf(certificate.getEncoded()).toByteArray());
             userLoginCertificate.setSha256Hash(Sha256Digest.digestOf(certificate.getEncoded()).toByteArray());
+            userLoginCertificate.setSha384Hash(Sha384Digest.digestOf(certificate.getEncoded()).toByteArray());
             userLoginCertificate.setStatus(Status.APPROVED);
             userLoginCertificate.setUserId(user.getId());
-            loginDAO.insertUserLoginCertificate(userLoginCertificate.getId(), userLoginCertificate.getUserId(), userLoginCertificate.getCertificate(), userLoginCertificate.getSha1Hash(), userLoginCertificate.getSha256Hash(), userLoginCertificate.getExpires(), userLoginCertificate.isEnabled(), userLoginCertificate.getStatus(), userLoginCertificate.getComment());
-            log.debug("Created user login certificate with sha256 {}", Sha256Digest.valueOf(userLoginCertificate.getSha256Hash()).toHexString());
+            loginDAO.insertUserLoginCertificate(userLoginCertificate.getId(), userLoginCertificate.getUserId(), userLoginCertificate.getCertificate(), userLoginCertificate.getSha1Hash(), userLoginCertificate.getSha256Hash(), userLoginCertificate.getSha384Hash(), userLoginCertificate.getExpires(), userLoginCertificate.isEnabled(), userLoginCertificate.getStatus(), userLoginCertificate.getComment());
+            log.debug("Created user login certificate with sha384 {}", Sha384Digest.valueOf(userLoginCertificate.getSha384Hash()).toHexString());
         }
         return userLoginCertificate;
     }

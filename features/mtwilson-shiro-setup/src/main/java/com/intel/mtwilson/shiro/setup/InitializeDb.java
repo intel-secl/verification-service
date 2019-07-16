@@ -30,7 +30,6 @@ public class InitializeDb extends DatabaseSetupTask {
     private static final String FLAVOR_MANAGER_ROLE = "flavor_manager";
     private static final String HOST_MANAGER_ROLE = "host_manager";
     private static final String REPORTS_MANAGER_ROLE = "reports_manager";
-    private static final String HOST_BASED_FLAVOR_CREATOR_ROLE = "host_based_flavor_creator";
     private static final String HOST_UNIQUE_FLAVOR_CREATOR_ROLE = "host_unique_flavor_creator";
     private static final String TRUSTAGENT_PROVISIONER_ROLE = "trustagent_provisioner";
     private HashMap<String, HashMap<String, String>> roleDomainActions = null;
@@ -54,7 +53,6 @@ public class InitializeDb extends DatabaseSetupTask {
             createRoleAndAssociatedPermissions(loginDAO, FLAVOR_MANAGER_ROLE, "", roleDomainActions.get(FLAVOR_MANAGER_ROLE));
             createRoleAndAssociatedPermissions(loginDAO, HOST_MANAGER_ROLE, "", roleDomainActions.get(HOST_MANAGER_ROLE));
             createRoleAndAssociatedPermissions(loginDAO, REPORTS_MANAGER_ROLE, "", roleDomainActions.get(REPORTS_MANAGER_ROLE));
-            createRoleAndAssociatedPermissions(loginDAO, HOST_BASED_FLAVOR_CREATOR_ROLE, "", roleDomainActions.get(HOST_BASED_FLAVOR_CREATOR_ROLE));
             createRoleAndAssociatedPermissions(loginDAO, HOST_UNIQUE_FLAVOR_CREATOR_ROLE, "", roleDomainActions.get(HOST_UNIQUE_FLAVOR_CREATOR_ROLE));
             createRoleAndAssociatedPermissions(loginDAO, TRUSTAGENT_PROVISIONER_ROLE, "", roleDomainActions.get(TRUSTAGENT_PROVISIONER_ROLE));
         }
@@ -103,7 +101,6 @@ public class InitializeDb extends DatabaseSetupTask {
             validateRoleAndAssociatedPermissions(loginDAO, FLAVOR_MANAGER_ROLE, roleDomainActions.get(FLAVOR_MANAGER_ROLE));
             validateRoleAndAssociatedPermissions(loginDAO, HOST_MANAGER_ROLE, roleDomainActions.get(HOST_MANAGER_ROLE));
             validateRoleAndAssociatedPermissions(loginDAO, REPORTS_MANAGER_ROLE, roleDomainActions.get(REPORTS_MANAGER_ROLE));
-            validateRoleAndAssociatedPermissions(loginDAO, HOST_BASED_FLAVOR_CREATOR_ROLE, roleDomainActions.get(HOST_BASED_FLAVOR_CREATOR_ROLE));
             validateRoleAndAssociatedPermissions(loginDAO, HOST_UNIQUE_FLAVOR_CREATOR_ROLE, roleDomainActions.get(HOST_UNIQUE_FLAVOR_CREATOR_ROLE));
             validateRoleAndAssociatedPermissions(loginDAO, TRUSTAGENT_PROVISIONER_ROLE, roleDomainActions.get(TRUSTAGENT_PROVISIONER_ROLE));
         }
@@ -175,11 +172,7 @@ public class InitializeDb extends DatabaseSetupTask {
         domainActions.put("flavors", "*");
         domainActions.put("flavorgroups", "*");
         roleDomainActions.put(FLAVOR_MANAGER_ROLE, domainActions);
-
-        domainActions = new HashMap<>();
-        domainActions.put("host_based_flavors", "create");
-        roleDomainActions.put(HOST_BASED_FLAVOR_CREATOR_ROLE, domainActions);
-
+        
         domainActions = new HashMap<>();
         domainActions.put("host_unique_flavors", "create");
         roleDomainActions.put(HOST_UNIQUE_FLAVOR_CREATOR_ROLE, domainActions);

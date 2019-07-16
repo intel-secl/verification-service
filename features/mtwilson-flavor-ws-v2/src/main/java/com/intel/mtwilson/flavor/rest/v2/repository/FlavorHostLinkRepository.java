@@ -61,6 +61,15 @@ public class FlavorHostLinkRepository {
                         flavorHostLinkCollection.getFlavorHostLinks().add(convert(mwLinkFlavorHost));
                     }
                 }
+            } else if (criteria.hostId != null && criteria.flavorgroupId != null) {
+                List<MwLinkFlavorHost> mwLinkFlavorHostList =
+                        mwLinkFlavorHostJpaController.findMwLinkFlavorHostByHostIdAndFlavorGroupId(criteria.hostId.toString(),
+                                criteria.flavorgroupId.toString());
+                if (mwLinkFlavorHostList != null && !mwLinkFlavorHostList.isEmpty()) {
+                    for (MwLinkFlavorHost mwLinkFlavorHost : mwLinkFlavorHostList) {
+                        flavorHostLinkCollection.getFlavorHostLinks().add(convert(mwLinkFlavorHost));
+                    }
+                }
             } else if (criteria.hostId != null) {
                 List<MwLinkFlavorHost> mwLinkFlavorHostList =
                         mwLinkFlavorHostJpaController.findMwLinkFlavorHostByHostId(criteria.hostId.toString());

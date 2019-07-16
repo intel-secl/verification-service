@@ -13,6 +13,7 @@ import com.google.common.io.Resources;
 import com.intel.dcsg.cpg.extensions.Extensions;
 import com.intel.mtwilson.core.flavor.PlatformFlavor;
 import com.intel.mtwilson.core.flavor.PlatformFlavorFactory;
+import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.core.flavor.model.Flavor;
 import com.intel.mtwilson.core.verifier.policy.TrustMarker;
 import com.intel.mtwilson.core.verifier.policy.TrustReport;
@@ -23,7 +24,6 @@ import com.intel.mtwilson.jackson.validation.ValidationModule;
 import com.intel.mtwilson.jaxrs2.provider.JacksonObjectMapperProvider;
 import com.intel.mtwilson.core.common.model.HostManifest;
 import com.intel.mtwilson.core.common.tag.model.X509AttributeCertificate;
-import java.io.File;
 import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -36,11 +36,8 @@ import org.junit.Test;
 public class TestFlavorVerify {
     
     ObjectMapper mapper = JacksonObjectMapperProvider.createDefaultMapper();
-    File tempPrivacyCA;
-    File temptagCA;
     String hostManifestwithTagCertificateAsJson;
-    TrustReport combinedTrustReport, individualTrustReport;
-    PlatformFlavor platformFlavor;
+    TrustReport combinedTrustReport;
     ArrayList<Flavor> flavors = new ArrayList();
 
     @BeforeClass
@@ -69,11 +66,12 @@ public class TestFlavorVerify {
         //TODO: add code to retrieve tag certificate from mw_tag_certificate
         PlatformFlavor platformFlavor = factory.getPlatformFlavor(hostManifest, null);
         for (String flavorPart : platformFlavor.getFlavorPartNames()){
-            Flavor flavor = mapper.readValue(platformFlavor.getFlavorPart(flavorPart), Flavor.class);
-            flavors.add(flavor);  
-            System.out.println(mapper.writeValueAsString(flavor));
+             for(String flavorStr : platformFlavor.getFlavorPart(flavorPart)) {
+                Flavor flavor = mapper.readValue(flavorStr, Flavor.class);
+                System.out.println(mapper.writeValueAsString(flavor));
+                flavors.add(flavor);
+            } 
         }
-
     }
     
     @Test
@@ -86,6 +84,4 @@ public class TestFlavorVerify {
         combinedTrustReport = rule.addFaults(combinedTrustReport);
         System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(combinedTrustReport));
     }
-    
-    
 }

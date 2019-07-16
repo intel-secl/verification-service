@@ -3,13 +3,14 @@
     
     <groupId>com.intel.mtwilson.packages</groupId>
     <artifactId>mtwilson-packages</artifactId>
+    <version>4.5-SNAPSHOT</version>
     
     <packaging>pom</packaging>
     
     <parent>
         <groupId>com.intel.mtwilson.maven</groupId>
         <artifactId>mtwilson-dist-feature</artifactId>
-        <version>4.4-SNAPSHOT</version>
+        <version>4.5-SNAPSHOT</version>
         <relativePath />
     </parent>
     
@@ -18,7 +19,6 @@
         <module>host-verification-service-linux</module>
         <module>host-verification-service-zip</module>
         <module>log-rotate-linux</module>
-        <module>monit-linux</module>
         <module>host-verification-service-docker</module>
     </modules>
     

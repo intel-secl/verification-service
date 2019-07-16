@@ -13,7 +13,6 @@ import com.intel.mtwilson.flavor.controller.MwFlavorJpaController;
 import com.intel.mtwilson.flavor.controller.exceptions.PreexistingEntityException;
 import com.intel.mtwilson.flavor.data.MwFlavor;
 import com.intel.mtwilson.flavor.model.FlavorMatchPolicy;
-
 import com.intel.mtwilson.flavor.model.FlavorMatchPolicyCollection;
 import com.intel.mtwilson.flavor.model.MatchPolicy;
 import static com.intel.mtwilson.flavor.model.MatchPolicy.MatchType.ANY_OF;
@@ -22,15 +21,12 @@ import static com.intel.mtwilson.flavor.model.MatchPolicy.Required.REQUIRED_IF_D
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorFilterCriteria;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorLocator;
-import com.intel.mtwilson.repository.RepositoryCreateException;
-import com.intel.mtwilson.repository.RepositoryException;
-import com.intel.mtwilson.repository.RepositoryInvalidInputException;
-import com.intel.mtwilson.repository.RepositoryRetrieveException;
-import com.intel.mtwilson.repository.RepositorySearchException;
+import com.intel.mtwilson.repository.*;
 import com.intel.mtwilson.flavor.controller.exceptions.NonexistentEntityException;
 import static com.intel.mtwilson.core.flavor.common.FlavorPart.*;
 import static com.intel.mtwilson.flavor.model.MatchPolicy.MatchType.LATEST;
 import com.intel.mtwilson.repository.RepositoryDeleteException;
+import javax.ws.rs.WebApplicationException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,10 +35,8 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- *
  * @author srege
  * @author nkgadepa
- *
  */
 public class FlavorRepository {
 
@@ -138,7 +132,7 @@ public class FlavorRepository {
         if (item == null || item.getMeta() == null) {
             throw new RepositoryInvalidInputException("Flavor meta must be specified");
         }
-        
+
         UUID flavorId;
         String flavorLabel = null;
         if (item.getMeta().getId() != null) {
@@ -149,32 +143,37 @@ public class FlavorRepository {
         if (item.getMeta().getDescription().getLabel() != null){
             flavorLabel = item.getMeta().getDescription().getLabel();
         }
-        
         FlavorLocator locator = new FlavorLocator();
         locator.id = flavorId;
         if (flavorLabel != null) {
             locator.label = flavorLabel;
         }
         MwFlavor mwFlavor;
+        String errorMessage = null;
         try {
             MwFlavorJpaController mwFlavorJpaController = My.jpa().mwFlavor();
             mwFlavor = mwFlavorJpaController.findMwFlavor(flavorId.toString());
             if (mwFlavor != null) {
-                log.error("Flavor specified {} already exists", flavorId.toString());
-                throw new RepositoryInvalidInputException(locator);
+                errorMessage = "A flavor with UUID " + flavorId.toString() + " already exists.";
+                log.error(errorMessage);
+                throw new PreexistingEntityException(errorMessage);
             }
             mwFlavor = mwFlavorJpaController.findMwFlavorByName(flavorLabel);
             if (mwFlavor != null) {
-                throw new PreexistingEntityException("The flavor with label " + mwFlavor.getLabel() + " already exists.");
+                errorMessage = "A flavor with Label " + mwFlavor.getLabel() + " already exists.";
+                log.error(errorMessage);
+                throw new PreexistingEntityException(errorMessage);
             }
-            
+
             // create the flavor
             MwFlavor newMwFlavor = new MwFlavor(flavorId.toString(), item);
             mwFlavorJpaController.create(newMwFlavor);
             log.debug("Created the flavor {} successfully", flavorId);
-            
+
             // return back the flavor created
             return newMwFlavor.getContent();
+        } catch (PreexistingEntityException ex) {
+            throw new WebApplicationException(errorMessage, 400);
         } catch (RepositoryException re) {
             throw re;
         } catch (Exception ex) {

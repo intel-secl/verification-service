@@ -81,7 +81,11 @@ public class FlavorgroupHostLinkRepository {
     
     public FlavorgroupHostLink retrieve(FlavorgroupHostLinkLocator locator) {
         log.debug("Received request to retrieve flavorgroup host link");
-        if (locator == null || (locator.id == null && locator.pathId == null)) { return null; }
+        if (locator == null || (locator.id == null
+                && locator.pathId == null
+                && (locator.flavorgroupId == null || locator.hostId == null))) {
+            return null;
+        }
         
         try {
             MwLinkFlavorgroupHostJpaController mwLinkFlavorgroupHostJpaController = My.jpa().mwLinkFlavorgroupHost();
@@ -162,29 +166,38 @@ public class FlavorgroupHostLinkRepository {
 
     public void delete(FlavorgroupHostLinkLocator locator) {
         log.debug("Received request to delete flavorgroup host link");
-        if (locator == null || locator.id == null) {
+        
+        if (locator == null || locator.id == null && (locator.flavorgroupId == null && locator.hostId == null)) {
             throw new RepositoryInvalidInputException("Invalid flavorgroup host link ID");
         }
+        MwLinkFlavorgroupHost linkFlavorgroupTbl = null;
         try {
             MwLinkFlavorgroupHostJpaController flavorgroupHostJpa = My.jpa().mwLinkFlavorgroupHost();
-            MwLinkFlavorgroupHost linkFlavorgroupTbl;
 
-            linkFlavorgroupTbl = flavorgroupHostJpa.findMwLinkFlavorgroupHost(locator.id.toString());
-            if (linkFlavorgroupTbl == null) {
-                log.error("No flavorgroup host link found with ID {}", locator.id.toString());
-                throw new RepositoryInvalidInputException("Invalid flavorgroup host link ID");
+            if (locator.flavorgroupId != null && locator.hostId != null){
+                linkFlavorgroupTbl = flavorgroupHostJpa.findMwLinkFlavorgroupHostByBothIds(locator.flavorgroupId.toString(), locator.hostId.toString());
+                if (linkFlavorgroupTbl == null) {
+                    log.error("No flavorgroup host link found with flavorgroupid: {} and hostId: {}", locator.flavorgroupId.toString(), locator.hostId.toString());
+                    throw new RepositoryInvalidInputException("Invalid flavorgroup host link");
+                }
             }
-
-            flavorgroupHostJpa.destroy(locator.id.toString());
+            else {
+                linkFlavorgroupTbl = flavorgroupHostJpa.findMwLinkFlavorgroupHost(locator.id.toString());
+                if (linkFlavorgroupTbl == null) {
+                    log.error("No flavorgroup host link found with id: {}", locator.id.toString());
+                    throw new RepositoryInvalidInputException("Invalid flavorgroup host link");
+                }
+            }
+            flavorgroupHostJpa.destroy(linkFlavorgroupTbl.getId());
         } catch (IOException ex) {
-            log.error("Error while deleting the flavorgroup host link with id {}", locator.id.toString());
+            log.error("Error while deleting the flavorgroup host link");
             throw new RepositoryDeleteException(ex, locator);
         } catch (NonexistentEntityException Ex) {
-            log.error("Error while deleting the flavorgroup host link with id {}", locator.id.toString());
+            log.error("Error while deleting the flavorgroup host link with id: {}", linkFlavorgroupTbl.getId());
             throw new RepositoryDeleteException(Ex, locator);
         }
     }
-    
+
     public void delete(FlavorgroupHostLinkFilterCriteria criteria) {
         log.debug("FlavorgroupHostLinkRepository:Delete - Got request to delete FlavorgroupHostLink by search criteria.");        
         FlavorgroupHostLinkCollection objCollection = search(criteria);

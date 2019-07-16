@@ -2,10 +2,12 @@
  * Copyright (C) 2019 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
 package com.intel.mtwilson.flavor.controller;
 
 import com.intel.dcsg.cpg.io.UUID;
+import com.intel.mtwilson.core.common.model.HardwareFeature;
+import com.intel.mtwilson.core.common.model.AttestationExemptFeature;
+import com.intel.mtwilson.core.common.model.HardwareFeatureDetails;
 import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.flavor.controller.exceptions.NonexistentEntityException;
 import com.intel.mtwilson.flavor.controller.exceptions.PreexistingEntityException;
@@ -15,12 +17,16 @@ import java.io.Serializable;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
-import static java.util.Optional.ofNullable;
+
 import static com.intel.mtwilson.core.flavor.common.FlavorPart.*;
+import static java.util.Optional.ofNullable;
 
 import javax.persistence.*;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+
+import com.intel.mtwilson.flavor.utils.HostMeasurementUtils;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -157,7 +163,7 @@ public class MwFlavorJpaController implements Serializable {
             Query query = em.createNativeQuery("SELECT * FROM mw_flavor WHERE " + jsonLikeLabelQueryText, MwFlavor.class);
             mwFlavor = (MwFlavor) query.getSingleResult();
         } catch (NoResultException ex){
-                log.debug("No flavor found with label {}.", name);
+            log.debug("No flavor found with label {}.", name);
         } finally {
             em.close();
         }
@@ -211,8 +217,11 @@ public class MwFlavorJpaController implements Serializable {
     private String buildMultipleFlavorPartQueryString(String flavorgroupId,HostManifest hostManifest, HashMap<String, Boolean> flavorTypesWithLatestStatus) {        
 
         String jsonDescriptionQueryTemplate = "f.content -> 'meta' -> 'description' ->>";
-        String jsonPlatformQueryText = null;
+        String jsonBiosQueryTemplate = "f.content -> 'bios' ->>";
+        String jsonHardwareQueryTemplate = "(f.content -> 'hardware' -> 'feature' ->";
+        String jsonBiosQueryText = null;
         String jsonOsQueryText = null;
+        String jsonSoftwareQueryText = null;
         String jsonAssetTagQueryText = null;
         String jsonHostUniqueQueryText = null;        
 
@@ -220,21 +229,70 @@ public class MwFlavorJpaController implements Serializable {
             for(String flavorType : flavorTypesWithLatestStatus.keySet()){
                 switch (FlavorPart.valueOf(flavorType)) {
                     case PLATFORM:
-                        jsonPlatformQueryText = buildFlavorPartQueryStringWithFlavorParts(flavorType, flavorgroupId);
+                        jsonBiosQueryText = buildFlavorPartQueryStringWithFlavorParts(flavorType, flavorgroupId);
+                        if (hostManifest != null && hostManifest.getHostInfo() != null && hostManifest.getHostInfo().getTbootInstalled() != null) {
+                            jsonBiosQueryText = String.format("%s\nAND ( %s 'tboot_installed' = '%s'",
+                                    jsonBiosQueryText, jsonDescriptionQueryTemplate, hostManifest.getHostInfo().getTbootInstalled());
+                            if(Boolean.valueOf(hostManifest.getHostInfo().getTbootInstalled())) { // If tboot is enabled and flavor is of old format tboot_installed field wont be there
+                                jsonBiosQueryText = String.format("%s\nOR ( %s 'tboot_installed' ) is null )",
+                                        jsonBiosQueryText, jsonDescriptionQueryTemplate);
+                            } else {
+                                jsonBiosQueryText = String.format("%s )", jsonBiosQueryText);
+                            }
+                        }
                         if (hostManifest != null && hostManifest.getHostInfo() != null && hostManifest.getHostInfo().getBiosName() != null && !hostManifest.getHostInfo().getBiosName().isEmpty()) {
-                            jsonPlatformQueryText = String.format("%s\nAND %s 'bios_name' = '%s'",
-                                    jsonPlatformQueryText, jsonDescriptionQueryTemplate, hostManifest.getHostInfo().getBiosName());
+                            jsonBiosQueryText = String.format("%s\nAND ( %s 'bios_name' = '%s'",
+                                    jsonBiosQueryText, jsonBiosQueryTemplate, hostManifest.getHostInfo().getBiosName());
+                            // TODO: Remove following post CCB
+                            jsonBiosQueryText = String.format("%s\nOR %s 'bios_name' = '%s')",
+                                    jsonBiosQueryText, jsonDescriptionQueryTemplate, hostManifest.getHostInfo().getBiosName());
                         }
                         if (hostManifest != null && hostManifest.getHostInfo() != null && hostManifest.getHostInfo().getBiosVersion() != null && !hostManifest.getHostInfo().getBiosVersion().isEmpty()) {
-                            jsonPlatformQueryText = String.format("%s\nAND %s 'bios_version' = '%s'",
-                                    jsonPlatformQueryText, jsonDescriptionQueryTemplate, hostManifest.getHostInfo().getBiosVersion());
+                            jsonBiosQueryText = String.format("%s\nAND ( %s 'bios_version' = '%s'",
+                                    jsonBiosQueryText, jsonBiosQueryTemplate, hostManifest.getHostInfo().getBiosVersion());
+                            // TODO: Remove following post CCB
+                            jsonBiosQueryText = String.format("%s\nOR %s 'bios_version' = '%s')",
+                                    jsonBiosQueryText, jsonDescriptionQueryTemplate, hostManifest.getHostInfo().getBiosVersion());
+                        }
+                        if (hostManifest != null && hostManifest.getHostInfo() != null) {
+                            for(HardwareFeature feature : HardwareFeature.values()) {
+                                /*
+                                Check whether the hardware feature is a type of AttestationExemptFeature,
+                                if it is not then include it in flavor retrieval query
+                                 */
+                                if (!EnumUtils.isValidEnum(AttestationExemptFeature.class, feature.getValue())) {
+                                    HardwareFeatureDetails featureDetails = getHardwareFeatureDetails(hostManifest, feature);
+                                    if (featureDetails != null) {
+                                        String jsonHardwareFeatureQueryTemplate = jsonHardwareQueryTemplate.concat(" '" + feature.getValue().toLowerCase() + "' ->>");
+                                        jsonBiosQueryText = String.format("%s\nAND %s 'enabled' = '%s')",
+                                                jsonBiosQueryText, jsonHardwareFeatureQueryTemplate, featureDetails.getEnabled());
+                                        if (feature == HardwareFeature.CBNT && featureDetails.getEnabled() && !StringUtils.isEmpty(featureDetails.getMeta().get("profile"))) {
+                                            jsonBiosQueryText = String.format("%s\nAND %s 'profile' = '%s')",
+                                                    jsonBiosQueryText, jsonHardwareFeatureQueryTemplate, featureDetails.getMeta().get("profile"));
+                                        }
+                                    } else {
+                                        String jsonHardwareFeatureQueryTemplate = jsonHardwareQueryTemplate.concat("> '" + feature.getValue().toLowerCase() + "' ");
+                                        jsonBiosQueryText = String.format("%s\nAND %s) is null", jsonBiosQueryText, jsonHardwareFeatureQueryTemplate);
+                                    }
+                                }
+                            }
                         }
                         if(flavorTypesWithLatestStatus.get(PLATFORM.getValue())){
-                           jsonPlatformQueryText = String.format("%s\nORDER BY f.created desc LIMIT 1",jsonPlatformQueryText);
+                           jsonBiosQueryText = String.format("%s\nORDER BY f.created desc LIMIT 1",jsonBiosQueryText); 
                         }
                         break;
                     case OS:
                         jsonOsQueryText = buildFlavorPartQueryStringWithFlavorParts(flavorType, flavorgroupId);
+                        if (hostManifest != null && hostManifest.getHostInfo() != null && hostManifest.getHostInfo().getTbootInstalled() != null) {
+                            jsonOsQueryText = String.format("%s\nAND ( %s 'tboot_installed' = '%s'",
+                                    jsonOsQueryText, jsonDescriptionQueryTemplate, hostManifest.getHostInfo().getTbootInstalled());
+                            if(Boolean.valueOf(hostManifest.getHostInfo().getTbootInstalled())) {
+                                jsonOsQueryText = String.format("%s\nOR ( %s 'tboot_installed' ) is null )",
+                                        jsonOsQueryText, jsonDescriptionQueryTemplate);
+                            } else {
+                                jsonOsQueryText = String.format("%s )", jsonOsQueryText);
+                            }
+                        }
                         if (hostManifest != null && hostManifest.getHostInfo() != null && hostManifest.getHostInfo().getOsName() != null && !hostManifest.getHostInfo().getOsName().isEmpty()) {
                             jsonOsQueryText = String.format("%s\nAND %s 'os_name' = '%s'",
                                     jsonOsQueryText, jsonDescriptionQueryTemplate, hostManifest.getHostInfo().getOsName());
@@ -255,23 +313,40 @@ public class MwFlavorJpaController implements Serializable {
                            jsonOsQueryText = String.format("%s\nORDER BY f.created desc LIMIT 1", jsonOsQueryText); 
                         }
                         break;
+                    case SOFTWARE:
+                        jsonSoftwareQueryText = buildFlavorPartQueryStringWithFlavorParts(flavorType, flavorgroupId);
+                        if (hostManifest != null && hostManifest.getPcrManifest() != null && hostManifest.getMeasurementXmls() != null && !HostMeasurementUtils.getMeasurementLabels(hostManifest).isEmpty()) {
+                            jsonSoftwareQueryText = String.format("%s\nAND f.label in ('%s')",
+                                    jsonSoftwareQueryText, StringUtils.join(HostMeasurementUtils.getMeasurementLabels(hostManifest), "','"));
+                        }
+                        break;
                     case ASSET_TAG:
-                        jsonAssetTagQueryText = String.format("SELECT f.id FROM mw_flavor AS f\nWHERE %s ",buildFlavorPartQueryString(ASSET_TAG.getValue()));
+                        jsonAssetTagQueryText = String.format("SELECT f.id FROM mw_flavor AS f\nWHERE %s ",buildFlavorPartQueryString(FlavorPart.ASSET_TAG.getValue()));
                         if (hostManifest != null && hostManifest.getHostInfo() != null && hostManifest.getHostInfo().getHardwareUuid() != null && !hostManifest.getHostInfo().getHardwareUuid().isEmpty()) {
                             jsonAssetTagQueryText = String.format("%s\nAND LOWER(%s 'hardware_uuid') = '%s'",
                                     jsonAssetTagQueryText, jsonDescriptionQueryTemplate, hostManifest.getHostInfo().getHardwareUuid().toLowerCase());
                         }
-                        if(flavorTypesWithLatestStatus.get(ASSET_TAG.getValue())){
+                        if(flavorTypesWithLatestStatus.get(FlavorPart.ASSET_TAG.getValue())){
                            jsonAssetTagQueryText = String.format("%s\nORDER BY f.created desc LIMIT 1", jsonAssetTagQueryText); 
                         }
                         break;
                     case HOST_UNIQUE:
-                        jsonHostUniqueQueryText = String.format("SELECT f.id FROM mw_flavor AS f\nWHERE %s ",buildFlavorPartQueryString(HOST_UNIQUE.getValue()));
+                        jsonHostUniqueQueryText = String.format("SELECT f.id FROM mw_flavor AS f\nWHERE %s ",buildFlavorPartQueryString(FlavorPart.HOST_UNIQUE.getValue()));
+                        if (hostManifest != null && hostManifest.getHostInfo() != null && hostManifest.getHostInfo().getTbootInstalled() != null) {
+                            jsonHostUniqueQueryText = String.format("%s\nAND ( %s 'tboot_installed' = '%s'",
+                                    jsonHostUniqueQueryText, jsonDescriptionQueryTemplate, hostManifest.getHostInfo().getTbootInstalled());
+                            if(Boolean.valueOf(hostManifest.getHostInfo().getTbootInstalled())) {
+                                jsonHostUniqueQueryText = String.format("%s\nOR ( %s 'tboot_installed' ) is null )",
+                                        jsonHostUniqueQueryText, jsonDescriptionQueryTemplate);
+                            } else {
+                                jsonHostUniqueQueryText = String.format("%s )", jsonHostUniqueQueryText);
+                            }
+                        }
                         if (hostManifest != null && hostManifest.getHostInfo() != null && hostManifest.getHostInfo().getHardwareUuid() != null && !hostManifest.getHostInfo().getHardwareUuid().isEmpty()) {
                             jsonHostUniqueQueryText = String.format("%s\nAND LOWER(%s 'hardware_uuid') = '%s'",
                                     jsonHostUniqueQueryText, jsonDescriptionQueryTemplate, hostManifest.getHostInfo().getHardwareUuid().toLowerCase());
                         }
-                        if(flavorTypesWithLatestStatus.get(HOST_UNIQUE.getValue())){
+                        if(flavorTypesWithLatestStatus.get(FlavorPart.HOST_UNIQUE.getValue())){
                            jsonHostUniqueQueryText = String.format("%s\nORDER BY f.created desc LIMIT 1", jsonHostUniqueQueryText); 
                         }
                         break;
@@ -285,11 +360,14 @@ public class MwFlavorJpaController implements Serializable {
         String jsonQueryText = null;
         
         // add automatic flavor group types to query string
-        if (jsonPlatformQueryText != null && !jsonPlatformQueryText.isEmpty()) {
-            jsonFlavorTypeQueryText = String.format("%s f.id IN (%s)\nOR ", ofNullable(jsonFlavorTypeQueryText).orElse(""), jsonPlatformQueryText);
+        if (jsonBiosQueryText != null && !jsonBiosQueryText.isEmpty()) {
+            jsonFlavorTypeQueryText = String.format("%s f.id IN (%s)\nOR ", ofNullable(jsonFlavorTypeQueryText).orElse(""), jsonBiosQueryText);
         }
         if (jsonOsQueryText != null && !jsonOsQueryText.isEmpty()) {
             jsonFlavorTypeQueryText = String.format("%s f.id IN (%s)\nOR ", ofNullable(jsonFlavorTypeQueryText).orElse(""), jsonOsQueryText);
+        }
+        if (jsonSoftwareQueryText != null && !jsonSoftwareQueryText.isEmpty()) {
+            jsonFlavorTypeQueryText = String.format("%s f.id IN (%s)\nOR ", ofNullable(jsonFlavorTypeQueryText).orElse(""), jsonSoftwareQueryText);
         }
         if (jsonAssetTagQueryText != null && !jsonAssetTagQueryText.isEmpty()) {
             jsonFlavorTypeQueryText = String.format("%s f.id IN (%s)\nOR", ofNullable(jsonFlavorTypeQueryText).orElse(""), jsonAssetTagQueryText);
@@ -313,7 +391,7 @@ public class MwFlavorJpaController implements Serializable {
         
         return jsonQueryText;
     }
-    
+
     public List<MwFlavor> findMwFlavorEntities(UUID flavorgroupId, HostManifest hostManifest, HashMap<String, Boolean> flavorTypeswithLatestStatus) {
         List<MwFlavor> mwFlavorList = null;
         EntityManager em = getEntityManager();
@@ -348,7 +426,7 @@ public class MwFlavorJpaController implements Serializable {
                     "FROM mw_flavor as f " +
                     "INNER JOIN mw_link_flavor_flavorgroup as l ON f.id = l.flavor_id " +
                     "INNER JOIN mw_flavorgroup as fg ON l.flavorgroup_id = fg.id " +
-                    "WHERE fg.name = 'mtwilson_unique' " +
+                    "WHERE fg.name = 'host_unique' " +
                     "AND (" + buildFlavorPartQueryString(flavorType) + " " +
                     "AND LOWER(f.content -> 'meta' -> 'description' ->> 'hardware_uuid') = ?)");
             query.setParameter(1, hardwareUuid.toLowerCase());
@@ -368,9 +446,10 @@ public class MwFlavorJpaController implements Serializable {
             Query query = em.createNativeQuery("SELECT COUNT(*) " +
                     "FROM mw_flavor as f " +
                     "INNER JOIN mw_link_flavor_flavorgroup as l ON f.id = l.flavor_id " +
-                    "INNER JOIN mw_flavorgroup as fg ON l.flavorgroup_id = fg.id " +
-                    "WHERE fg.id = ? AND " + buildFlavorPartQueryString(flavorType));
+                    "INNER JOIN mw_flavorgroup as fg ON l.flavorgroup_id = fg.id, json_array_elements(fg.flavor_type_match_policy ->'flavor_match_policies') policies " +
+                    "WHERE fg.id = ? AND policies ->> 'flavor_part' = ? AND " + buildFlavorPartQueryString(flavorType));
             query.setParameter(1, flavorgroupId.toString());
+            query.setParameter(2, flavorType);
             Long flavorCount = (Long) query.getResultList().get(0);
             if (flavorCount > 0) {
                 return true;
@@ -379,5 +458,19 @@ public class MwFlavorJpaController implements Serializable {
         } finally {
             em.close();
         }
+    }
+    
+    private HardwareFeatureDetails getHardwareFeatureDetails(HostManifest hostManifest, HardwareFeature feature) {
+        HardwareFeatureDetails featureDetails = null;
+        if(hostManifest.getHostInfo().getHardwareFeatures() != null && hostManifest.getHostInfo().getHardwareFeatures().size() != 0) {
+            featureDetails = hostManifest.getHostInfo().getHardwareFeatures().get(feature);
+        } else if(feature.equals(HardwareFeature.TPM)) {
+            featureDetails = new HardwareFeatureDetails();
+            featureDetails.setEnabled(Boolean.valueOf(hostManifest.getHostInfo().getTpmEnabled()));
+        } else if(feature.equals(HardwareFeature.TXT)) {
+            featureDetails = new HardwareFeatureDetails();
+            featureDetails.setEnabled(Boolean.valueOf(hostManifest.getHostInfo().getTxtEnabled()));
+        }
+        return featureDetails;
     }
 }

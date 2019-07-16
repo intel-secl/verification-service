@@ -34,6 +34,7 @@ public class UserLoginCertificateResultMapper implements ResultSetMapper<UserLog
         userLoginCertificate.setCertificate(rs.getBytes("certificate"));
         userLoginCertificate.setSha1Hash(rs.getBytes("sha1_hash"));
         userLoginCertificate.setSha256Hash(rs.getBytes("sha256_hash"));
+        userLoginCertificate.setSha384Hash(rs.getBytes("sha384_hash"));
         userLoginCertificate.setExpires(rs.getTimestamp("expires"));
         userLoginCertificate.setEnabled(rs.getBoolean("enabled"));
         userLoginCertificate.setStatus(Status.valueOf(rs.getString("status")));

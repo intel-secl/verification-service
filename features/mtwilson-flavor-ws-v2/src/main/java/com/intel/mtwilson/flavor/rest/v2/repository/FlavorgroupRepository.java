@@ -16,12 +16,8 @@ import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupFilterCriteria;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupLocator;
-import com.intel.mtwilson.repository.RepositoryCreateException;
-import com.intel.mtwilson.repository.RepositoryDeleteException;
-import com.intel.mtwilson.repository.RepositoryException;
-import com.intel.mtwilson.repository.RepositoryInvalidInputException;
-import com.intel.mtwilson.repository.RepositoryRetrieveException;
-import com.intel.mtwilson.repository.RepositorySearchException;
+import com.intel.mtwilson.repository.*;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -124,8 +120,36 @@ public class FlavorgroupRepository {
         return null;
     }
 
-    public void store(Flavorgroup item) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public Flavorgroup store(Flavorgroup item) {
+        log.debug("Flavorgroup:Store - Got request to update flavorgroup");
+        if (item == null || item.getId() == null) {
+            log.error("Flavorgroup:store - Flavorgroup ID must be specified");
+            throw new RepositoryInvalidInputException();
+        }
+        FlavorgroupLocator locator = new FlavorgroupLocator();
+        locator.id = item.getId();
+        try {
+            MwFlavorgroupJpaController mwFlavorgroupJpaController = My.jpa().mwFlavorgroup();
+            MwFlavorgroup mwFlavorgroup = mwFlavorgroupJpaController.findMwFlavorgroup(locator.id.toString());
+            if (mwFlavorgroup == null) {
+                log.error("Flavorgroup:Flavorgroup - Host does not exist");
+                throw new RepositoryInvalidInputException(locator);
+            }
+
+            if (item.getName() != null && !item.getName().isEmpty())
+                mwFlavorgroup.setName(item.getName());
+            if (item.getFlavorMatchPolicyCollection() != null)
+                mwFlavorgroup.setFlavorTypeMatchPolicy(item.getFlavorMatchPolicyCollection());
+            mwFlavorgroupJpaController.edit(mwFlavorgroup);
+
+            log.debug("Flavorgroup:Store - Updated the Flavorgroup with id {} successfully.", item.getId().toString());
+            return retrieve(locator);
+        } catch (RepositoryException re) {
+            throw re;
+        } catch (Exception ex) {
+            log.error("Flavorgroup:Store - Error during Host update.", ex);
+            throw new RepositoryStoreException(ex, locator);
+        }
     }
 
     public Flavorgroup create(Flavorgroup item) {
@@ -140,7 +164,7 @@ public class FlavorgroupRepository {
         FlavorgroupLocator locator = new FlavorgroupLocator();
         locator.id = flavorgroupId;
 
-        if (item.getName() == null || (item.getFlavorMatchPolicyCollection() == null && !item.getName().equals("mtwilson_unique"))) {
+        if (item.getName() == null || (item.getFlavorMatchPolicyCollection() == null && !item.getName().equals(Flavorgroup.HOST_UNIQUE_FLAVORGROUP))) {
             log.error("flavorgroup:create - flavorgroup name and flavor match policy must be specified");
             throw new RepositoryInvalidInputException(locator);
         }
@@ -150,7 +174,7 @@ public class FlavorgroupRepository {
             MwFlavorgroup mwFlavorgroup = mwFlavorgroupJpaController.findMwFlavorgroupByName(item.getName());
             if (mwFlavorgroup != null) {
                 log.error("flavorgroup:create - flavorgroup specified {} already exists", item.getName());
-                throw new RepositoryInvalidInputException(locator);
+                throw new RepositoryCreateConflictException(locator);
             }
 
             // create the flavor
@@ -177,8 +201,8 @@ public class FlavorgroupRepository {
         try {
             Flavorgroup obj = retrieve(locator);
             if (obj != null) {
-                if (obj.getName().equalsIgnoreCase("mtwilson_automatic") || obj.getName().equalsIgnoreCase("mtwilson_unique")) {
-                    log.error("The flavorgroup is either mtwilson_automatic or mtwilson_unique, which cannot be deleted");
+                if (obj.getName().equalsIgnoreCase(Flavorgroup.AUTOMATIC_FLAVORGROUP) || obj.getName().equalsIgnoreCase(Flavorgroup.HOST_UNIQUE_FLAVORGROUP)) {
+                    log.error("The flavorgroup is either automatic or host_unique, which cannot be deleted");
                     throw new RepositoryDeleteException();
                 }
 

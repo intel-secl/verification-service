@@ -242,33 +242,39 @@ public class MwHostJpaController implements Serializable {
     
     //This method is used to get the list of hostId and forceUpdate values
     public Map<String, Boolean> filterHostIdFromMwQueue(List<String> hostIdList) {
-        EntityManager em = getEntityManager();
-	String hostList = "";
-        if (hostIdList.size() == 0){
-            hostList = "''";
-        }        
-        for (String hostId : hostIdList) {
-            hostList = String.format("%s,'%s'", hostList, hostId.replaceAll("''", "'")).replaceAll("^,+", "").replaceAll(",+$", "");
-        }
-        
-        try {
-            String formattedQuery = String.format("SELECT action_parameters ->> 'host_id' AS host_id, "
-                    + "action_parameters ->> 'force_update' AS force_update "
-                    + "FROM mw_queue WHERE queue_action = 'flavor-verify' "
-                    + "AND action_parameters ->> 'host_id' IN (?) ");
-            Query query = em.createNativeQuery(formattedQuery);
-            query.setParameter(1, hostList);
-            Map<String, Boolean> resultMap = null;
-            if (query.getResultList() != null && !query.getResultList().isEmpty()) {
-                List<Object[]> result = query.getResultList();
-                resultMap = new HashMap();
-                for (Object[] obj : result) {
-                    resultMap.put(obj[0].toString(), Boolean.valueOf(obj[1].toString()));
+        Map<String, Boolean> resultMap =  new HashMap();
+        if (hostIdList.size() != 0) {
+            EntityManager em = getEntityManager();
+            try {
+                String formattedQuery = String.format("SELECT action_parameters ->> 'host_id' AS host_id, "
+                        + "action_parameters ->> 'force_update' AS force_update "
+                        + "FROM mw_queue WHERE queue_action = 'flavor-verify' "
+                        + "AND action_parameters ->> 'host_id' IN (%s)", getParamBuffer(hostIdList.size()));
+
+                Query query = em.createNativeQuery(formattedQuery);
+                for (int i = 0; i < hostIdList.size(); i++) {
+                    query.setParameter(i + 1, hostIdList.get(i));
                 }
+
+                if (query.getResultList() != null && !query.getResultList().isEmpty()) {
+                    List<Object[]> result = query.getResultList();
+                    for (Object[] obj : result) {
+                        resultMap.put(obj[0].toString(), Boolean.valueOf(obj[1].toString()));
+                    }
+                }
+            } finally {
+                em.close();
             }
-            return resultMap;
-        } finally {
-            em.close();
         }
+        return resultMap;
+    }
+
+    private String getParamBuffer(int size) {
+        StringBuffer params = new StringBuffer();
+        params.append("?");
+        for (int i = 1; i < size; i++) {
+            params.append(", ?");
+        }
+        return params.toString();
     }
 }

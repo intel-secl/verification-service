@@ -31,7 +31,7 @@ keystore_password=password
 api_username=testuser
 api_password=password
 mtwilson_api_baseurl=https://192.168.0.1:8181
-keytool -genkey -alias ${api_username} -keyalg RSA -keysize 2048 -keystore ${keystore} -storepass ${keystore_password} -dname "CN=${api_username}" -validity 30  -keypass "${api_password}"
+keytool -genkey -alias ${api_username} -keyalg RSA -keysize 3072 -keystore ${keystore} -storepass ${keystore_password} -dname "CN=${api_username}" -validity 30  -keypass "${api_password}"
 mtwilson api RegisterUser ${keystore} "${mtwilson_api_baseurl}" Attestation,Whitelist "${api_password}"
 +---
 

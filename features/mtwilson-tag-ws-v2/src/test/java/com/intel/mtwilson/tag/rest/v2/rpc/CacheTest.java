@@ -49,16 +49,16 @@ public class CacheTest {
         log.debug("cert base64: {}", Base64.encodeBase64String(cert.getEncoded()));
     }
     
-    protected SelectionType createSelectionSame() throws IOException{
+    protected SelectionType createSelectionSame() throws IOException {
         // country = US
         DerAttributeType countryValue = new DerAttributeType();
-        countryValue.setValue(new UTF8NameValueSequence("Country", "US").getEncoded());
+        countryValue.setValue(new UTF8NameValueSequence("Country", "US").toASN1Primitive().getEncoded());
         AttributeType country = new AttributeType();
         country.setOid("2.5.4.789.2");
         country.setDer(countryValue);
         // state = CA, TX
         DerAttributeType stateValue = new DerAttributeType();
-        stateValue.setValue(new UTF8NameValueSequence("State", "CA", "TX").getEncoded());
+        stateValue.setValue(new UTF8NameValueSequence("State", "CA", "TX").toASN1Primitive().getEncoded());
         AttributeType state = new AttributeType();
         state.setOid("2.5.4.789.2");
         state.setDer(stateValue);

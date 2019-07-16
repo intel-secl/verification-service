@@ -21,4 +21,6 @@ public class FlavorHostLinkFilterCriteria extends DefaultFilterCriteria implemen
     public UUID flavorId;
     @QueryParam("hostId")
     public UUID hostId;
+    @QueryParam("flavorgroupId")
+    public UUID flavorgroupId;
 }

@@ -210,4 +210,23 @@ public class MwLinkFlavorHostJpaController implements Serializable {
             em.close();
         }
     }
+
+    public List<MwLinkFlavorHost> findMwLinkFlavorHostByHostIdAndFlavorGroupId(String hostId, String flavorgroupId) {
+        EntityManager em = getEntityManager();
+        List<MwLinkFlavorHost> mwLinkFlavorHostList = null;
+        try {
+            Query query = em.createNamedQuery("MwLinkFlavorHost.findByHostIdAndFlavorgroupId");
+            query.setParameter("flavorgroupId", flavorgroupId);
+            query.setParameter("hostId", flavorgroupId);
+            if (query.getResultList() != null && !query.getResultList().isEmpty()) {
+                mwLinkFlavorHostList = query.getResultList();
+            }
+            return mwLinkFlavorHostList;
+        } catch(NoResultException e){
+            log.info( "NoResultException : No flavor and host [{}] link exists for flavorgroup [{}]", hostId, flavorgroupId);
+            return null;
+        } finally {
+            em.close();
+        }
+    }
 }

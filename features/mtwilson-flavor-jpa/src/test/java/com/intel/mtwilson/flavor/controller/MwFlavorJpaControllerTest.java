@@ -9,16 +9,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import java.util.Arrays; 
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.mtwilson.core.flavor.PlatformFlavor;
 import com.intel.mtwilson.core.flavor.PlatformFlavorFactory;
+import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.core.flavor.model.Flavor;
 import com.intel.mtwilson.flavor.data.MwFlavor;
 import com.intel.mtwilson.flavor.data.MwFlavorgroup;
+import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
 import com.intel.mtwilson.jaxrs2.provider.JacksonObjectMapperProvider;
 import com.intel.mtwilson.core.common.model.HostManifest;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import javax.persistence.EntityManagerFactory;
@@ -94,9 +96,9 @@ public class MwFlavorJpaControllerTest {
         System.out.println(String.format("Successfully deserialized file to host manifest with host name: %s", hostManifest.getHostInfo().getHostName()));
         PlatformFlavorFactory factory = new PlatformFlavorFactory();
         PlatformFlavor platformFlavor = factory.getPlatformFlavor(hostManifest, null);
-        Flavor flavorPlatform = mapper.readValue(platformFlavor.getFlavorPart(PLATFORM.getValue()), Flavor.class);
-        Flavor flavorOs = mapper.readValue(platformFlavor.getFlavorPart(OS.getValue()), Flavor.class);
-        Flavor flavorHostUnique = mapper.readValue(platformFlavor.getFlavorPart(HOST_UNIQUE.getValue()), Flavor.class);
+        Flavor flavorPlatform = mapper.readValue(platformFlavor.getFlavorPart(PLATFORM.getValue()).get(0), Flavor.class);
+        Flavor flavorOs = mapper.readValue(platformFlavor.getFlavorPart(OS.getValue()).get(0), Flavor.class);
+        Flavor flavorHostUnique = mapper.readValue(platformFlavor.getFlavorPart(HOST_UNIQUE.getValue()).get(0), Flavor.class);
 
         for (int i = 1; i <= 5; i++) {
             // PLATFORM
@@ -221,7 +223,7 @@ public class MwFlavorJpaControllerTest {
                 "Successfully deserialized file to host manifest with host name: %s",
                 hostManifest.getHostInfo().getHostName()));
         
-        MwFlavorgroup mwFlavorgroupAutomatic = mwFlavorgroupJpaController.findMwFlavorgroupByName("mtwilson_automatic");
+        MwFlavorgroup mwFlavorgroupAutomatic = mwFlavorgroupJpaController.findMwFlavorgroupByName(Flavorgroup.AUTOMATIC_FLAVORGROUP);
         List<MwFlavor> mwFlavorEntries = mwFlavorJpaController.findMwFlavorEntities(UUID.valueOf(mwFlavorgroupAutomatic.getId()), hostManifest, null);
         if (mwFlavorEntries == null) {
             System.out.println(String.format("Could not find any flavors"));
@@ -256,8 +258,10 @@ public class MwFlavorJpaControllerTest {
     
     @Test
     public void flavorgroupContainsFlavorType() throws Exception {
+//        List<String> flavorTypes = Arrays.asList("PLATFORM", "OS", "TEST");
+//        List<String> flavorTypes = new ArrayList<>();
         List<String> flavorTypes = null;
-        MwFlavorgroup mwFlavorgroupAutomatic = mwFlavorgroupJpaController.findMwFlavorgroupByName("mtwilson_automatic");
+        MwFlavorgroup mwFlavorgroupAutomatic = mwFlavorgroupJpaController.findMwFlavorgroupByName(Flavorgroup.AUTOMATIC_FLAVORGROUP);
         
         List<String> flavorTypesInFlavorGroup = new ArrayList<>();
         for (String flavorType : flavorTypes) {

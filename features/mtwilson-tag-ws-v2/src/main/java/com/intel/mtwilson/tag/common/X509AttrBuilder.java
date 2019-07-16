@@ -204,7 +204,7 @@ public class X509AttrBuilder extends BuilderModel {
         }
         try {
             if (getFaults().isEmpty()) {
-                AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find("SHA256withRSA");
+                AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find("SHA384withRSA");
                 AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
                 if (issuerPrivateKey == null) {
                     return null;

@@ -54,8 +54,8 @@ import org.slf4j.LoggerFactory;
  * 
  * <b>Default Flavor Groups</b>: Two flavor groups exist by default.
  * 
- *      mtwilson_automatic   Default flavor group for flavor verification.
- *      mtwilson_unique      Default flavor group for host unique flavor parts. All host unique flavor parts are associated with this 
+ *      automatic   Default flavor group for flavor verification.
+ *      host_unique      Default flavor group for host unique flavor parts. All host unique flavor parts are associated with this 
  *                           flavor group regardless of user settings. This flavor group’s policy is null, and the match policy for its 
  *                           flavor parts are defined in each individual separate flavor group. This separation is required for backend
  *                           processing and handling of the host unique flavors. Host Unique Flavor Parts: ASSET_TAG, HOST_UNIQUE
@@ -252,7 +252,7 @@ public class Flavorgroups extends MtWilsonClient {
      * Output: 
      * {
      *     "id": "826501bd-3c75-4839-a08f-db5f744f8498",
-     *     "name": "mtwilson_automatic",
+     *     "name": "automatic",
      *     "flavor_match_policy_collection": {
      *         "flavor_match_policies": [
      *             {
@@ -345,13 +345,13 @@ public class Flavorgroups extends MtWilsonClient {
      * @mtwMethodType GET
      * @mtwSampleRestCall
      * <div style="word-wrap: break-word; width: 1024px"><pre>
-     * https://server.com:8443/mtwilson/v2/flavorgroups?nameEqualTo=mtwilson_automatic
+     * https://server.com:8443/mtwilson/v2/flavorgroups?nameEqualTo=automatic
      * Output:
      * {
      *     "flavorgroups": [
      *         {
      *             "id": "826501bd-3c75-4839-a08f-db5f744f8498",
-     *             "name": "mtwilson_automatic",
+     *             "name": "automatic",
      *             "flavor_match_policy_collection": {
      *                 "flavor_match_policies": [
      *                     {
@@ -395,7 +395,7 @@ public class Flavorgroups extends MtWilsonClient {
      * <div style="word-wrap: break-word; width: 1024px"><pre>
      * // Create the flavor group filter criteria model and set a flavor group name
      * FlavorgroupFilterCriteria filterCriteria = new FlavorgroupFilterCriteria();
-     * filterCriteria.nameEqualTo = "mtwilson_automatic";
+     * filterCriteria.nameEqualTo = "automatic";
      * 
      * // Create the client and call the search API
      * Flavorgroups client = new Flavorgroups(properties);

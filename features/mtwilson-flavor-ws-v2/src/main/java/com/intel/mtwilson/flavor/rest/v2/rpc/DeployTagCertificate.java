@@ -7,9 +7,10 @@ package com.intel.mtwilson.flavor.rest.v2.rpc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import com.intel.dcsg.cpg.crypto.Sha256Digest;
+import com.intel.dcsg.cpg.crypto.Sha384Digest;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
+import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.launcher.ws.ext.RPC;
 import com.intel.mtwilson.repository.RepositoryException;
 import com.intel.mtwilson.repository.RepositoryInvalidInputException;
@@ -35,8 +36,7 @@ import com.intel.mtwilson.core.common.tag.model.X509AttributeCertificate;
 import com.intel.mtwilson.tag.rest.v2.repository.TagCertificateRepository;
 import com.intel.mtwilson.tls.policy.TlsPolicyDescriptor;
 import com.intel.mtwilson.tls.policy.factory.TlsPolicyFactoryUtil;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.intel.mtwilson.core.flavor.common.FlavorPart.ASSET_TAG;
 
@@ -104,7 +104,7 @@ public class DeployTagCertificate implements Runnable{
                     throw new RepositoryInvalidInputException(locator);
                 }
 
-                Sha256Digest tagSha256 = Sha256Digest.digestOf(obj.getCertificate());
+                Sha384Digest tagSha384 = Sha384Digest.digestOf(obj.getCertificate());
                 String tlsPolicyId = hostObj.getTlsPolicyId();
                 //TlsPolicyFactory tlsPolicyFactory = TlsPolicyFactory.createFactory(hostInfo);
                 //TODO: replace tls policy with actual policy
@@ -113,7 +113,7 @@ public class DeployTagCertificate implements Runnable{
                 TlsPolicyDescriptor tlsPolicyDescriptor = new HostResource().getTlsPolicy(tlsPolicyId, connectionString, true);
                 TlsPolicy tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(tlsPolicyDescriptor);
                 //call asset tag provisioner to deploy asset tag to host (it will call host connector to deploy it)
-                deployAssetTagToHost(tagSha256, hostObj, tlsPolicy);
+                deployAssetTagToHost(tagSha384, hostObj, tlsPolicy);
                 
                 X509AttributeCertificate attrcert = X509AttributeCertificate.valueOf(obj.getCertificate());
                 
@@ -121,12 +121,18 @@ public class DeployTagCertificate implements Runnable{
                 PlatformFlavorFactory flavorFactory = new PlatformFlavorFactory();
                 PlatformFlavor platformFlavor = flavorFactory.getPlatformFlavor(connectionString.getVendor().toString(), attrcert);
                 ObjectMapper mapper = JacksonObjectMapperProvider.createDefaultMapper(); 
-                Flavor flavor = mapper.readValue(platformFlavor.getFlavorPart(ASSET_TAG.getValue()), Flavor.class);
-                
-                // Add Flavor to the Flavorgroup
-                Map<String, Flavor> flavorPartFlavorMap = new HashMap<>();
-                flavorPartFlavorMap.put(ASSET_TAG.getValue(), flavor);
-                new FlavorResource().addFlavorToFlavorgroup(flavorPartFlavorMap, null);
+                if (!platformFlavor.getFlavorPart(ASSET_TAG.getValue()).get(0).isEmpty()) {
+                    Flavor flavor = mapper.readValue(platformFlavor.getFlavorPart(ASSET_TAG.getValue()).get(0), Flavor.class);
+                    // Add Flavor to the Flavorgroup
+                    Map<String, List<Flavor>> flavorPartFlavorMap = new HashMap<>();
+                    List<Flavor> flavors = new ArrayList();
+                    flavors.add(flavor);
+                    flavorPartFlavorMap.put(ASSET_TAG.getValue(), flavors);
+                    new FlavorResource().addFlavorToFlavorgroup(flavorPartFlavorMap, null);                    
+                } else {
+                    log.error("RPC: DeployTagCertificate - Failed to get platform flavor from asset tag certificate");
+                    throw new RepositoryInvalidInputException(locator);
+                }
             } else {
                 log.error("RPC: DeployTagCertificate - Failed to retreive certificate while trying to discover host by certificate ID.");
                 throw new RepositoryInvalidInputException(locator);
@@ -141,14 +147,14 @@ public class DeployTagCertificate implements Runnable{
         
     }
 
-    private void deployAssetTagToHost(Sha256Digest tagSha256, Host host, TlsPolicy tlsPolicy) throws IOException, Exception {
-        String certSha256 = tagSha256.toHexString();
+    private void deployAssetTagToHost(Sha384Digest tagSha384, Host host, TlsPolicy tlsPolicy) throws IOException, Exception {
+        String certSha384 = tagSha384.toHexString();
         try {
             //Assettag provisioner core library method call
             ProvisionAssetTag provisionTag = new ProvisionAssetTag();
             MwHostCredential  credential = My.jpa().mwHostCredential().findByHostId(host.getId().toString());
             provisionTag.provisionTagCertificate(String.format("%s;%s",host.getConnectionString(), credential.getCredential()),
-                                                 certSha256,
+                                                 certSha384,
                                                  tlsPolicy);
 
         } catch (IOException ex) {

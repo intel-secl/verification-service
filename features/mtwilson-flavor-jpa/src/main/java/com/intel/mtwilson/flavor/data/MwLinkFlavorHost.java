@@ -27,7 +27,8 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "MwLinkFlavorHost.findById", query = "SELECT m FROM MwLinkFlavorHost m WHERE m.id = :id"),
     @NamedQuery(name = "MwLinkFlavorHost.findByFlavorId", query = "SELECT m FROM MwLinkFlavorHost m WHERE m.flavorId = :flavorId"),
     @NamedQuery(name = "MwLinkFlavorHost.findByHostId", query = "SELECT m FROM MwLinkFlavorHost m WHERE m.hostId = :hostId"),
-    @NamedQuery(name = "MwLinkFlavorHost.findByBothIds", query = "SELECT m FROM MwLinkFlavorHost m WHERE m.flavorId = :flavorId AND m.hostId = :hostId")})
+    @NamedQuery(name = "MwLinkFlavorHost.findByBothIds", query = "SELECT m FROM MwLinkFlavorHost m WHERE m.flavorId = :flavorId AND m.hostId = :hostId"),
+    @NamedQuery(name = "MwLinkFlavorHost.findByHostIdAndFlavorgroupId", query = "SELECT m FROM MwLinkFlavorHost m INNER JOIN MwLinkFlavorFlavorgroup n ON m.flavorId = n.flavorId where n.flavorgroupId = :flavorgroupId and m.hostId = :hostId")})
 public class MwLinkFlavorHost implements Serializable {
 
     private static final long serialVersionUID = 1L;

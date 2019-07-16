@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.intel.mtwilson.maven</groupId>
         <artifactId>mtwilson-core-feature-zip</artifactId>
-        <version>4.4-SNAPSHOT</version>
+        <version>4.5-SNAPSHOT</version>
         <relativePath/>
     </parent>
     
@@ -83,13 +83,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>org.eclipse.persistence</groupId>
-            <artifactId>javax.persistence</artifactId>
-            <version>2.0.3</version>
-        </dependency>
-        -->
         <dependency>
             <groupId>org.eclipse.persistence</groupId>
             <artifactId>org.eclipse.persistence.jpa.modelgen.processor</artifactId>
