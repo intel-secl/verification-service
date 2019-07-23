@@ -400,7 +400,7 @@ public class MwFlavorJpaController implements Serializable {
             flavorgroupIdString = flavorgroupId.toString();
         }
         try {
-            String queryString = String.format("SELECT f.id, f.content FROM mw_flavor AS f %s",
+            String queryString = String.format("SELECT f.id, f.content, f.signature FROM mw_flavor AS f %s",
                     ofNullable(buildMultipleFlavorPartQueryString(flavorgroupIdString, hostManifest, 
                             flavorTypeswithLatestStatus)).orElse(""));
             log.debug("The Flavor search query string is:\n{}", queryString);

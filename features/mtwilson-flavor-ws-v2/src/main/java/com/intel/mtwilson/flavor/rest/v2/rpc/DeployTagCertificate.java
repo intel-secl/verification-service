@@ -11,6 +11,7 @@ import com.intel.dcsg.cpg.crypto.Sha384Digest;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
 import com.intel.mtwilson.core.flavor.common.FlavorPart;
+import com.intel.mtwilson.core.flavor.model.SignedFlavor;
 import com.intel.mtwilson.launcher.ws.ext.RPC;
 import com.intel.mtwilson.repository.RepositoryException;
 import com.intel.mtwilson.repository.RepositoryInvalidInputException;
@@ -121,12 +122,12 @@ public class DeployTagCertificate implements Runnable{
                 PlatformFlavorFactory flavorFactory = new PlatformFlavorFactory();
                 PlatformFlavor platformFlavor = flavorFactory.getPlatformFlavor(connectionString.getVendor().toString(), attrcert);
                 ObjectMapper mapper = JacksonObjectMapperProvider.createDefaultMapper(); 
-                if (!platformFlavor.getFlavorPart(ASSET_TAG.getValue()).get(0).isEmpty()) {
-                    Flavor flavor = mapper.readValue(platformFlavor.getFlavorPart(ASSET_TAG.getValue()).get(0), Flavor.class);
+                if (!platformFlavor.getFlavorPartWithSignature(ASSET_TAG.getValue()).get(0).getFlavor().toString().isEmpty()) {
+                    SignedFlavor flavorAndSignature = platformFlavor.getFlavorPartWithSignature(ASSET_TAG.getValue()).get(0);
                     // Add Flavor to the Flavorgroup
-                    Map<String, List<Flavor>> flavorPartFlavorMap = new HashMap<>();
-                    List<Flavor> flavors = new ArrayList();
-                    flavors.add(flavor);
+                    Map<String, List<SignedFlavor>> flavorPartFlavorMap = new HashMap<>();
+                    List<SignedFlavor> flavors = new ArrayList();
+                    flavors.add(flavorAndSignature);
                     flavorPartFlavorMap.put(ASSET_TAG.getValue(), flavors);
                     new FlavorResource().addFlavorToFlavorgroup(flavorPartFlavorMap, null);                    
                 } else {

@@ -11,7 +11,9 @@ import com.intel.mtwilson.core.common.utils.ManifestUtils;
 import com.intel.mtwilson.core.common.utils.MeasurementUtils;
 import com.intel.mtwilson.core.flavor.SoftwareFlavor;
 import com.intel.mtwilson.core.flavor.common.FlavorPart;
+import com.intel.mtwilson.core.flavor.common.PlatformFlavorUtil;
 import com.intel.mtwilson.core.flavor.model.Flavor;
+import com.intel.mtwilson.core.flavor.model.SignedFlavor;
 import com.intel.mtwilson.core.host.connector.HostConnector;
 import com.intel.mtwilson.core.host.connector.HostConnectorFactory;
 import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
@@ -63,15 +65,13 @@ public class FlavorFromAppManifestResource {
                     ManifestUtils.parseManifestXML(manifestXml), tlsPolicy);
             String measurementString = MeasurementUtils.getMeasurementString(measurementXml);
 
-            //call flavor library to get software flavor.
-            ObjectMapper mapper = JacksonObjectMapperProvider.createDefaultMapper();
             SoftwareFlavor softwareFlavor = new SoftwareFlavor(measurementString);
-            Flavor flavor = mapper.readValue(softwareFlavor.getSoftwareFlavor(), Flavor.class);
+            SignedFlavor signedFlavor = PlatformFlavorUtil.getSignedFlavor(softwareFlavor.getSoftwareFlavor());
 
             // Add Flavor to the Flavorgroup
-            Map<String, List<Flavor>> flavorPartFlavorMap = new HashMap<>();
-            List<Flavor> flavors = new ArrayList();
-            flavors.add(flavor);
+            Map<String, List<SignedFlavor>> flavorPartFlavorMap = new HashMap<>();
+            List<SignedFlavor> flavors = new ArrayList();
+            flavors.add(signedFlavor);
             flavorPartFlavorMap.put(FlavorPart.SOFTWARE.getValue(), flavors);
             List<String> partialFlavorTypes = new ArrayList();
             partialFlavorTypes.add(FlavorPart.SOFTWARE.getValue());
@@ -81,7 +81,7 @@ public class FlavorFromAppManifestResource {
                 flavorgroup = FlavorGroupUtils.createFlavorGroupByName(manifestRequest.getFlavorgroupName());            
             }
             new FlavorResource().addFlavorToFlavorgroup(flavorPartFlavorMap, flavorgroup.getId());
-            return flavor;
+            return signedFlavor.getFlavor();
         } catch(Exception ex) {
             log.error("FlavorFromAppManifestResource - Error during flavor creation.", ex);
             throw new RepositoryException(ex);

@@ -8,7 +8,10 @@ package com.intel.mtwilson.flavor.model;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.core.flavor.model.Flavor;
+import com.intel.mtwilson.core.flavor.model.SignedFlavor;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorCollection;
+import com.intel.mtwilson.flavor.rest.v2.model.SignedFlavorCollection;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,13 +22,13 @@ import java.util.List;
 public class HostTrustRequirements {
     private UUID flavorgroupId;
     private FlavorMatchPolicyCollection flavorMatchPolicy;
-    private FlavorCollection allOfFlavors;
+    private SignedFlavorCollection allOfFlavors;
     private List<FlavorPart> allOfFlavorsTypes = new ArrayList<>();
     private List<FlavorPart> definedAndRequiredFlavorTypes = new ArrayList();
     
     public HostTrustRequirements() { }
     
-    public HostTrustRequirements(FlavorCollection allOfFlavors, List<FlavorPart> definedAndRequiredFlavorTypes) {
+    public HostTrustRequirements(SignedFlavorCollection allOfFlavors, List<FlavorPart> definedAndRequiredFlavorTypes) {
         this.allOfFlavors = allOfFlavors;
         this.definedAndRequiredFlavorTypes = definedAndRequiredFlavorTypes;
     }
@@ -46,20 +49,20 @@ public class HostTrustRequirements {
         this.flavorMatchPolicy = flavorMatchPolicy;
     }
     
-    public FlavorCollection getAllOfFlavors() {
+    public SignedFlavorCollection getAllOfFlavors() {
         return allOfFlavors;
     }
     
-    public void setAllOfFlavors(FlavorCollection allOfFlavors) {
+    public void setAllOfFlavors(SignedFlavorCollection allOfFlavors) {
         this.allOfFlavors = allOfFlavors;
     }
     
-    public void addAllOfFlavor(Flavor flavor) {
-        allOfFlavors.getFlavors().add(flavor);
+    public void addAllOfFlavor(SignedFlavor flavor) {
+        allOfFlavors.getFlavorsWithSignature().add(flavor);
     }
     
-    public void removeAllOfFlavor(Flavor flavor) {
-        allOfFlavors.getFlavors().remove(flavor);
+    public void removeAllOfFlavor(SignedFlavor flavor) {
+        allOfFlavors.getFlavorsWithSignature().remove(flavor);
     }
     
     public List<FlavorPart> getDefinedAndRequiredFlavorTypes() {

@@ -7,6 +7,7 @@ package com.intel.mtwilson.flavor.business.policy.rule;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.intel.mtwilson.core.flavor.model.Flavor;
+import com.intel.mtwilson.core.flavor.model.SignedFlavor;
 import com.intel.mtwilson.core.verifier.policy.BaseRule;
 import com.intel.mtwilson.core.verifier.policy.HostTrustPolicyManager;
 import com.intel.mtwilson.core.verifier.policy.Policy;
@@ -18,6 +19,7 @@ import com.intel.mtwilson.core.verifier.policy.vendor.VendorTrustPolicyReader;
 import com.intel.mtwilson.flavor.business.policy.fault.RuleAllOfFlavorsMissing;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorCollection;
 import com.intel.mtwilson.core.common.model.HostManifest;
+import com.intel.mtwilson.flavor.rest.v2.model.SignedFlavorCollection;
 
 /**
  *
@@ -27,22 +29,22 @@ import com.intel.mtwilson.core.common.model.HostManifest;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RuleAllOfFlavors extends BaseRule {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(RuleAllOfFlavors.class);
-    FlavorCollection allOfFlavors;
+    SignedFlavorCollection allOfFlavors;
     private String privacyCaCert;
     private String tagCaCert;
     
     protected RuleAllOfFlavors() {
     } // for desearializing jackson
 
-    public RuleAllOfFlavors(FlavorCollection allOfFlavors, String privacyCaCert, String tagCaCert) {
+    public RuleAllOfFlavors(SignedFlavorCollection allOfFlavors, String privacyCaCert, String tagCaCert) {
         this.allOfFlavors = allOfFlavors;
         this.privacyCaCert = privacyCaCert;
         this.tagCaCert = tagCaCert;
     }
 
     // HostManifest is required if vendor details are missing in flavor e.g. [SOFTWARE, ASSET_TAG]
-    private VendorTrustPolicyReader getVendorTrustPolicyReader(Flavor flavor, HostManifest hostManifest) {
-        HostTrustPolicyManager policymanager = new HostTrustPolicyManager(flavor, hostManifest, privacyCaCert, tagCaCert);
+    private VendorTrustPolicyReader getVendorTrustPolicyReader(SignedFlavor flavorAndSignature, HostManifest hostManifest) {
+        HostTrustPolicyManager policymanager = new HostTrustPolicyManager(flavorAndSignature, hostManifest, privacyCaCert, tagCaCert);
         VendorTrustPolicyReader trustPolicy = policymanager.getVendorTrustPolicyReader();
         return trustPolicy;
     }
@@ -51,12 +53,12 @@ public class RuleAllOfFlavors extends BaseRule {
         if (allOfFlavorsEmpty()) {
             return trustReport;
         }
-        for (Flavor flavor : allOfFlavors.getFlavors()) {
+        for (SignedFlavor flavor : allOfFlavors.getFlavorsWithSignature()) {
             Policy policy = getVendorTrustPolicyReader(flavor, trustReport.getHostManifest()).loadTrustRules();
             for (Rule policyrule : policy.getRules()) {
                 RuleResult result = policyrule.apply(trustReport.getHostManifest());
                 if (!trustReport.checkResultExists(result)) {
-                    String flavorPart = flavor.getMeta().getDescription().getFlavorPart();
+                    String flavorPart = flavor.getFlavor().getMeta().getDescription().getFlavorPart();
                     RuleResult rule = new RuleResult(this);
                     rule.fault(new RuleAllOfFlavorsMissing(flavorPart));
                     trustReport.addResult(rule);
@@ -67,7 +69,7 @@ public class RuleAllOfFlavors extends BaseRule {
     }
 
     public boolean allOfFlavorsEmpty() {
-        if (allOfFlavors == null || allOfFlavors.getFlavors() == null || allOfFlavors.getFlavors().isEmpty()) {
+        if (allOfFlavors == null || allOfFlavors.getFlavorsWithSignature() == null || allOfFlavors.getFlavorsWithSignature().isEmpty()) {
             return true;
         }
         return false;
@@ -77,7 +79,7 @@ public class RuleAllOfFlavors extends BaseRule {
         if (allOfFlavors == null) {
             return false;
         }
-        for (Flavor flavor : allOfFlavors.getFlavors()) {
+        for (SignedFlavor flavor : allOfFlavors.getFlavorsWithSignature()) {
             Policy policy = getVendorTrustPolicyReader(flavor, trustReport.getHostManifest()).loadTrustRules();
             for (Rule policyrule : policy.getRules()) {
                 RuleResult result = policyrule.apply(trustReport.getHostManifest());

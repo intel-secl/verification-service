@@ -9,6 +9,7 @@ import com.intel.dcsg.cpg.io.UUID;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.core.flavor.model.Flavor;
+import com.intel.mtwilson.core.flavor.model.SignedFlavor;
 import com.intel.mtwilson.flavor.controller.MwFlavorJpaController;
 import com.intel.mtwilson.flavor.controller.exceptions.PreexistingEntityException;
 import com.intel.mtwilson.flavor.data.MwFlavor;
@@ -21,6 +22,7 @@ import static com.intel.mtwilson.flavor.model.MatchPolicy.Required.REQUIRED_IF_D
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorFilterCriteria;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorLocator;
+import com.intel.mtwilson.flavor.rest.v2.model.SignedFlavorCollection;
 import com.intel.mtwilson.repository.*;
 import com.intel.mtwilson.flavor.controller.exceptions.NonexistentEntityException;
 import static com.intel.mtwilson.core.flavor.common.FlavorPart.*;
@@ -42,28 +44,28 @@ public class FlavorRepository {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FlavorRepository.class);
 
-    public FlavorCollection search(FlavorFilterCriteria criteria) {
+    public SignedFlavorCollection search(FlavorFilterCriteria criteria) {
         log.debug("flavor:search - got request to search for flavors");
-        FlavorCollection flavorCollection = new FlavorCollection();
+        SignedFlavorCollection flavorCollection = new SignedFlavorCollection();
         try {
             MwFlavorJpaController mwFlavorJpaController = My.jpa().mwFlavor();
             if (criteria.filter == false) {
                 List<MwFlavor> mwFlavorList = mwFlavorJpaController.findMwFlavorEntities();
                 if (mwFlavorList != null && !mwFlavorList.isEmpty()) {
                     for (MwFlavor mwFlavor : mwFlavorList) {
-                        flavorCollection.getFlavors().add(mwFlavor.getContent());
+			flavorCollection.getFlavorsWithSignature().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
                     }
                 }
             } else if (criteria.id != null) {
                 MwFlavor mwFlavor = mwFlavorJpaController.findMwFlavor(criteria.id.toString());
                 if (mwFlavor != null) {
-                    flavorCollection.getFlavors().add(mwFlavor.getContent());
+			flavorCollection.getFlavorsWithSignature().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
                 }
             } else if (criteria.key != null && !criteria.key.isEmpty() && criteria.value != null && !criteria.value.isEmpty()) {
                 List<MwFlavor> mwFlavorList = mwFlavorJpaController.findMwFlavorByKeyValue(criteria.key, criteria.value);
                 if (mwFlavorList != null && !mwFlavorList.isEmpty()) {
                     for (MwFlavor mwFlavor : mwFlavorList) {
-                        flavorCollection.getFlavors().add(mwFlavor.getContent());
+                        flavorCollection.getFlavorsWithSignature().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
                     }
                 }
             } else if (criteria.flavorgroupId != null || criteria.hostManifest != null
@@ -82,7 +84,7 @@ public class FlavorRepository {
                         criteria.flavorgroupId, criteria.hostManifest, criteria.flavorPartsWithLatest);
                 if (mwFlavorList != null && !mwFlavorList.isEmpty()) {
                     for (MwFlavor mwFlavor : mwFlavorList) {
-                        flavorCollection.getFlavors().add(mwFlavor.getContent());
+                        flavorCollection.getFlavorsWithSignature().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
                     }
                 }
             } else {
@@ -93,7 +95,7 @@ public class FlavorRepository {
             log.error("flavor:search - error during search for flavors", ex);
             throw new RepositorySearchException(ex, criteria);
         }
-        log.debug("flavor:search - returning back {} flavor results", flavorCollection.getFlavors().size());
+        log.debug("flavor:search - returning back {} flavor results", flavorCollection.getFlavorsWithSignature().size());
         return flavorCollection;
     }
 
@@ -123,25 +125,51 @@ public class FlavorRepository {
         return null;
     }
 
+    public MwFlavor retrieveFlavorEntity(FlavorLocator locator) {
+        log.debug("flavor:retrieve - got request to retrieve flavor");
+        if (locator == null || (locator.id == null && locator.pathId == null)) {
+            return null;
+        }
+
+        try {
+            MwFlavorJpaController mwFlavorJpaController = My.jpa().mwFlavor();
+            if (locator.pathId != null) {
+                MwFlavor mwFlavor = mwFlavorJpaController.findMwFlavor(locator.pathId.toString());
+                if (mwFlavor != null) {
+                    return mwFlavor;
+                }
+            } else if (locator.id != null) {
+                MwFlavor mwFlavor = mwFlavorJpaController.findMwFlavor(locator.id.toString());
+                if (mwFlavor != null) {
+                    return mwFlavor;
+                }
+            }
+        } catch (Exception ex) {
+            log.error("flavor:retrieve - error during retrieval of flavor", ex);
+            throw new RepositoryRetrieveException(ex);
+        }
+        return null;
+    }
+
     public void store(Flavor item) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public Flavor create(Flavor item) {
+    public Flavor create(SignedFlavor item) {
         log.debug("Got request to create a new flavor");
-        if (item == null || item.getMeta() == null) {
+        if (item == null || item.getFlavor().getMeta() == null) {
             throw new RepositoryInvalidInputException("Flavor meta must be specified");
         }
 
         UUID flavorId;
         String flavorLabel = null;
-        if (item.getMeta().getId() != null) {
-            flavorId = UUID.valueOf(item.getMeta().getId());
+        if (item.getFlavor().getMeta().getId() != null) {
+            flavorId = UUID.valueOf(item.getFlavor().getMeta().getId());
         } else {
             flavorId = new UUID();
         }
-        if (item.getMeta().getDescription().getLabel() != null){
-            flavorLabel = item.getMeta().getDescription().getLabel();
+        if (item.getFlavor().getMeta().getDescription().getLabel() != null){
+            flavorLabel = item.getFlavor().getMeta().getDescription().getLabel();
         }
         FlavorLocator locator = new FlavorLocator();
         locator.id = flavorId;
@@ -166,7 +194,7 @@ public class FlavorRepository {
             }
 
             // create the flavor
-            MwFlavor newMwFlavor = new MwFlavor(flavorId.toString(), item);
+            MwFlavor newMwFlavor = new MwFlavor(flavorId.toString(), item.getFlavor(), item.getSignature());
             mwFlavorJpaController.create(newMwFlavor);
             log.debug("Created the flavor {} successfully", flavorId);
 

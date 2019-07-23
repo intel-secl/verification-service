@@ -19,16 +19,16 @@ import java.util.List;
  */
 public class FlavorCollection extends DocumentCollection<Flavor> {
     private ArrayList<Flavor> flavors = new ArrayList<>();
-    
+
     @JsonInclude(JsonInclude.Include.ALWAYS)
     @JacksonXmlElementWrapper(localName="flavors")
-    @JacksonXmlProperty(localName="flavor")    
+    @JacksonXmlProperty(localName="flavor")
     public List<Flavor> getFlavors() { return flavors; }
-    
+
     public void setFlavors(ArrayList<Flavor> flavors){
         this.flavors = flavors;
     }
-    
+
     @Override
     public List<Flavor> getDocuments() {
         return getFlavors();

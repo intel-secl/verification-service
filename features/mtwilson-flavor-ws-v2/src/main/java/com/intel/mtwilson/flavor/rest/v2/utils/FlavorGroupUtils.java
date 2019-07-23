@@ -8,6 +8,7 @@ import com.intel.mtwilson.core.flavor.model.Flavor;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupLocator;
+import com.intel.mtwilson.flavor.rest.v2.model.SignedFlavorCollection;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorgroupRepository;
 
 import java.util.ArrayList;

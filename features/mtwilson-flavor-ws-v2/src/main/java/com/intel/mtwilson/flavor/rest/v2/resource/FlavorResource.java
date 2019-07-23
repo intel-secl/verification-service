@@ -12,28 +12,13 @@ import com.intel.mtwilson.core.flavor.PlatformFlavor;
 import com.intel.mtwilson.core.flavor.PlatformFlavorFactory;
 import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.core.flavor.common.PlatformFlavorException;
+import com.intel.mtwilson.core.flavor.common.PlatformFlavorUtil;
 import com.intel.mtwilson.core.flavor.model.Flavor;
 import static com.intel.mtwilson.core.flavor.common.FlavorPart.*;
+
 import com.intel.mtwilson.core.flavor.model.Meta;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorCollection;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorCreateCriteria;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorFilterCriteria;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorFlavorgroupLink;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorFlavorgroupLinkCollection;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorFlavorgroupLinkFilterCriteria;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorFlavorgroupLinkLocator;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorHostLink;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorHostLinkCollection;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorHostLinkFilterCriteria;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorHostLinkLocator;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorLocator;
-import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLink;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkCollection;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkFilterCriteria;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupLocator;
-import com.intel.mtwilson.flavor.rest.v2.model.Host;
-import com.intel.mtwilson.flavor.rest.v2.model.HostLocator;
+import com.intel.mtwilson.core.flavor.model.SignedFlavor;
+import com.intel.mtwilson.flavor.rest.v2.model.*;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorFlavorgroupLinkRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorHostLinkRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorRepository;
@@ -103,7 +88,10 @@ public class FlavorResource {
     public FlavorCollection searchFlavor(@BeanParam FlavorFilterCriteria criteria, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse) {
         ValidationUtil.validate(criteria); 
         log.debug("target: {} - {}", httpServletRequest.getRequestURI(), httpServletRequest.getQueryString());
-        return repository.search(criteria);
+        SignedFlavorCollection signedFlavorCollection = repository.search(criteria);
+        FlavorCollection flavorCollection = new FlavorCollection();
+        flavorCollection.setFlavors(signedFlavorCollection.getFlavors());
+        return flavorCollection;
     }
 
     @GET
@@ -112,7 +100,9 @@ public class FlavorResource {
     public FlavorCollection searchFlavorXML(@BeanParam FlavorFilterCriteria criteria, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse) {
         ValidationUtil.validate(criteria);
         log.debug("target: {} - {}", httpServletRequest.getRequestURI(), httpServletRequest.getQueryString());
-        FlavorCollection flavorCollection =  repository.search(criteria);
+        SignedFlavorCollection signedFlavorCollection =  repository.search(criteria);
+        FlavorCollection flavorCollection = new FlavorCollection();
+        flavorCollection.setFlavors(signedFlavorCollection.getFlavors());
         return FlavorGroupUtils.updatePathSeparatorForXML(flavorCollection);
     }
 
@@ -226,7 +216,8 @@ public class FlavorResource {
     
     private FlavorCollection createOne(FlavorCreateCriteria item) throws IOException, Exception {
         X509AttributeCertificate attributeCertificate = null;
-        Map<String, List<Flavor>> flavorPartFlavorMap = new HashMap<>();
+        Map<String, List<SignedFlavor>> flavorPartFlavorMap = new HashMap<>();
+        SignedFlavor signedFlavor = new SignedFlavor();
         List<String> partialFlavorTypes = new ArrayList();
         // get flavor from host or from input
         PlatformFlavor platformFlavor = null;
@@ -273,13 +264,15 @@ public class FlavorResource {
                     if(flavor.getMeta().getDescription().getFlavorPart().equalsIgnoreCase(DEPRECATED_FLAVOR_PART_BIOS)) {
                         flavor.getMeta().getDescription().setFlavorPart(FlavorPart.PLATFORM.getValue());
                     }
+                    signedFlavor.setFlavor(flavor);
+                    signedFlavor.setSignature(PlatformFlavorUtil.getSignedFlavor(Flavor.serialize(flavor)).getSignature());
                     validateFlavorMetaContent(flavor.getMeta());
                     if(flavorPartFlavorMap.containsKey(flavor.getMeta().getDescription().getFlavorPart())) {
-                        flavorPartFlavorMap.get(flavor.getMeta().getDescription().getFlavorPart()).add(flavor);
+                        flavorPartFlavorMap.get(flavor.getMeta().getDescription().getFlavorPart()).add(signedFlavor);
                     } else {
-                        List<Flavor> flavorsList = new ArrayList();
-                        flavorsList.add(flavor);
-                        flavorPartFlavorMap.put(flavor.getMeta().getDescription().getFlavorPart(), flavorsList);
+                        List<SignedFlavor> signedFlavorsList = new ArrayList();
+                        signedFlavorsList.add(signedFlavor);
+                        flavorPartFlavorMap.put(flavor.getMeta().getDescription().getFlavorPart(), signedFlavorsList);
                     }
                     partialFlavorTypes.add(flavor.getMeta().getDescription().getFlavorPart());
                 }
@@ -426,22 +419,22 @@ public class FlavorResource {
      * associated
      * @return createdFlavor Created flavor
      */
-    public FlavorCollection addFlavorToFlavorgroup(Map<String, List<Flavor>> flavorObjCollection, UUID flavorgroupId) {
+    public FlavorCollection addFlavorToFlavorgroup(Map<String, List<SignedFlavor>> flavorObjCollection, UUID flavorgroupId) {
         FlavorCollection returnFlavors = new FlavorCollection();
         Collection<UUID> flavorIds = new ArrayList<>();
 
-        for (Map.Entry<String, List<Flavor>> flavorObj : flavorObjCollection.entrySet()) {
-            for(Flavor flavor : flavorObj.getValue()) {
-                Flavor flavorCreated = new FlavorRepository().create(flavor);
+        for (Map.Entry<String, List<SignedFlavor>> flavorObj : flavorObjCollection.entrySet()) {
+            for(SignedFlavor signedFlavor : flavorObj.getValue()) {
+                Flavor flavorCreated = new FlavorRepository().create(signedFlavor);
                 returnFlavors.getFlavors().add(flavorCreated);      
                 // If the flavor part is HOST_UNIQUE OR ASSET_TAG, then we associate it with the host_unique group name
                 if (flavorObj.getKey().equalsIgnoreCase(ASSET_TAG.getValue())) {
                     addFlavorToUniqueFlavorgroup(flavorCreated, true);
                 } else if (flavorObj.getKey().equalsIgnoreCase(HOST_UNIQUE.getValue())) {
                     addFlavorToUniqueFlavorgroup(flavorCreated, false);
-                } else if (flavorObj.getKey().equalsIgnoreCase(SOFTWARE.getValue()) && flavor.getMeta().getDescription().getLabel().contains(SoftwareFlavorPrefix.DEFAULT_APPLICATION_FLAVOR_PREFIX.getValue())) {
+                } else if (flavorObj.getKey().equalsIgnoreCase(SOFTWARE.getValue()) && signedFlavor.getFlavor().getMeta().getDescription().getLabel().contains(SoftwareFlavorPrefix.DEFAULT_APPLICATION_FLAVOR_PREFIX.getValue())) {
                     addFlavorToIseclSoftwareFlavorgroup(flavorCreated, Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP);
-                } else if (flavorObj.getKey().equalsIgnoreCase(SOFTWARE.getValue()) && flavor.getMeta().getDescription().getLabel().contains(SoftwareFlavorPrefix.DEFAULT_WORKLOAD_FLAVOR_PREFIX.getValue())) {
+                } else if (flavorObj.getKey().equalsIgnoreCase(SOFTWARE.getValue()) && signedFlavor.getFlavor().getMeta().getDescription().getLabel().contains(SoftwareFlavorPrefix.DEFAULT_WORKLOAD_FLAVOR_PREFIX.getValue())) {
                     addFlavorToIseclSoftwareFlavorgroup(flavorCreated, Flavorgroup.WORKLOAD_SOFTWARE_FLAVORGROUP);
                 } else {
                     // For other flavor parts, we just store all the individual flavors first and finally do the association below.
@@ -572,8 +565,8 @@ public class FlavorResource {
      * @param flavorParts
      * @return 
      */
-    private Map<String, List<Flavor>> retrieveFlavorCollection(PlatformFlavor platformFlavor, String flavorgroupId, Collection<String> flavorParts) {
-        Map<String, List<Flavor>> flavorCollection = new HashMap<>();
+    private Map<String, List<SignedFlavor>> retrieveFlavorCollection(PlatformFlavor platformFlavor, String flavorgroupId, Collection<String> flavorParts) {
+        Map<String, List<SignedFlavor>> flavorCollection = new HashMap<>();
 
         if (platformFlavor == null || flavorgroupId == null) {
             throw new IllegalArgumentException("Platform flavor and flavorgroup ID must be specified");
@@ -586,14 +579,13 @@ public class FlavorResource {
         for (String flavorPart : flavorParts) {
             try {
                 ObjectMapper mapper = JacksonObjectMapperProvider.createDefaultMapper();
-                for(String flavorStr : platformFlavor.getFlavorPart(flavorPart)) {
-                    Flavor flavor = mapper.readValue(flavorStr, Flavor.class);
+                for(SignedFlavor flavorAndSignature : platformFlavor.getFlavorPartWithSignature(flavorPart)) {
                     if(flavorCollection.containsKey(flavorPart)) {
-                        flavorCollection.get(flavorPart).add(flavor);                        
+                        flavorCollection.get(flavorPart).add(flavorAndSignature);
                     } else {
-                        List<Flavor> flavors = new ArrayList();
-                        flavors.add(flavor);
-                        flavorCollection.put(flavorPart, flavors);
+                        List<SignedFlavor> signedFlavorList = new ArrayList();
+                        signedFlavorList.add(flavorAndSignature);
+                        flavorCollection.put(flavorPart, signedFlavorList);
                     }
                 }
             } catch (PlatformFlavorException pe) {

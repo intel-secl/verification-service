@@ -52,6 +52,10 @@ public class MwFlavor implements Serializable {
     private Flavor content;
 
     @Basic(optional = false)
+    @Column(name = "signature")
+    private String signature;
+
+    @Basic(optional = false)
     @Column(name = "created")
     @Temporal(TemporalType.TIMESTAMP)
     private Date created;
@@ -61,6 +65,11 @@ public class MwFlavor implements Serializable {
 
     public MwFlavor(String id) {
         this.id = id;
+    }
+
+    public MwFlavor(String id, Flavor content) {
+        this.id = id;
+        this.content = content;
         if (this.content != null && this.content.getMeta() != null) {
             this.content.getMeta().setId(id);
         }
@@ -70,9 +79,10 @@ public class MwFlavor implements Serializable {
         }
     }
 
-    public MwFlavor(String id, Flavor content) {
+    public MwFlavor(String id, Flavor content, String signature) {
         this.id = id;
         this.content = content;
+        this.signature = signature;
         if (this.content != null && this.content.getMeta() != null) {
             this.content.getMeta().setId(id);
         }
@@ -115,7 +125,11 @@ public class MwFlavor implements Serializable {
 
     public void setCreated(Date created) {
         this.created = created;
-    }   
+    }
+
+    public String getSignature() {
+        return signature;
+    }
 
     @Override
     public int hashCode() {

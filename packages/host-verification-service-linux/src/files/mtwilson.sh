@@ -116,7 +116,7 @@ JAVA_OPTS=${JAVA_OPTS:-"-Dlogback.configurationFile=$MTWILSON_CONFIGURATION/logb
 MTWILSON_SETUP_FIRST_TASKS=${MTWILSON_SETUP_FIRST_TASKS:-"filesystem update-extensions-cache-file"}
 MTWILSON_SETUP_MANAGER_TASKS="update-ssl-port create-endorsement-ca create-privacy-ca";
 MTWILSON_PRESETUP_TASKS="create-data-encryption-key"
-MTWILSON_SETUP_TASKS=${MTWILSON_SETUP_TASKS:-"create-certificate-authority-key create-admin-user create-default-flavorgroups initialize-db jetty-ports jetty-tls-keystore password-vault shiro-ssl-port"}
+MTWILSON_SETUP_TASKS=${MTWILSON_SETUP_TASKS:-"create-certificate-authority-key create-flavor-signing-certificate create-admin-user create-default-flavorgroups initialize-db jetty-ports jetty-tls-keystore password-vault shiro-ssl-port"}
 
 # RHEL 7.6 needs PID file for systemd startup service
 # The location is identified as below in mtwilson.sh
@@ -219,6 +219,7 @@ mtwilson_complete_setup() {
   mtwilson_run setup $MTWILSON_PRESETUP_TASKS
   mtwilson_run setup $MTWILSON_SETUP_TASKS
 
+
   postsetup_config
 
   #mtwilson tag-init-database
@@ -264,7 +265,6 @@ mtwilson_setup_keystore() {
     $MTWILSON_BIN/mtwilson config "saml.keystore.password" "${SAML_KEYSTORE_PASSWORD}" >/dev/null
     $MTWILSON_BIN/mtwilson config "saml.key.password" "${SAML_KEY_PASSWORD}" >/dev/null
   fi
-
 
   $MTWILSON_BIN/mtwilson config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,jersey-media-multipart}" >/dev/null
   $MTWILSON_BIN/mtwilson config mtwilson.extensions.packageIncludeFilter.startsWith "${MTWILSON_EXTENSIONS_PACKAGEINCLUDEFILTER_STARTSWITH:-com.intel,org.glassfish.jersey.media.multipart}" >/dev/null

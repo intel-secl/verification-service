@@ -19,6 +19,7 @@ import com.intel.mtwilson.core.host.connector.HostConnectorFactory;
 import com.intel.mtwilson.flavor.data.MwHost;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorFilterCriteria;
+import com.intel.mtwilson.flavor.rest.v2.model.SignedFlavorCollection;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorRepository;
 import com.intel.mtwilson.core.common.model.HostManifest;
 import java.io.IOException;
@@ -40,7 +41,7 @@ public class FlavorsTest {
         searchCriteria.value = PLATFORM.getValue();
         
         FlavorRepository repository = new FlavorRepository();
-        FlavorCollection objCollection = repository.search(searchCriteria);
+        SignedFlavorCollection objCollection = repository.search(searchCriteria);
         for (Flavor obj: objCollection.getFlavors()) {
             log.info(obj.getMeta().getDescription().toString());
         }

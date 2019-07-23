@@ -18,6 +18,7 @@ public class FlavorCreateCriteria {
     private String connectionString;
     private String tlsPolicyId;
     private FlavorCollection flavorCollection;
+    private SignedFlavorCollection signedFlavorCollection;
     private String flavorgroupName;
     private List<String> partialFlavorTypes;
 
@@ -58,5 +59,13 @@ public class FlavorCreateCriteria {
     
     public void setPartialFlavorTypes(List<String> partialFlavorTypes) {
         this.partialFlavorTypes = partialFlavorTypes;
+    }
+
+    public SignedFlavorCollection getSignedFlavorCollection() {
+        return signedFlavorCollection;
+    }
+
+    public void setSignedFlavorCollection(SignedFlavorCollection signedFlavorCollection) {
+        this.signedFlavorCollection = signedFlavorCollection;
     }
 }

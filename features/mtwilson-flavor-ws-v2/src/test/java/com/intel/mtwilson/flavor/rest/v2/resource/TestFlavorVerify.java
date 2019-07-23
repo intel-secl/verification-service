@@ -19,6 +19,7 @@ import com.intel.mtwilson.core.verifier.policy.TrustMarker;
 import com.intel.mtwilson.core.verifier.policy.TrustReport;
 import com.intel.mtwilson.flavor.business.policy.rule.RuleAllOfFlavors;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorCollection;
+import com.intel.mtwilson.flavor.rest.v2.model.SignedFlavorCollection;
 import com.intel.mtwilson.jackson.bouncycastle.BouncyCastleModule;
 import com.intel.mtwilson.jackson.validation.ValidationModule;
 import com.intel.mtwilson.jaxrs2.provider.JacksonObjectMapperProvider;
@@ -76,7 +77,7 @@ public class TestFlavorVerify {
     
     @Test
     public void testCombinedTrustReportResults() throws Exception {
-        FlavorCollection flavorCollection = new FlavorCollection();
+        SignedFlavorCollection flavorCollection = new SignedFlavorCollection();
         flavorCollection.setFlavors(flavors);
         RuleAllOfFlavors rule = new RuleAllOfFlavors(flavorCollection, "", "");
         String[] marker = {TrustMarker.PLATFORM.name()};

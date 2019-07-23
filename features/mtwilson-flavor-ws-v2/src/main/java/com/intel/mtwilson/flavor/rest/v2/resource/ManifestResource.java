@@ -10,6 +10,7 @@ import com.intel.mtwilson.core.flavor.common.FlavorToManifestConverter;
 import com.intel.mtwilson.core.flavor.model.Flavor;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorFilterCriteria;
+import com.intel.mtwilson.flavor.rest.v2.model.SignedFlavorCollection;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorRepository;
 import com.intel.mtwilson.launcher.ws.ext.V2;
 import com.intel.mtwilson.core.common.utils.ManifestUtils;
@@ -43,7 +44,7 @@ public class ManifestResource {
         ValidationUtil.validate(criteria);
         log.debug("getManifest(): target: {} - {}", httpServletRequest.getRequestURI(), httpServletRequest.getQueryString());
         Flavor flavor = null;
-        FlavorCollection flavorCollection = repository.search(criteria);
+        SignedFlavorCollection flavorCollection = repository.search(criteria);
         if (flavorCollection.getFlavors().size() > 0) {
             flavor = flavorCollection.getFlavors().get(0);
         }
