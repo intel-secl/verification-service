@@ -108,12 +108,12 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask{
             getConfiguration().set("mtwilson.flavor.signing.dn", flavorSigningCSRDistinguishedName);
         }
 
-        if (getConfiguration().get("cms.api.url") == null || getConfiguration().get("cms.api.url").isEmpty()) {
+        if (getConfiguration().get("cms.base.url") == null || getConfiguration().get("cms.base.url").isEmpty()) {
             configuration("CMS API Url is not provided");
         }
 
-        if (getConfiguration().get("aas.bearer.token") != null || !getConfiguration().get("aas.bearer.token").isEmpty()) {
-            properties.setProperty("aas.bearer.token", getConfiguration().get("aas.bearer.token"));
+        if (getConfiguration().get("bearer.token") != null || !getConfiguration().get("bearer.token").isEmpty()) {
+            properties.setProperty("bearer.token", getConfiguration().get("bearer.token"));
         }
         else {
             configuration("AAS Bearer Token is not provided");
@@ -171,7 +171,7 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask{
         ContentSigner signGen = new JcaContentSignerBuilder("SHA384withRSA").build(flavorSigningKey.getPrivate());
         PKCS10CertificationRequest certificateRequest = csrBuilder.build(signGen);
         Pem flavorSigningCSR = new Pem("CERTIFICATE REQUEST", certificateRequest.getEncoded());
-        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(getConfiguration().get("cms.api.url")), tlsPolicy));
+        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(getConfiguration().get("cms.base.url")), tlsPolicy));
         X509Certificate cmsCACert = cmsClient.getCACertificate();
         X509Certificate flavorSigningCert = cmsClient.getFlavorSigningCertificate(flavorSigningCSR.toString());
         CertificateFactory certificateFactory=CertificateFactory.getInstance("X509");

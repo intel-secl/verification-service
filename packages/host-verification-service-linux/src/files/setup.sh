@@ -753,8 +753,8 @@ export SAML_VALIDITY_SECONDS=${SAML_VALIDITY_SECONDS:-86400}
 mtwilson config "saml.validity.seconds" "$SAML_VALIDITY_SECONDS" >/dev/null
 
 #CMS configuration
-mtwilson config "cms.api.url" "$CMS_API_URL" >/dev/null
-mtwilson config "aas.bearer.token" "$AAS_BEARER_TOKEN" >/dev/null
+mtwilson config "cms.base.url" "$CMS_BASE_URL" >/dev/null
+mtwilson config "bearer.token" "$BEARER_TOKEN" >/dev/null
 
 #Save variables to properties file
 postgres_write_connection_properties "$MTWILSON_CONFIGURATION/mtwilson.properties" mtwilson.db
