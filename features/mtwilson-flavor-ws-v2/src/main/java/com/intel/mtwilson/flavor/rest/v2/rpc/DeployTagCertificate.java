@@ -121,7 +121,7 @@ public class DeployTagCertificate implements Runnable{
                 //call flavor library to get asset tag flavor.
                 PlatformFlavorFactory flavorFactory = new PlatformFlavorFactory();
                 PlatformFlavor platformFlavor = flavorFactory.getPlatformFlavor(connectionString.getVendor().toString(), attrcert);
-                ObjectMapper mapper = JacksonObjectMapperProvider.createDefaultMapper(); 
+                ObjectMapper mapper = JacksonObjectMapperProvider.createDefaultMapper();
                 if (!platformFlavor.getFlavorPartWithSignature(ASSET_TAG.getValue()).get(0).getFlavor().toString().isEmpty()) {
                     SignedFlavor flavorAndSignature = platformFlavor.getFlavorPartWithSignature(ASSET_TAG.getValue()).get(0);
                     // Add Flavor to the Flavorgroup

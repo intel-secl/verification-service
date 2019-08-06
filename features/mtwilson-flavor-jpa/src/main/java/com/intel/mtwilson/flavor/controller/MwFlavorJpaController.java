@@ -14,6 +14,7 @@ import com.intel.mtwilson.flavor.controller.exceptions.PreexistingEntityExceptio
 import com.intel.mtwilson.flavor.data.MwFlavor;
 import com.intel.mtwilson.core.common.model.HostManifest;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -150,6 +151,20 @@ public class MwFlavorJpaController implements Serializable {
             cq.select(em.getCriteriaBuilder().count(rt));
             Query q = em.createQuery(cq);
             return ((Long) q.getSingleResult()).intValue();
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<MwFlavor> getUnsignedMwFlavorList() {
+        EntityManager em = getEntityManager();
+        List<MwFlavor> mwFlavorList = new ArrayList<>();
+        try {
+            Query query = em.createNativeQuery("SELECT * FROM mw_flavor WHERE signature IS NULL OR signature = ''" , MwFlavor.class);
+            if (query.getResultList() != null && !query.getResultList().isEmpty()) {
+                mwFlavorList = query.getResultList();
+            }
+            return mwFlavorList;
         } finally {
             em.close();
         }

@@ -28,13 +28,12 @@ import com.intel.mtwilson.flavor.controller.exceptions.NonexistentEntityExceptio
 import static com.intel.mtwilson.core.flavor.common.FlavorPart.*;
 import static com.intel.mtwilson.flavor.model.MatchPolicy.MatchType.LATEST;
 import com.intel.mtwilson.repository.RepositoryDeleteException;
+
+import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.WebApplicationException;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author srege
@@ -151,8 +150,38 @@ public class FlavorRepository {
         return null;
     }
 
-    public void store(Flavor item) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public List<MwFlavor> retrieveUnsignedMwFlavorList() {
+        log.debug("flavor:retrieve - got request to retrieve unsigned flavors");
+        try {
+            MwFlavorJpaController mwFlavorJpaController = My.jpa().mwFlavor();
+            List<MwFlavor> mwFlavorList = mwFlavorJpaController.getUnsignedMwFlavorList();
+            return mwFlavorList;
+        } catch (Exception ex) {
+            log.error("flavor:retrieve - error during retrieval of unsigned flavors", ex);
+            throw new RepositoryRetrieveException(ex);
+        }
+    }
+
+    public void storeEntity(MwFlavor item) throws Exception {
+        log.debug("Got request to update a flavor");
+        if (item == null || item.getSignature() == null) {
+            throw new RepositoryInvalidInputException("Flavor signature does not exist");
+        }
+	MwFlavorJpaController mwFlavorJpaController = My.jpa().mwFlavor();
+        MwFlavor mwFlavor = mwFlavorJpaController.findMwFlavor(item.getId());
+        String errorMessage;
+        if (mwFlavor == null) {
+            errorMessage = "A flavor with UUID " + item.getId() + " does not exist.";
+            log.error(errorMessage);
+            throw new EntityNotFoundException(errorMessage);
+        }
+        try {
+            mwFlavorJpaController.edit(item);
+            log.debug("Updated the flavor {} successfully", item.getId());
+        } catch (Exception ex) {
+            log.error("Error during the storage of the flavor in the DB", ex);
+            throw new RepositoryStoreException(ex);
+        }
     }
 
     public Flavor create(SignedFlavor item) {

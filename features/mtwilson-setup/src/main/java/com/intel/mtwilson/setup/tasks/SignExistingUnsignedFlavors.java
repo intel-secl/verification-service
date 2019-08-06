@@ -1,0 +1,75 @@
+package com.intel.mtwilson.setup.tasks;
+
+import com.intel.mtwilson.core.flavor.common.PlatformFlavorUtil;
+import com.intel.mtwilson.core.flavor.model.Flavor;
+import com.intel.mtwilson.core.flavor.model.SignedFlavor;
+import com.intel.mtwilson.flavor.data.MwFlavor;
+import com.intel.mtwilson.flavor.rest.v2.repository.FlavorRepository;
+import com.intel.mtwilson.setup.ConfigurationException;
+import com.intel.mtwilson.setup.LocalSetupTask;
+
+import java.io.*;
+import java.security.*;
+import java.util.List;
+
+public class SignExistingUnsignedFlavors extends LocalSetupTask {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SignExistingUnsignedFlavors.class);
+    private static final String FLAVOR_SIGNER_KEYSTORE_PASSWORD = "flavor.signer.keystore.password";
+    private static final String FLAVOR_SIGNER_KEYSTORE_FILE = "flavor.signer.keystore.file";
+    private static final String FLAVOR_SIGNING_KEY_ALIAS = "flavor.signing.key.alias";
+
+    @Override
+    protected void configure() {
+        String keystoreFile = getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_FILE);
+        if (keystoreFile == null || keystoreFile.isEmpty())
+        {
+            log.error("Flavor signing keystore file is not configured");
+            throw new ConfigurationException("Flavor signing keystore file is not configured");
+        }
+        else if (!new File(keystoreFile).exists()) {
+                log.debug("Flavor Signing keystore file is missing");
+                configuration("Flavor Signing keystore file is missing");
+        }
+
+        try {
+            String flavorSigningKeystorePassword = getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD);
+            if (flavorSigningKeystorePassword == null || flavorSigningKeystorePassword.isEmpty()) {
+                log.error("Flavor signing keystore password is not configured");
+                throw new ConfigurationException("Flavor signing keystore password is not configured");
+            }
+
+            String keyAlias = getConfiguration().get(FLAVOR_SIGNING_KEY_ALIAS,"flavor-signing-key");
+            KeyStore keystore = KeyStore.getInstance("PKCS12", "SunJSSE");
+            keystore.load(new FileInputStream(keystoreFile), flavorSigningKeystorePassword.toCharArray());
+            if (!keystore.containsAlias(keyAlias)) {
+                log.debug("Flavor Signing key is not present in keystore");
+                configuration("Flavor Signing key is not present in keystore");
+            }
+        } catch (Exception ex) {
+            log.debug("Cannot load flavor signing keystore", ex);
+            configuration(ex, "Cannot load flavor signing keystore");
+        }
+    }
+
+    @Override
+    protected void validate() {
+        List<MwFlavor> mwFlavorList = new FlavorRepository().retrieveUnsignedMwFlavorList();
+        int numberOfUnsignedFlavors = mwFlavorList.size();
+        if ( numberOfUnsignedFlavors > 0) {
+            log.info("Number of unsigned flavors: {}",numberOfUnsignedFlavors);
+            validation("Number of unsigned flavors: {}",numberOfUnsignedFlavors);
+        }
+    }
+
+    @Override
+    protected void execute() throws Exception {
+        FlavorRepository flavorRepository = new FlavorRepository();
+        List<MwFlavor> mwFlavorList = flavorRepository.retrieveUnsignedMwFlavorList();
+        for (MwFlavor mwFlavor : mwFlavorList) {
+            SignedFlavor signedFlavor = PlatformFlavorUtil.getSignedFlavor(Flavor.serialize(mwFlavor.getContent()));
+            mwFlavor.setSignature(signedFlavor.getSignature());
+            flavorRepository.storeEntity(mwFlavor);
+        }
+    }
+}
