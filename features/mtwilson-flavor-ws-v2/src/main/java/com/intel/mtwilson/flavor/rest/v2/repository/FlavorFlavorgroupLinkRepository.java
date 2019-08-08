@@ -138,7 +138,7 @@ public class FlavorFlavorgroupLinkRepository {
                 throw new RepositoryInvalidInputException(locator);                                        
             }
             
-            // create the flavor
+            // create the flavor flavorgroup link
             MwLinkFlavorFlavorgroup newMwLinkFlavorFlavorgroup
                     = new MwLinkFlavorFlavorgroup(
                             flavorFlavorgroupLinkId.toString(),

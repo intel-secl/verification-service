@@ -441,20 +441,23 @@ public class FlavorResource {
         for (Map.Entry<String, List<SignedFlavor>> flavorObj : flavorObjCollection.entrySet()) {
             for(SignedFlavor signedFlavor : flavorObj.getValue()) {
                 Flavor flavorCreated = new FlavorRepository().create(signedFlavor);
-                returnFlavors.getFlavors().add(flavorCreated);      
-                // If the flavor part is HOST_UNIQUE OR ASSET_TAG, then we associate it with the host_unique group name
-                if (flavorObj.getKey().equalsIgnoreCase(ASSET_TAG.getValue())) {
-                    addFlavorToUniqueFlavorgroup(flavorCreated, true);
-                } else if (flavorObj.getKey().equalsIgnoreCase(HOST_UNIQUE.getValue())) {
-                    addFlavorToUniqueFlavorgroup(flavorCreated, false);
-                } else if (flavorObj.getKey().equalsIgnoreCase(SOFTWARE.getValue()) && signedFlavor.getFlavor().getMeta().getDescription().getLabel().contains(SoftwareFlavorPrefix.DEFAULT_APPLICATION_FLAVOR_PREFIX.getValue())) {
-                    addFlavorToIseclSoftwareFlavorgroup(flavorCreated, Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP);
-                } else if (flavorObj.getKey().equalsIgnoreCase(SOFTWARE.getValue()) && signedFlavor.getFlavor().getMeta().getDescription().getLabel().contains(SoftwareFlavorPrefix.DEFAULT_WORKLOAD_FLAVOR_PREFIX.getValue())) {
-                    addFlavorToIseclSoftwareFlavorgroup(flavorCreated, Flavorgroup.WORKLOAD_SOFTWARE_FLAVORGROUP);
-                } else {
-                    // For other flavor parts, we just store all the individual flavors first and finally do the association below.
-                    // Other flavor parts include OS, PLATFORM, SOFTWARE
-                    flavorIds.add(UUID.valueOf(flavorCreated.getMeta().getId()));
+                //TODO: need to handle this more gracefully for exception in flavor creation
+                if (flavorCreated != null) {
+                    returnFlavors.getFlavors().add(flavorCreated);
+                    // If the flavor part is HOST_UNIQUE OR ASSET_TAG, then we associate it with the host_unique group name
+                    if (flavorObj.getKey().equalsIgnoreCase(ASSET_TAG.getValue())) {
+                        addFlavorToUniqueFlavorgroup(flavorCreated, true);
+                    } else if (flavorObj.getKey().equalsIgnoreCase(HOST_UNIQUE.getValue())) {
+                        addFlavorToUniqueFlavorgroup(flavorCreated, false);
+                    } else if (flavorObj.getKey().equalsIgnoreCase(SOFTWARE.getValue()) && signedFlavor.getFlavor().getMeta().getDescription().getLabel().contains(SoftwareFlavorPrefix.DEFAULT_APPLICATION_FLAVOR_PREFIX.getValue())) {
+                        addFlavorToIseclSoftwareFlavorgroup(flavorCreated, Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP);
+                    } else if (flavorObj.getKey().equalsIgnoreCase(SOFTWARE.getValue()) && signedFlavor.getFlavor().getMeta().getDescription().getLabel().contains(SoftwareFlavorPrefix.DEFAULT_WORKLOAD_FLAVOR_PREFIX.getValue())) {
+                        addFlavorToIseclSoftwareFlavorgroup(flavorCreated, Flavorgroup.WORKLOAD_SOFTWARE_FLAVORGROUP);
+                    } else {
+                        // For other flavor parts, we just store all the individual flavors first and finally do the association below.
+                        // Other flavor parts include OS, PLATFORM, SOFTWARE
+                        flavorIds.add(UUID.valueOf(flavorCreated.getMeta().getId()));
+                    }
                 }
             }
         }

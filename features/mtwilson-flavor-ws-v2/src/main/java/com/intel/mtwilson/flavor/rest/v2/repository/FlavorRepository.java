@@ -206,7 +206,7 @@ public class FlavorRepository {
             locator.label = flavorLabel;
         }
         MwFlavor mwFlavor;
-        String errorMessage = null;
+        String errorMessage;
         try {
             MwFlavorJpaController mwFlavorJpaController = My.jpa().mwFlavor();
             mwFlavor = mwFlavorJpaController.findMwFlavor(flavorId.toString());
@@ -230,7 +230,8 @@ public class FlavorRepository {
             // return back the flavor created
             return newMwFlavor.getContent();
         } catch (PreexistingEntityException ex) {
-            throw new WebApplicationException(errorMessage, 400);
+            //returning null so that it will not create new flavor flavorgroup link for existing flavor
+            return null;
         } catch (RepositoryException re) {
             throw re;
         } catch (Exception ex) {
