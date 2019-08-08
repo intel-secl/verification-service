@@ -58,11 +58,11 @@ public class HostTrustRequirements {
     }
     
     public void addAllOfFlavor(SignedFlavor flavor) {
-        allOfFlavors.getFlavorsWithSignature().add(flavor);
+        allOfFlavors.getSignedFlavors().add(flavor);
     }
     
     public void removeAllOfFlavor(SignedFlavor flavor) {
-        allOfFlavors.getFlavorsWithSignature().remove(flavor);
+        allOfFlavors.getSignedFlavors().remove(flavor);
     }
     
     public List<FlavorPart> getDefinedAndRequiredFlavorTypes() {

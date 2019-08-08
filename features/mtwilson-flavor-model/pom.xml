@@ -46,6 +46,11 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.intel.mtwilson.services</groupId>
+            <artifactId>mtwilson-util</artifactId>
+        </dependency>
     </dependencies>
     
 </project>

@@ -72,9 +72,8 @@ export PRIVACYCA_KEYGEN_URANDOM=${PRIVACYCA_KEYGEN_URANDOM:-yes}
 export MTWILSON_TAG_ADMIN_USERNAME=${MTWILSON_TAG_ADMIN_USERNAME:-tagentadmin}
 export MTWILSON_TAG_ADMIN_PASSWORD=${MTWILSON_TAG_ADMIN_PASSWORD:-TagProvisionPassword}
 export TAG_PROVISION_NOCACHE=${TAG_PROVISION_NOCACHE:-true}
-
+export SKIP_FLAVOR_SIGNATURE_VERIFICATION=${SKIP_FLAVOR_SIGNATURE_VERIFICATION:-false}
 export MTWILSON_HOME=${MTWILSON_HOME:-/opt/mtwilson}
-
 # the layout setting is used only by this script
 # and it is not saved or used by the app script
 MTWILSON_LAYOUT=${MTWILSON_LAYOUT:-home}
@@ -755,6 +754,9 @@ mtwilson config "saml.validity.seconds" "$SAML_VALIDITY_SECONDS" >/dev/null
 #CMS configuration
 mtwilson config "cms.base.url" "$CMS_BASE_URL" >/dev/null
 mtwilson config "bearer.token" "$BEARER_TOKEN" >/dev/null
+
+#Skip flavor signature configuration
+mtwilson config "skip.flavor.signature.verification" "$SKIP_FLAVOR_SIGNATURE_VERIFICATION" >/dev/null
 
 #Save variables to properties file
 postgres_write_connection_properties "$MTWILSON_CONFIGURATION/mtwilson.properties" mtwilson.db

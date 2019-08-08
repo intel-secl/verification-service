@@ -23,15 +23,23 @@ import com.intel.mtwilson.flavor.rest.v2.utils.HostConnectorUtils;
 import com.intel.mtwilson.jaxrs2.mediatype.DataMediaType;
 import com.intel.mtwilson.jaxrs2.provider.JacksonObjectMapperProvider;
 import com.intel.mtwilson.launcher.ws.ext.V2;
+import com.intel.mtwilson.ms.common.MSConfig;
 import com.intel.mtwilson.repository.RepositoryException;
 import com.intel.mtwilson.tls.policy.factory.TlsPolicyFactoryUtil;
+import com.intel.mtwilson.util.crypto.keystore.PrivateKeyStore;
 import com.intel.wml.manifest.xml.Manifest;
 import com.intel.wml.manifest.xml.ManifestRequest;
 import com.intel.wml.measurement.xml.Measurement;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.Key;
+import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,7 +55,9 @@ import com.intel.mtwilson.core.common.model.SoftwareFlavorPrefix;
 @Path("flavor-from-app-manifest")
 public class FlavorFromAppManifestResource {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FlavorFromAppManifestResource.class);
-
+    private static final String FLAVOR_SIGNER_KEYSTORE_FILE = "flavor.signer.keystore.file";
+    private static final String FLAVOR_SIGNER_KEYSTORE_PASSWORD = "flavor.signer.keystore.password";
+    private static final String FLAVOR_SIGNING_KEY_ALIAS = "flavor.signing.key.alias";
     @POST
     @Consumes({MediaType.APPLICATION_XML})
     @Produces({MediaType.APPLICATION_JSON, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
@@ -56,6 +66,7 @@ public class FlavorFromAppManifestResource {
         log.info("FlavorFromAppManifestResource - Got request to create software flavor from app manifest {}.", manifestRequest.getManifest());
         validateDefaultManifest(manifestRequest.getManifest());
         try {
+            FileInputStream keystoreFIS = new FileInputStream(MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_FILE));
             TlsPolicy tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(
                     HostConnectorUtils.getTlsPolicyDescriptor(manifestRequest.getConnectionString(),
                             getHostId(manifestRequest)));
@@ -66,7 +77,9 @@ public class FlavorFromAppManifestResource {
             String measurementString = MeasurementUtils.getMeasurementString(measurementXml);
 
             SoftwareFlavor softwareFlavor = new SoftwareFlavor(measurementString);
-            SignedFlavor signedFlavor = PlatformFlavorUtil.getSignedFlavor(softwareFlavor.getSoftwareFlavor());
+            PrivateKeyStore privateKeyStore = new PrivateKeyStore("PKCS12", new File(MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_FILE)), MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
+            PrivateKey privateKey = privateKeyStore.getPrivateKey(MSConfig.getConfiguration().getString(FLAVOR_SIGNING_KEY_ALIAS, "flavor-signing-key"));
+            SignedFlavor signedFlavor = PlatformFlavorUtil.getSignedFlavor(softwareFlavor.getSoftwareFlavor(), privateKey);
 
             // Add Flavor to the Flavorgroup
             Map<String, List<SignedFlavor>> flavorPartFlavorMap = new HashMap<>();
@@ -81,6 +94,7 @@ public class FlavorFromAppManifestResource {
                 flavorgroup = FlavorGroupUtils.createFlavorGroupByName(manifestRequest.getFlavorgroupName());            
             }
             new FlavorResource().addFlavorToFlavorgroup(flavorPartFlavorMap, flavorgroup.getId());
+            keystoreFIS.close();
             return signedFlavor.getFlavor();
         } catch(Exception ex) {
             log.error("FlavorFromAppManifestResource - Error during flavor creation.", ex);
@@ -92,7 +106,7 @@ public class FlavorFromAppManifestResource {
     @Consumes({MediaType.APPLICATION_XML})
     @Produces({MediaType.APPLICATION_XML})
     @RequiresPermissions("software_flavors:create")
-    public Flavor createFlavorXML(ManifestRequest manifestRequest) {
+    public Flavor createFlavorXML(ManifestRequest manifestRequest){
             Flavor softwareFlavor = createFlavor(manifestRequest);
             return FlavorUtils.updatePathSeparatorForXML(softwareFlavor);
     }

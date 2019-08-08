@@ -37,10 +37,17 @@ import com.intel.mtwilson.core.common.model.SoftwareFlavorPrefix;
 import com.intel.mtwilson.core.common.tag.model.X509AttributeCertificate;
 import com.intel.mtwilson.core.common.tag.model.TagCertificate;
 import com.intel.mtwilson.flavor.runnable.AddFlavorgroupHostsToFlavorVerifyQueue;
+import com.intel.mtwilson.ms.common.MSConfig;
 import com.intel.mtwilson.tag.model.TagCertificateLocator;
 import com.intel.mtwilson.tag.rest.v2.repository.TagCertificateRepository;
 import com.intel.mtwilson.tls.policy.TlsPolicyDescriptor;
+
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.Key;
+import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -56,6 +63,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
+import com.intel.mtwilson.util.crypto.keystore.PrivateKeyStore;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 /**
@@ -69,6 +78,9 @@ public class FlavorResource {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FlavorResource.class);
     private FlavorRepository repository;
     private static final String DEPRECATED_FLAVOR_PART_BIOS = "BIOS";
+    private static final String FLAVOR_SIGNER_KEYSTORE_FILE = "flavor.signer.keystore.file";
+    private static final String FLAVOR_SIGNER_KEYSTORE_PASSWORD = "flavor.signer.keystore.password";
+    private static final String FLAVOR_SIGNING_KEY_ALIAS = "flavor.signing.key.alias";
 
     public FlavorResource() {
         repository = new FlavorRepository();
@@ -216,6 +228,7 @@ public class FlavorResource {
     
     private FlavorCollection createOne(FlavorCreateCriteria item) throws IOException, Exception {
         X509AttributeCertificate attributeCertificate = null;
+        FileInputStream keystoreFIS = new FileInputStream(MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_FILE));
         Map<String, List<SignedFlavor>> flavorPartFlavorMap = new HashMap<>();
         SignedFlavor signedFlavor = new SignedFlavor();
         List<String> partialFlavorTypes = new ArrayList();
@@ -257,6 +270,8 @@ public class FlavorResource {
             }
         } else if (item.getFlavorCollection() != null && item.getFlavorCollection().getFlavors() != null
                 && !item.getFlavorCollection().getFlavors().isEmpty()) {
+            PrivateKeyStore privateKeyStore = new PrivateKeyStore("PKCS12", new File(MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_FILE)), MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
+            PrivateKey privateKey = privateKeyStore.getPrivateKey(MSConfig.getConfiguration().getString(FLAVOR_SIGNING_KEY_ALIAS, "flavor-signing-key"));
             for (Flavor flavor : item.getFlavorCollection().getFlavors()) {
                 if (flavor != null && flavor.getMeta() != null && flavor.getMeta().getDescription() != null
                         && flavor.getMeta().getDescription().getFlavorPart() != null) {
@@ -265,7 +280,7 @@ public class FlavorResource {
                         flavor.getMeta().getDescription().setFlavorPart(FlavorPart.PLATFORM.getValue());
                     }
                     signedFlavor.setFlavor(flavor);
-                    signedFlavor.setSignature(PlatformFlavorUtil.getSignedFlavor(Flavor.serialize(flavor)).getSignature());
+                    signedFlavor.setSignature(PlatformFlavorUtil.getSignedFlavor(Flavor.serialize(flavor), (PrivateKey)privateKey).getSignature());
                     validateFlavorMetaContent(flavor.getMeta());
                     if(flavorPartFlavorMap.containsKey(flavor.getMeta().getDescription().getFlavorPart())) {
                         flavorPartFlavorMap.get(flavor.getMeta().getDescription().getFlavorPart()).add(signedFlavor);
@@ -565,8 +580,10 @@ public class FlavorResource {
      * @param flavorParts
      * @return 
      */
-    private Map<String, List<SignedFlavor>> retrieveFlavorCollection(PlatformFlavor platformFlavor, String flavorgroupId, Collection<String> flavorParts) {
+    private Map<String, List<SignedFlavor>> retrieveFlavorCollection(PlatformFlavor platformFlavor, String flavorgroupId, Collection<String> flavorParts) throws Exception {
         Map<String, List<SignedFlavor>> flavorCollection = new HashMap<>();
+        PrivateKeyStore privateKeyStore = new PrivateKeyStore("PKCS12", new File(MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_FILE)), MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
+        PrivateKey privateKey = privateKeyStore.getPrivateKey(MSConfig.getConfiguration().getString(FLAVOR_SIGNING_KEY_ALIAS, "flavor-signing-key"));
 
         if (platformFlavor == null || flavorgroupId == null) {
             throw new IllegalArgumentException("Platform flavor and flavorgroup ID must be specified");
@@ -578,13 +595,12 @@ public class FlavorResource {
         // User has specified the particular flavor part(s)
         for (String flavorPart : flavorParts) {
             try {
-                ObjectMapper mapper = JacksonObjectMapperProvider.createDefaultMapper();
-                for(SignedFlavor flavorAndSignature : platformFlavor.getFlavorPartWithSignature(flavorPart)) {
+                for(SignedFlavor signedFlavor : platformFlavor.getFlavorPartWithSignature(flavorPart, (PrivateKey)privateKey)) {
                     if(flavorCollection.containsKey(flavorPart)) {
-                        flavorCollection.get(flavorPart).add(flavorAndSignature);
+                        flavorCollection.get(flavorPart).add(signedFlavor);
                     } else {
                         List<SignedFlavor> signedFlavorList = new ArrayList();
-                        signedFlavorList.add(flavorAndSignature);
+                        signedFlavorList.add(signedFlavor);
                         flavorCollection.put(flavorPart, signedFlavorList);
                     }
                 }

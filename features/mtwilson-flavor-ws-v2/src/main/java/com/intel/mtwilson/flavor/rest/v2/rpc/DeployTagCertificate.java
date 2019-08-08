@@ -5,31 +5,36 @@
 
 package com.intel.mtwilson.flavor.rest.v2.rpc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.intel.dcsg.cpg.crypto.Sha384Digest;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
-import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.core.flavor.model.SignedFlavor;
 import com.intel.mtwilson.launcher.ws.ext.RPC;
+import com.intel.mtwilson.ms.common.MSConfig;
 import com.intel.mtwilson.repository.RepositoryException;
 import com.intel.mtwilson.repository.RepositoryInvalidInputException;
+
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.Key;
+import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.util.Date;
+
+import com.intel.mtwilson.util.crypto.keystore.PrivateKeyStore;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.core.asset.tag.ProvisionAssetTag;
 import com.intel.mtwilson.core.flavor.PlatformFlavor;
 import com.intel.mtwilson.core.flavor.PlatformFlavorFactory;
-import com.intel.mtwilson.core.flavor.model.Flavor;
 import com.intel.mtwilson.flavor.data.MwHostCredential;
 import com.intel.mtwilson.flavor.rest.v2.model.Host;
 import com.intel.mtwilson.flavor.rest.v2.repository.HostRepository;
 import com.intel.mtwilson.flavor.rest.v2.model.HostLocator;
 import com.intel.mtwilson.flavor.rest.v2.resource.FlavorResource;
 import com.intel.mtwilson.flavor.rest.v2.resource.HostResource;
-import com.intel.mtwilson.jaxrs2.provider.JacksonObjectMapperProvider;
 import com.intel.mtwilson.core.common.datatypes.ConnectionString;
 import com.intel.mtwilson.core.common.tag.model.TagCertificate;
 import com.intel.mtwilson.tag.model.TagCertificateLocator;
@@ -52,7 +57,9 @@ import static com.intel.mtwilson.core.flavor.common.FlavorPart.ASSET_TAG;
 public class DeployTagCertificate implements Runnable{
     
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(DeployTagCertificate.class);
-
+    private static final String FLAVOR_SIGNER_KEYSTORE_FILE = "flavor.signer.keystore.file";
+    private static final String FLAVOR_SIGNER_KEYSTORE_PASSWORD = "flavor.signer.keystore.password";
+    private static final String FLAVOR_SIGNING_KEY_ALIAS = "flavor.signing.key.alias";
        
     private UUID certificateId;
     private String host;
@@ -80,6 +87,8 @@ public class DeployTagCertificate implements Runnable{
         log.error("RPC: DeployTagCertificate - Got request to deploy certificate with ID {}.", certificateId);        
         try {
             TagCertificateLocator locator = new TagCertificateLocator();
+            PrivateKeyStore privateKeyStore = new PrivateKeyStore("PKCS12", new File(MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_FILE)), MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
+            PrivateKey privateKey = privateKeyStore.getPrivateKey(MSConfig.getConfiguration().getString(FLAVOR_SIGNING_KEY_ALIAS, "flavor-signing-key"));
             locator.id = certificateId;
             
             TagCertificate obj = new TagCertificateRepository().retrieve(locator);
@@ -121,13 +130,12 @@ public class DeployTagCertificate implements Runnable{
                 //call flavor library to get asset tag flavor.
                 PlatformFlavorFactory flavorFactory = new PlatformFlavorFactory();
                 PlatformFlavor platformFlavor = flavorFactory.getPlatformFlavor(connectionString.getVendor().toString(), attrcert);
-                ObjectMapper mapper = JacksonObjectMapperProvider.createDefaultMapper();
-                if (!platformFlavor.getFlavorPartWithSignature(ASSET_TAG.getValue()).get(0).getFlavor().toString().isEmpty()) {
-                    SignedFlavor flavorAndSignature = platformFlavor.getFlavorPartWithSignature(ASSET_TAG.getValue()).get(0);
+                if (!platformFlavor.getFlavorPartWithSignature(ASSET_TAG.getValue(), privateKey).get(0).getFlavor().toString().isEmpty()) {
+                    SignedFlavor signedFlavor = platformFlavor.getFlavorPartWithSignature(ASSET_TAG.getValue(), privateKey).get(0);
                     // Add Flavor to the Flavorgroup
                     Map<String, List<SignedFlavor>> flavorPartFlavorMap = new HashMap<>();
                     List<SignedFlavor> flavors = new ArrayList();
-                    flavors.add(flavorAndSignature);
+                    flavors.add(signedFlavor);
                     flavorPartFlavorMap.put(ASSET_TAG.getValue(), flavors);
                     new FlavorResource().addFlavorToFlavorgroup(flavorPartFlavorMap, null);                    
                 } else {

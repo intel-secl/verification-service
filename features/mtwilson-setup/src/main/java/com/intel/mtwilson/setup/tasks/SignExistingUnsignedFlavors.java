@@ -5,8 +5,10 @@ import com.intel.mtwilson.core.flavor.model.Flavor;
 import com.intel.mtwilson.core.flavor.model.SignedFlavor;
 import com.intel.mtwilson.flavor.data.MwFlavor;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorRepository;
+import com.intel.mtwilson.ms.common.MSConfig;
 import com.intel.mtwilson.setup.ConfigurationException;
 import com.intel.mtwilson.setup.LocalSetupTask;
+import com.intel.mtwilson.util.crypto.keystore.PrivateKeyStore;
 
 import java.io.*;
 import java.security.*;
@@ -40,7 +42,7 @@ public class SignExistingUnsignedFlavors extends LocalSetupTask {
             }
 
             String keyAlias = getConfiguration().get(FLAVOR_SIGNING_KEY_ALIAS,"flavor-signing-key");
-            KeyStore keystore = KeyStore.getInstance("PKCS12", "SunJSSE");
+            KeyStore keystore = KeyStore.getInstance("PKCS12");
             keystore.load(new FileInputStream(keystoreFile), flavorSigningKeystorePassword.toCharArray());
             if (!keystore.containsAlias(keyAlias)) {
                 log.debug("Flavor Signing key is not present in keystore");
@@ -66,8 +68,10 @@ public class SignExistingUnsignedFlavors extends LocalSetupTask {
     protected void execute() throws Exception {
         FlavorRepository flavorRepository = new FlavorRepository();
         List<MwFlavor> mwFlavorList = flavorRepository.retrieveUnsignedMwFlavorList();
+        PrivateKeyStore privateKeyStore = new PrivateKeyStore("PKCS12", new File(MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_FILE)), MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
+        PrivateKey privateKey = privateKeyStore.getPrivateKey(MSConfig.getConfiguration().getString(FLAVOR_SIGNING_KEY_ALIAS, "flavor-signing-key"));
         for (MwFlavor mwFlavor : mwFlavorList) {
-            SignedFlavor signedFlavor = PlatformFlavorUtil.getSignedFlavor(Flavor.serialize(mwFlavor.getContent()));
+            SignedFlavor signedFlavor = PlatformFlavorUtil.getSignedFlavor(Flavor.serialize(mwFlavor.getContent()), privateKey);
             mwFlavor.setSignature(signedFlavor.getSignature());
             flavorRepository.storeEntity(mwFlavor);
         }

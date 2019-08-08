@@ -52,19 +52,19 @@ public class FlavorRepository {
                 List<MwFlavor> mwFlavorList = mwFlavorJpaController.findMwFlavorEntities();
                 if (mwFlavorList != null && !mwFlavorList.isEmpty()) {
                     for (MwFlavor mwFlavor : mwFlavorList) {
-			flavorCollection.getFlavorsWithSignature().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
+			flavorCollection.getSignedFlavors().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
                     }
                 }
             } else if (criteria.id != null) {
                 MwFlavor mwFlavor = mwFlavorJpaController.findMwFlavor(criteria.id.toString());
                 if (mwFlavor != null) {
-			flavorCollection.getFlavorsWithSignature().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
+			flavorCollection.getSignedFlavors().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
                 }
             } else if (criteria.key != null && !criteria.key.isEmpty() && criteria.value != null && !criteria.value.isEmpty()) {
                 List<MwFlavor> mwFlavorList = mwFlavorJpaController.findMwFlavorByKeyValue(criteria.key, criteria.value);
                 if (mwFlavorList != null && !mwFlavorList.isEmpty()) {
                     for (MwFlavor mwFlavor : mwFlavorList) {
-                        flavorCollection.getFlavorsWithSignature().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
+                        flavorCollection.getSignedFlavors().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
                     }
                 }
             } else if (criteria.flavorgroupId != null || criteria.hostManifest != null
@@ -83,7 +83,7 @@ public class FlavorRepository {
                         criteria.flavorgroupId, criteria.hostManifest, criteria.flavorPartsWithLatest);
                 if (mwFlavorList != null && !mwFlavorList.isEmpty()) {
                     for (MwFlavor mwFlavor : mwFlavorList) {
-                        flavorCollection.getFlavorsWithSignature().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
+                        flavorCollection.getSignedFlavors().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
                     }
                 }
             } else {
@@ -94,7 +94,7 @@ public class FlavorRepository {
             log.error("flavor:search - error during search for flavors", ex);
             throw new RepositorySearchException(ex, criteria);
         }
-        log.debug("flavor:search - returning back {} flavor results", flavorCollection.getFlavorsWithSignature().size());
+        log.debug("flavor:search - returning back {} flavor results", flavorCollection.getSignedFlavors().size());
         return flavorCollection;
     }
 
@@ -124,7 +124,7 @@ public class FlavorRepository {
         return null;
     }
 
-    public MwFlavor retrieveFlavorEntity(FlavorLocator locator) {
+    public SignedFlavor retrieveSignedFlavor(FlavorLocator locator) {
         log.debug("flavor:retrieve - got request to retrieve flavor");
         if (locator == null || (locator.id == null && locator.pathId == null)) {
             return null;
@@ -135,12 +135,12 @@ public class FlavorRepository {
             if (locator.pathId != null) {
                 MwFlavor mwFlavor = mwFlavorJpaController.findMwFlavor(locator.pathId.toString());
                 if (mwFlavor != null) {
-                    return mwFlavor;
+                    return new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature());
                 }
             } else if (locator.id != null) {
                 MwFlavor mwFlavor = mwFlavorJpaController.findMwFlavor(locator.id.toString());
                 if (mwFlavor != null) {
-                    return mwFlavor;
+                    return new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature());
                 }
             }
         } catch (Exception ex) {

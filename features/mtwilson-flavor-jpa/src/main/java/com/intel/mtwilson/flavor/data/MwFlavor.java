@@ -131,9 +131,7 @@ public class MwFlavor implements Serializable {
         return signature;
     }
 
-    public void setSignature(String signature) {
-        this.signature = signature;
-    }
+    public void setSignature(String signature) { this.signature = signature; }
 
     @Override
     public int hashCode() {

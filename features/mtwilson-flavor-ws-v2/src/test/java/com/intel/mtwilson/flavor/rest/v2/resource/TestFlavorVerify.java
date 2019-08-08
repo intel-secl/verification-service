@@ -77,9 +77,9 @@ public class TestFlavorVerify {
     
     @Test
     public void testCombinedTrustReportResults() throws Exception {
-        SignedFlavorCollection flavorCollection = new SignedFlavorCollection();
-        flavorCollection.setFlavors(flavors);
-        RuleAllOfFlavors rule = new RuleAllOfFlavors(flavorCollection, "", "");
+        SignedFlavorCollection signedFlavorCollection = new SignedFlavorCollection();
+        signedFlavorCollection.setFlavors(flavors);
+        RuleAllOfFlavors rule = new RuleAllOfFlavors(signedFlavorCollection, "", "", "", true);
         String[] marker = {TrustMarker.PLATFORM.name()};
         rule.setMarkers(marker);
         combinedTrustReport = rule.addFaults(combinedTrustReport);

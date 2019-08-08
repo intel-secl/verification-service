@@ -7,6 +7,7 @@ package com.intel.mtwilson.flavor.business;
 
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.x509.X509Util;
+import com.intel.dcsg.cpg.configuration.CommonsConfiguration;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.core.common.model.HardwareFeature;
 import com.intel.mtwilson.core.common.model.HardwareFeatureDetails;
@@ -51,11 +52,14 @@ import static com.intel.mtwilson.features.queue.model.QueueState.ERROR;
 import com.intel.mtwilson.flavor.rest.v2.resource.HostStatusResource;
 import static com.intel.mtwilson.i18n.HostState.CONNECTION_TIMEOUT;
 
+import java.io.File;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
+
+import com.intel.mtwilson.ms.common.MSConfig;
 import com.intel.mtwilson.supplemental.saml.SAML;
 import com.intel.mtwilson.supplemental.saml.MapFormatter;
 import com.intel.mtwilson.supplemental.saml.SamlAssertion;
@@ -76,6 +80,7 @@ import javax.xml.stream.XMLStreamReader;
 import org.apache.commons.beanutils.BeanMap;
 import org.apache.commons.lang.WordUtils;
 import org.apache.shiro.util.CollectionUtils;
+import org.opensaml.core.config.Configuration;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
 /**
@@ -85,6 +90,7 @@ import org.opensaml.core.xml.io.MarshallingException;
  */
 public class FlavorVerify extends QueueOperation {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FlavorVerify.class);
+    private final String flavorSigningCertPath = My.configuration().getDirectoryPath() + File.separator + "flavor-signer.crt.pem";
     
     private UUID hostId;
     private boolean forceUpdate;
@@ -349,8 +355,10 @@ public class FlavorVerify extends QueueOperation {
             // retrieve the trusted flavor
             FlavorLocator flavorLocator = new FlavorLocator();
             flavorLocator.id = flavorHostLink.getFlavorId();
-            MwFlavor cachedFlavor = new FlavorRepository().retrieveFlavorEntity(flavorLocator);
-            flavorsToMatch.add(new SignedFlavor(cachedFlavor.getContent(), cachedFlavor.getSignature()));
+            SignedFlavor cachedFlavor = new FlavorRepository().retrieveSignedFlavor(flavorLocator);
+            if (cachedFlavor !=  null) {
+                flavorsToMatch.add(new SignedFlavor(cachedFlavor.getFlavor(), cachedFlavor.getSignature()));
+            }
         }
 
         return flavorsToMatch;
@@ -365,8 +373,8 @@ public class FlavorVerify extends QueueOperation {
                 // call verifier
                 String privacyCaCert = My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath();
                 String tagCaCert = My.configuration().getAssetTagCaCertificateFile().getAbsolutePath();
-                Verifier verifier = new Verifier(privacyCaCert, tagCaCert);
-                TrustReport individualTrustReport = verifier.verify(hostManifest, cachedFlavor);
+                Verifier verifier = new Verifier(privacyCaCert, tagCaCert, flavorSigningCertPath);
+                TrustReport individualTrustReport = verifier.verify(hostManifest, cachedFlavor, MSConfig.getConfiguration().getBoolean("skip.flavor.signature.verification"));
 
                 // if the flavor is trusted, add it to the collective trust report and to the return object
                 // else, delete it from the trust cache
@@ -399,7 +407,7 @@ public class FlavorVerify extends QueueOperation {
         TrustReport collectiveTrustReport = null;
 
         // return null if no flavors were found
-        if (flavors == null || flavors.getFlavorsWithSignature() == null || flavors.getFlavorsWithSignature().isEmpty()) {
+        if (flavors == null || flavors.getSignedFlavors() == null || flavors.getSignedFlavors().isEmpty()) {
             log.debug("No flavors found to verify for host with ID {}", hostId.toString());
             return new TrustReport(hostManifest, null);
         }
@@ -412,17 +420,17 @@ public class FlavorVerify extends QueueOperation {
 
         try {
             FlavorTrustReportCollection untrustedReports = new FlavorTrustReportCollection();
-            for (SignedFlavor flavor : flavors.getFlavorsWithSignature()) {
-                UUID flavorId = UUID.valueOf(flavor.getFlavor().getMeta().getId());
+            for (SignedFlavor signedFlavor : flavors.getSignedFlavors()) {
+                UUID flavorId = UUID.valueOf(signedFlavor.getFlavor().getMeta().getId());
                 log.debug("Found flavor with ID: {}", flavorId.toString());
                 // call verifier
                 String privacyCaCert = My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath();
                 String tagCaCert = My.configuration().getAssetTagCaCertificateFile().getAbsolutePath();
-                Verifier verifier = new Verifier(privacyCaCert, tagCaCert);
+                Verifier verifier = new Verifier(privacyCaCert, tagCaCert, flavorSigningCertPath);
                 List<FlavorMatchPolicy> flavorMatchPolicies= hostTrustRequirements.getFlavorMatchPolicy().getFlavorMatchPolicies();
                 for(FlavorMatchPolicy flavorMatchPolicy : flavorMatchPolicies) {
-                    if (flavorMatchPolicy.getFlavorPart().getValue().equals(flavor.getFlavor().getMeta().getDescription().getFlavorPart())) {
-                        TrustReport individualTrustReport = verifier.verify(hostManifest, flavor);
+                    if (flavorMatchPolicy.getFlavorPart().getValue().equals(signedFlavor.getFlavor().getMeta().getDescription().getFlavorPart())) {
+                        TrustReport individualTrustReport = verifier.verify(hostManifest, signedFlavor, MSConfig.getConfiguration().getBoolean("skip.flavor.signature.verification"));
 
                         // if the flavor is trusted, add it to the collective trust report
                         // and store the flavor host link in the trust cache
@@ -438,7 +446,7 @@ public class FlavorVerify extends QueueOperation {
                             createFlavorHostLink(flavorId, hostId);
                         } else {
                             untrustedReports.getFlavorTrustReportList().add(new FlavorTrustReport(
-                                    FlavorPart.valueOf(flavor.getFlavor().getMeta().getDescription().getFlavorPart()),
+                                    FlavorPart.valueOf(signedFlavor.getFlavor().getMeta().getDescription().getFlavorPart()),
                                     flavorId,
                                     individualTrustReport));
                             for (RuleResult result : individualTrustReport.getResults()) {
@@ -544,7 +552,9 @@ public class FlavorVerify extends QueueOperation {
         SignedFlavorCollection allOfFlavors = hostTrustRequirements.getAllOfFlavors();
         RuleAllOfFlavors ruleAllOfFlavors = new RuleAllOfFlavors(allOfFlavors,
                 My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath(),
-                My.configuration().getAssetTagCaCertificateFile().getAbsolutePath());
+                My.configuration().getAssetTagCaCertificateFile().getAbsolutePath(),
+                flavorSigningCertPath,
+                MSConfig.getConfiguration().getBoolean("skip.flavor.signature.verification"));
         ruleAllOfFlavors.setMarkers(getAllOfMarkers(hostTrustRequirements));
         trustReport = ruleAllOfFlavors.addFaults(trustReport);  // Add faults if every 'All of' flavors are not present
         
@@ -579,7 +589,9 @@ public class FlavorVerify extends QueueOperation {
         SignedFlavorCollection allOfFlavors = hostTrustRequirements.getAllOfFlavors();
         RuleAllOfFlavors ruleAllOfFlavors = new RuleAllOfFlavors(allOfFlavors,
                 My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath(),
-                My.configuration().getAssetTagCaCertificateFile().getAbsolutePath());
+                My.configuration().getAssetTagCaCertificateFile().getAbsolutePath(),
+                flavorSigningCertPath,
+                MSConfig.getConfiguration().getBoolean("skip.flavor.signature.verification"));
         ruleAllOfFlavors.setMarkers(getAllOfMarkers(hostTrustRequirements));
         if (areAllOfFlavorsMissingInCachedTrustReport(cachedTrustReport, ruleAllOfFlavors)) {
             log.debug("All of flavors exist in policy for host: {}", hostId.toString());
@@ -611,7 +623,9 @@ public class FlavorVerify extends QueueOperation {
         SignedFlavorCollection allOfFlavors = hostTrustRequirements.getAllOfFlavors();
         RuleAllOfFlavors ruleAllOfFlavors = new RuleAllOfFlavors(allOfFlavors,
                 My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath(),
-                My.configuration().getAssetTagCaCertificateFile().getAbsolutePath());
+                My.configuration().getAssetTagCaCertificateFile().getAbsolutePath(),
+                flavorSigningCertPath,
+                MSConfig.getConfiguration().getBoolean("skip.flavor.signature.verification"));
         ruleAllOfFlavors.setMarkers(getAllOfMarkers(hostTrustRequirements));
         if (areAllOfFlavorsMissingInCachedTrustReport(cachedTrustReport, ruleAllOfFlavors)) {
             return createTrustReport(hostManifest, hostTrustRequirements, trustCache, latestReqAndDefFlavorTypes);
