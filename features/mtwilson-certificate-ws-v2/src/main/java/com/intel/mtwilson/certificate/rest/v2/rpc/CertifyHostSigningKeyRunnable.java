@@ -21,9 +21,7 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
-import com.intel.mtwilson.util.tpm12.CertifyKey;
 import com.intel.mtwilson.util.tpm20.CertifyKey20;
-import gov.niarl.his.privacyca.TpmCertifyKey;
 import gov.niarl.his.privacyca.TpmCertifyKey20;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -178,7 +176,7 @@ public class CertifyHostSigningKeyRunnable implements Runnable {
                       throw new Exception("TPM Key Name specified does not match name digest in the TCG binding certificate");
                   }
                  }else if( tpmVersion.equals("2.0") && operatingSystem.equals("Windows")){
-                        if (!CertifyKey.isCertifiedKeySignatureValid(tpmCertifyKey, tpmCertifyKeySignature, decodedAikDerCertificate.getPublicKey())) {
+                        if (!CertifyKey20.isCertifiedKeySignatureValidWin(tpmCertifyKey, tpmCertifyKeySignature, decodedAikDerCertificate.getPublicKey())) {
                             throw new CertificateException("The signature specified for the certifiy key does not match.");
                         }                    
                     }else{
@@ -226,8 +224,8 @@ public class CertifyHostSigningKeyRunnable implements Runnable {
                         .keyUsageNonRepudiation()
                         .extKeyUsageIsCritical()
                         .randomSerial()
-                        .noncriticalExtension(CertifyKey.TCG_STRUCTURE_CERTIFY_INFO_OID, tpmCertifyKey)
-                        .noncriticalExtension(CertifyKey.TCG_STRUCTURE_CERTIFY_INFO_SIGNATURE_OID, tpmCertifyKeySignature)
+                        .noncriticalExtension(CertifyKey20.TCG_STRUCTURE_CERTIFY_INFO_OID, tpmCertifyKey)
+                        .noncriticalExtension(CertifyKey20.TCG_STRUCTURE_CERTIFY_INFO_SIGNATURE_OID, tpmCertifyKeySignature)
                         .build();
 
                 if (bkCert != null) {
@@ -246,37 +244,7 @@ public class CertifyHostSigningKeyRunnable implements Runnable {
             throw new RepositoryCreateException();
         }
     }
-    
- /**
-     * Validates the public key digest in the CertifyKey against the public key specified.
-     * @param publicKeyModulus
-     * @param tcgCertificate
-     * @return
-     * @throws Exception 
-     */
-     protected static boolean validatePublicKeyDigest(byte[] publicKeyModulus, byte[] tcgCertificate) throws Exception {
-        try {
-            
-            log.debug("Validating the public key.");
-            byte[] calculatedModulusDigest = Sha1Digest.digestOf(publicKeyModulus).toByteArray();
-            
-            TpmCertifyKey certifiedKey = new TpmCertifyKey(tcgCertificate);
-            byte[] providedDigest = certifiedKey.getPublicKeyDigest();
-            
-            log.debug("Calculated public key digest is {} -- passed in public key digest is {}", 
-                    TpmUtils.byteArrayToHexString(calculatedModulusDigest), TpmUtils.byteArrayToHexString(certifiedKey.getPublicKeyDigest()));
-            
-            for (int i = 0; i < calculatedModulusDigest.length; i++) {
-                if(calculatedModulusDigest[i] != providedDigest[i])
-                    return false;
-}
-            
-            return true;
-        } catch (TpmUtils.TpmBytestreamResouceException | TpmUtils.TpmUnsignedConversionException ex) {
-            throw ex;
-        }        
-    }
-    
+
     /**
      * Validates the name digest in the CertifyKey against the name blob
      * specified.

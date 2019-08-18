@@ -12,9 +12,7 @@ import com.intel.dcsg.cpg.x509.X509Util;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.launcher.ws.ext.RPC;
 import com.intel.mtwilson.repository.RepositoryCreateException;
-import com.intel.mtwilson.util.tpm12.CertifyKey;
 import com.intel.mtwilson.util.tpm20.CertifyKey20;
-import gov.niarl.his.privacyca.TpmCertifyKey;
 import gov.niarl.his.privacyca.TpmCertifyKey20;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import gov.niarl.his.privacyca.TpmUtils;
@@ -178,7 +176,7 @@ public class CertifyHostBindingKeyRunnable implements Runnable {
                             throw new Exception("TPM Key Name specified does not match name digest in the TCG binding certificate");
                         }
                     }else if( tpmVersion.equals("2.0") && operatingSystem.equals("Windows")){
-                        if (!CertifyKey.isCertifiedKeySignatureValid(tpmCertifyKey, tpmCertifyKeySignature, decodedAikDerCertificate.getPublicKey())) {
+                        if (!CertifyKey20.isCertifiedKeySignatureValidWin(tpmCertifyKey, tpmCertifyKeySignature, decodedAikDerCertificate.getPublicKey())) {
                             throw new CertificateException("The signature specified for the certifiy key does not match.");
                         }                    
                     }else{
@@ -214,12 +212,8 @@ public class CertifyHostBindingKeyRunnable implements Runnable {
                     X509Certificate cacert = TpmUtils.certFromP12(My.configuration().getPrivacyCaIdentityP12().getAbsolutePath(), My.configuration().getPrivacyCaIdentityPassword());
                     //Read encryption scheme used in binding key
                     ByteBuffer byteBuffer = ByteBuffer.allocate(2);
-                    
-                    if (tpmVersion != null && tpmVersion.equals("1.2") && operatingSystem.equals("Linux")) {
-                        byteBuffer.putShort(new TpmCertifyKey(tpmCertifyKey).getKeyParms().getEncScheme());
-                    } else {
-                        byteBuffer.putShort(encryptionScheme);
-                    }
+                    byteBuffer.putShort(encryptionScheme);
+
 
                     X509Builder caBuilder = X509Builder.factory();
                     //ToDo: Add encryption Scheme in certificate attribute
@@ -233,9 +227,9 @@ public class CertifyHostBindingKeyRunnable implements Runnable {
                             //                        .keyUsageDataEncipherment()
                             .extKeyUsageIsCritical()
                             .randomSerial()
-                            .noncriticalExtension(CertifyKey.TCG_STRUCTURE_CERTIFY_INFO_OID, tpmCertifyKey)
-                            .noncriticalExtension(CertifyKey.TCG_STRUCTURE_CERTIFY_INFO_SIGNATURE_OID, tpmCertifyKeySignature)
-                            .noncriticalExtension(CertifyKey.TCG_STRUCTURE_CERTIFY_INFO_ENC_SCHEME_OID, byteBuffer.array())
+                            .noncriticalExtension(CertifyKey20.TCG_STRUCTURE_CERTIFY_INFO_OID, tpmCertifyKey)
+                            .noncriticalExtension(CertifyKey20.TCG_STRUCTURE_CERTIFY_INFO_SIGNATURE_OID, tpmCertifyKeySignature)
+                            .noncriticalExtension(CertifyKey20.TCG_STRUCTURE_CERTIFY_INFO_ENC_SCHEME_OID, byteBuffer.array())
                             .build();
 
                     if (bkCert != null) {
@@ -257,35 +251,6 @@ public class CertifyHostBindingKeyRunnable implements Runnable {
     
     
     
-    /**
-     * Validates the public key digest in the CertifyKey against the public key specified.
-     * @param publicKeyModulus
-     * @param tcgCertificate
-     * @return
-     * @throws Exception 
-     */
-    protected static boolean validatePublicKeyDigest(byte[] publicKeyModulus, byte[] tcgCertificate) throws Exception {
-        try {
-            
-            log.debug("Validating the public key.");
-            byte[] calculatedModulusDigest = Sha1Digest.digestOf(publicKeyModulus).toByteArray();
-            
-            TpmCertifyKey certifiedKey = new TpmCertifyKey(tcgCertificate);
-            byte[] providedDigest = certifiedKey.getPublicKeyDigest();
-            
-            log.debug("Calculated public key digest is {} -- passed in public key digest is {}", 
-                    TpmUtils.byteArrayToHexString(calculatedModulusDigest), TpmUtils.byteArrayToHexString(certifiedKey.getPublicKeyDigest()));
-            
-            for (int i = 0; i < calculatedModulusDigest.length; i++) {
-                if(calculatedModulusDigest[i] != providedDigest[i])
-                    return false;
-            }
-            
-            return true;
-        } catch (TpmUtils.TpmBytestreamResouceException | TpmUtils.TpmUnsignedConversionException ex) {
-            throw ex;
-        }        
-    }
     /**
      * Validates the name digest in the CertifyKey against the name blob
      * specified.

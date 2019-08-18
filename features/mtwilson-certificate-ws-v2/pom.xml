@@ -72,10 +72,6 @@
             <groupId>com.intel.mtwilson.util</groupId>
             <artifactId>mtwilson-util-jaxrs2-server</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.intel.mtwilson.util</groupId>
-            <artifactId>mtwilson-util-tpm12</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>com.intel.mtwilson.util</groupId>
