@@ -228,7 +228,6 @@ public class FlavorResource {
     
     private FlavorCollection createOne(FlavorCreateCriteria item) throws IOException, Exception {
         X509AttributeCertificate attributeCertificate = null;
-        FileInputStream keystoreFIS = new FileInputStream(MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_FILE));
         Map<String, List<SignedFlavor>> flavorPartFlavorMap = new HashMap<>();
         SignedFlavor signedFlavor = new SignedFlavor();
         List<String> partialFlavorTypes = new ArrayList();

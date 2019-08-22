@@ -22,7 +22,7 @@ public class SignExistingUnsignedFlavors extends LocalSetupTask {
     private static final String FLAVOR_SIGNING_KEY_ALIAS = "flavor.signing.key.alias";
 
     @Override
-    protected void configure() {
+    protected void configure() throws Exception {
         String keystoreFile = getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_FILE);
         if (keystoreFile == null || keystoreFile.isEmpty())
         {
@@ -34,6 +34,7 @@ public class SignExistingUnsignedFlavors extends LocalSetupTask {
                 configuration("Flavor Signing keystore file is missing");
         }
 
+        FileInputStream keystoreFIS = new FileInputStream(keystoreFile);
         try {
             String flavorSigningKeystorePassword = getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD);
             if (flavorSigningKeystorePassword == null || flavorSigningKeystorePassword.isEmpty()) {
@@ -43,7 +44,7 @@ public class SignExistingUnsignedFlavors extends LocalSetupTask {
 
             String keyAlias = getConfiguration().get(FLAVOR_SIGNING_KEY_ALIAS,"flavor-signing-key");
             KeyStore keystore = KeyStore.getInstance("PKCS12");
-            keystore.load(new FileInputStream(keystoreFile), flavorSigningKeystorePassword.toCharArray());
+            keystore.load(keystoreFIS, flavorSigningKeystorePassword.toCharArray());
             if (!keystore.containsAlias(keyAlias)) {
                 log.debug("Flavor Signing key is not present in keystore");
                 configuration("Flavor Signing key is not present in keystore");
@@ -51,6 +52,8 @@ public class SignExistingUnsignedFlavors extends LocalSetupTask {
         } catch (Exception ex) {
             log.debug("Cannot load flavor signing keystore", ex);
             configuration(ex, "Cannot load flavor signing keystore");
+        } finally {
+            keystoreFIS.close();
         }
     }
 

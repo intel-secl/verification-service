@@ -135,7 +135,7 @@ public class CertifyHostSigningKeyRunnable implements Runnable {
 			    
                 // Verify the encryption scheme, key flags etc
                 // validateCertifyKeyData(tpmCertifyKey, false);
-                if(tpmVersion.equals("2.0")) {
+                if(tpmVersion != null && tpmVersion.equals("2.0")) {
                     if (operatingSystem.equals("Linux")){
                         if( !CertifyKey20.isSigningKey(new TpmCertifyKey20(tpmCertifyKey))) {
                           throw new Exception("Not a valid signing key");

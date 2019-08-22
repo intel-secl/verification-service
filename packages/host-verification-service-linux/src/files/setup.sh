@@ -753,7 +753,6 @@ mtwilson config "saml.validity.seconds" "$SAML_VALIDITY_SECONDS" >/dev/null
 
 #CMS configuration
 mtwilson config "cms.base.url" "$CMS_BASE_URL" >/dev/null
-mtwilson config "bearer.token" "$BEARER_TOKEN" >/dev/null
 
 #Skip flavor signature configuration
 mtwilson config "skip.flavor.signature.verification" "$SKIP_FLAVOR_SIGNATURE_VERIFICATION" >/dev/null

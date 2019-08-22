@@ -139,7 +139,7 @@ public class CertifyHostBindingKeyRunnable implements Runnable {
 
                 log.debug("Starting to verify the Binding key TCG certificate and generate the MTW certified certificate.");
                 
-                if (tpmVersion.equals("2.0")) {
+                if (tpmVersion != null && tpmVersion.equals("2.0")) {
                     // Verify the encryption scheme, key flags etc
                     if (operatingSystem.equals("Linux")){
                         if (!CertifyKey20.isBindingKey(new TpmCertifyKey20(tpmCertifyKey))) {

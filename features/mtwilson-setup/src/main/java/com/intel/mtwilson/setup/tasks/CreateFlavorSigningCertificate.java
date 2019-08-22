@@ -9,7 +9,6 @@ import com.intel.dcsg.cpg.tls.policy.TlsPolicyBuilder;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.core.common.cms.client.jaxrs.CMSClient;
 import com.intel.mtwilson.core.common.model.CertificateType;
-import com.intel.mtwilson.core.flavor.common.PlatformFlavorUtil;
 import com.intel.mtwilson.setup.LocalSetupTask;
 
 import java.io.*;
@@ -21,7 +20,6 @@ import java.security.cert.X509Certificate;
 import java.util.Properties;
 import javax.security.auth.x500.X500Principal;
 
-import com.intel.mtwilson.util.crypto.keystore.PrivateKeyStore;
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
@@ -45,6 +43,7 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
     private static final String FLAVOR_SIGNER_KEYSTORE_PASSWORD = "flavor.signer.keystore.password";
     private static final String CMS_BASE_URL = "cms.base.url";
     private static final String BEARER_TOKEN = "bearer.token";
+    private static final String BEARER_TOKEN_ENV = "BEARER_TOKEN";
     private Properties properties = new Properties();
 
     @Override
@@ -65,11 +64,10 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
             configuration("CMS Base Url is not provided");
         }
 
-        if (getConfiguration().get(BEARER_TOKEN) == null || getConfiguration().get(BEARER_TOKEN).isEmpty()) {
-            configuration("AAS Bearer Token is not provided");
-        }
-        else {
-            properties.setProperty(BEARER_TOKEN, getConfiguration().get(BEARER_TOKEN));
+        if (System.getenv(BEARER_TOKEN_ENV) == null || System.getenv(BEARER_TOKEN_ENV).isEmpty()) {
+            configuration("AAS Bearer Token is not provided in environment");
+        } else {
+            properties.setProperty(BEARER_TOKEN, System.getenv(BEARER_TOKEN_ENV));
         }
         try {
             initializeKeystore();
@@ -83,13 +81,13 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
         if (!new File(getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_FILE)).exists()) {
             validation("Flavor Signing keystore file is missing");
         }
-        FileInputStream keystoreFIS = new FileInputStream(getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_FILE));
         if (!getConfigurationFaults().isEmpty()) {
             return;
         }
-
-        KeyStore keystore = KeyStore.getInstance("PKCS12");
+        FileInputStream keystoreFIS = new FileInputStream(getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_FILE));
+        KeyStore keystore;
         try {
+            keystore = KeyStore.getInstance("PKCS12");
             keystore.load(keystoreFIS, getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
             keystoreFIS.close();
             if (!keystore.containsAlias(getConfiguration().get(FLAVOR_SIGNING_KEY_ALIAS))) {
@@ -97,6 +95,8 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
             }
         } catch (Exception ex) {
             validation(ex, "Cannot load flavor signing keystore");
+        } finally {
+            keystoreFIS.close();
         }
     }
 
@@ -128,10 +128,15 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
 
     private void initializeKeystore() throws Exception {
         FileOutputStream keystoreFOS = new FileOutputStream(getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_FILE));
-        KeyStore keystore = KeyStore.getInstance("PKCS12");
-        keystore.load(null, getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
-        keystore.store(keystoreFOS, getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
-        keystoreFOS.close();
+        try {
+            KeyStore keystore = KeyStore.getInstance("PKCS12");
+            keystore.load(null, getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
+            keystore.store(keystoreFOS, getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
+        } catch (Exception exc) {
+            throw new Exception("Error initializing keystore", exc);
+        } finally {
+            keystoreFOS.close();
+        }
     }
 
     //Create CSR for flavor signing request
@@ -142,16 +147,28 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
         return new Pem("CERTIFICATE REQUEST", certificateRequest.getEncoded());
     }
 
-    private void storeKeyPair(KeyPair flavorSigningKey, X509Certificate[] certificateChain) throws Exception{
+    private void storeKeyPair(KeyPair flavorSigningKey, X509Certificate[] certificateChain) throws Exception {
         FileInputStream keystoreFIS = new FileInputStream(getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_FILE));
-        KeyStore keystore = KeyStore.getInstance("PKCS12");
-        keystore.load(keystoreFIS, getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
+        KeyStore keystore;
+        try {
+            keystore = KeyStore.getInstance("PKCS12");
+            keystore.load(keystoreFIS, getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
+        } catch (Exception exc) {
+            throw new Exception("Error loading keystore", exc);
+        } finally {
+            keystoreFIS.close();
+        }
         FileOutputStream keystoreFOS = new FileOutputStream(getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_FILE));
-        keystore.setKeyEntry(getConfiguration().get(FLAVOR_SIGNING_KEY_ALIAS), flavorSigningKey.getPrivate(), getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray(), certificateChain);
-        keystore.store(keystoreFOS, getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
-        keystoreFOS.close();
-        keystoreFIS.close();
+        try {
+            keystore.setKeyEntry(getConfiguration().get(FLAVOR_SIGNING_KEY_ALIAS), flavorSigningKey.getPrivate(), getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray(), certificateChain);
+            keystore.store(keystoreFOS, getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
+        } catch (Exception exc) {
+            throw new Exception("Error storing keypair in keystore", exc);
+        }finally {
+            keystoreFOS.close();
+        }
     }
+
 
     private void storeCertificateChain(X509Certificate cmsCACert, X509Certificate flavorSigningCert) throws CertificateException {
         Pem flavorSigningCertEncoded = new Pem("CERTIFICATE", flavorSigningCert.getEncoded());

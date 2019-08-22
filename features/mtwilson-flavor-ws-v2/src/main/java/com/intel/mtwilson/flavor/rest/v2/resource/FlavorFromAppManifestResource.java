@@ -66,7 +66,6 @@ public class FlavorFromAppManifestResource {
         log.info("FlavorFromAppManifestResource - Got request to create software flavor from app manifest {}.", manifestRequest.getManifest());
         validateDefaultManifest(manifestRequest.getManifest());
         try {
-            FileInputStream keystoreFIS = new FileInputStream(MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_FILE));
             TlsPolicy tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(
                     HostConnectorUtils.getTlsPolicyDescriptor(manifestRequest.getConnectionString(),
                             getHostId(manifestRequest)));
@@ -94,7 +93,6 @@ public class FlavorFromAppManifestResource {
                 flavorgroup = FlavorGroupUtils.createFlavorGroupByName(manifestRequest.getFlavorgroupName());            
             }
             new FlavorResource().addFlavorToFlavorgroup(flavorPartFlavorMap, flavorgroup.getId());
-            keystoreFIS.close();
             return signedFlavor.getFlavor();
         } catch(Exception ex) {
             log.error("FlavorFromAppManifestResource - Error during flavor creation.", ex);
