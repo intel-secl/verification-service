@@ -5,7 +5,6 @@
 
 package com.intel.mtwilson.flavor.rest.v2.resource;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.validation.ValidationUtil;
 import com.intel.mtwilson.core.flavor.PlatformFlavor;
@@ -229,7 +228,6 @@ public class FlavorResource {
     private FlavorCollection createOne(FlavorCreateCriteria item) throws IOException, Exception {
         X509AttributeCertificate attributeCertificate = null;
         Map<String, List<SignedFlavor>> flavorPartFlavorMap = new HashMap<>();
-        SignedFlavor signedFlavor = new SignedFlavor();
         List<String> partialFlavorTypes = new ArrayList();
         // get flavor from host or from input
         PlatformFlavor platformFlavor = null;
@@ -278,14 +276,13 @@ public class FlavorResource {
                     if(flavor.getMeta().getDescription().getFlavorPart().equalsIgnoreCase(DEPRECATED_FLAVOR_PART_BIOS)) {
                         flavor.getMeta().getDescription().setFlavorPart(FlavorPart.PLATFORM.getValue());
                     }
-                    signedFlavor.setFlavor(flavor);
-                    signedFlavor.setSignature(PlatformFlavorUtil.getSignedFlavor(Flavor.serialize(flavor), (PrivateKey)privateKey).getSignature());
                     validateFlavorMetaContent(flavor.getMeta());
                     if(flavorPartFlavorMap.containsKey(flavor.getMeta().getDescription().getFlavorPart())) {
-                        flavorPartFlavorMap.get(flavor.getMeta().getDescription().getFlavorPart()).add(signedFlavor);
+                        flavorPartFlavorMap.get(flavor.getMeta().getDescription().getFlavorPart())
+                                .add(PlatformFlavorUtil.getSignedFlavor(Flavor.serialize(flavor), privateKey));
                     } else {
                         List<SignedFlavor> signedFlavorsList = new ArrayList();
-                        signedFlavorsList.add(signedFlavor);
+                        signedFlavorsList.add(PlatformFlavorUtil.getSignedFlavor(Flavor.serialize(flavor), privateKey));
                         flavorPartFlavorMap.put(flavor.getMeta().getDescription().getFlavorPart(), signedFlavorsList);
                     }
                     partialFlavorTypes.add(flavor.getMeta().getDescription().getFlavorPart());
