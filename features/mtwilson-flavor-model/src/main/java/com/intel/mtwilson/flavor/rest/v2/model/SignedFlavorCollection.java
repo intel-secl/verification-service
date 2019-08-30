@@ -1,7 +1,10 @@
+/*
+ * Copyright (C) 2019 Intel Corporation
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.intel.mtwilson.flavor.rest.v2.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.intel.mtwilson.core.flavor.common.PlatformFlavorUtil;
@@ -12,9 +15,6 @@ import com.intel.mtwilson.ms.common.MSConfig;
 import com.intel.mtwilson.util.crypto.keystore.PrivateKeyStore;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.security.Key;
-import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.List;
