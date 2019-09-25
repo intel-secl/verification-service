@@ -220,7 +220,7 @@ if [ -d /etc/intel/cloudsecurity ]; then
   ls -l /etc/intel >>$INSTALL_LOG_FILE
   if [ -w /etc/intel/cloudsecurity ]; then
     echo "Migrating configuration from /etc/intel/cloudsecurity to $MTWILSON_CONFIGURATION" >>$INSTALL_LOG_FILE
-    mkdir -p $MTWILSON_CONFIGURATION
+    mkdir -p $MTWILSON_CONFIGURATION $MTWILSON_CONFIGURATION/trustedjwt $MTWILSON_CONFIGURATION/trustedca
     cp -r /etc/intel/cloudsecurity/* $MTWILSON_CONFIGURATION
     chown -R $MTWILSON_USERNAME:$MTWILSON_USERNAME $MTWILSON_CONFIGURATION
     rm -rf /etc/intel/cloudsecurity
@@ -230,7 +230,7 @@ if [ -d /etc/intel/cloudsecurity ]; then
     exit 1
   fi
 else  
-  mkdir -p $MTWILSON_CONFIGURATION
+  mkdir -p $MTWILSON_CONFIGURATION $MTWILSON_CONFIGURATION/trustedjwt $MTWILSON_CONFIGURATION/trustedca
   if [ $? -ne 0 ]; then
     echo_failure "Cannot create directory: $MTWILSON_CONFIGURATION"
     exit 1
@@ -753,6 +753,8 @@ mtwilson config "saml.validity.seconds" "$SAML_VALIDITY_SECONDS" >/dev/null
 
 #CMS configuration
 mtwilson config "cms.base.url" "$CMS_BASE_URL" >/dev/null
+#AAS configuration
+mtwilson config "aas.api.url" "$AAS_API_URL" >/dev/null
 
 #Skip flavor signature configuration
 mtwilson config "skip.flavor.signature.verification" "$SKIP_FLAVOR_SIGNATURE_VERIFICATION" >/dev/null
