@@ -11,8 +11,9 @@ import com.intel.dcsg.cpg.tls.policy.TlsConnection;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicyBuilder;
 import com.intel.mtwilson.My;
-import com.intel.mtwilson.core.common.cms.client.jaxrs.CMSClient;
+import com.intel.mtwilson.jaxrs2.client.CMSClient;
 import com.intel.mtwilson.core.common.model.CertificateType;
+import com.intel.mtwilson.core.common.utils.AASTokenFetcher;
 import com.intel.mtwilson.setup.LocalSetupTask;
 
 import java.io.*;
@@ -46,8 +47,7 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
     private static final String FLAVOR_SIGNER_KEYSTORE_FILE = "flavor.signer.keystore.file";
     private static final String FLAVOR_SIGNER_KEYSTORE_PASSWORD = "flavor.signer.keystore.password";
     private static final String CMS_BASE_URL = "cms.base.url";
-    private static final String BEARER_TOKEN = "bearer.token";
-    private static final String BEARER_TOKEN_ENV = "BEARER_TOKEN";
+    private static final String AAS_API_URL = "aas.api.url";
     private Properties properties = new Properties();
 
     @Override
@@ -68,10 +68,11 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
             configuration("CMS Base Url is not provided");
         }
 
-        if (System.getenv(BEARER_TOKEN_ENV) == null || System.getenv(BEARER_TOKEN_ENV).isEmpty()) {
-            configuration("AAS Bearer Token is not provided in environment");
-        } else {
-            properties.setProperty(BEARER_TOKEN, System.getenv(BEARER_TOKEN_ENV));
+        try {
+            String token = new AASTokenFetcher().getAASToken(getConfiguration().get(AAS_API_URL),"admin", "password");
+            properties.setProperty("bearer.token", token);
+        } catch (Exception e) {
+            configuration("Could not download AAS token");
         }
         try {
             initializeKeystore();
