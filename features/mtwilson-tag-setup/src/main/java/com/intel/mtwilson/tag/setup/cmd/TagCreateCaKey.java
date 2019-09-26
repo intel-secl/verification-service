@@ -4,21 +4,30 @@
  */
 package com.intel.mtwilson.tag.setup.cmd;
 
+import com.intel.dcsg.cpg.configuration.Configuration;
+import com.intel.dcsg.cpg.tls.policy.TlsConnection;
+import com.intel.dcsg.cpg.tls.policy.impl.InsecureTlsPolicy;
+import com.intel.mtwilson.configuration.ConfigurationFactory;
+import com.intel.mtwilson.configuration.ConfigurationProvider;
+import com.intel.mtwilson.core.common.model.CertificateType;
+import com.intel.mtwilson.jaxrs2.client.CMSClient;
 import com.intel.mtwilson.tag.setup.TagCommand;
 import com.intel.mtwilson.tag.model.File;
 import com.intel.dcsg.cpg.crypto.RsaUtil;
 import com.intel.dcsg.cpg.io.ByteArray;
 import com.intel.dcsg.cpg.io.UUID;
-import com.intel.dcsg.cpg.validation.Fault;
+import com.intel.mtwilson.core.common.utils.AASTokenFetcher;
 import com.intel.dcsg.cpg.x509.X509Builder;
 import com.intel.dcsg.cpg.x509.X509Util;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.tag.dao.TagJdbi;
 import java.io.FileOutputStream;
+import java.net.URL;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Properties;
+import com.intel.mtwilson.setup.utils.CertificateUtils;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.io.IOUtils;
@@ -40,7 +49,11 @@ public class TagCreateCaKey extends TagCommand {
     private static Logger log = LoggerFactory.getLogger(TagCreateCaKey.class);
     public static final String PRIVATEKEY_FILE = "cakey";
     public static final String CACERTS_FILE = "cacerts";
-    
+    private static final String CMS_BASE_URL = "cms.base.url";
+    private static final String AAS_API_URL = "aas.api.url";
+    private static final String MC_FIRST_USERNAME = "mc.first.username";
+    private static final String MC_FIRST_PASSWORD = "mc.first.password";
+
     @Override
     public void execute(String[] args) throws Exception {
         String dn;
@@ -48,22 +61,33 @@ public class TagCreateCaKey extends TagCommand {
             dn = args[0];
         } 
         else {
-            dn = "CN=asset-tag-service,OU=mtwilson"; 
+            dn = "CN=asset-tag-service";
         }
         
         // create a new key pair
         KeyPair cakey = RsaUtil.generateRsaKeyPair(3072);
-        X509Builder builder = X509Builder.factory();
-        X509Certificate cacert = builder.selfSigned(dn, cakey).expires(3650, TimeUnit.DAYS).build();
-        if( cacert == null ) {
-            List<Fault> faults = builder.getFaults();
-            for(Fault fault : faults) {
-                log.error(String.format("%s: %s", fault.getClass().getName(), fault.toString()));
-            }
-            return;
-            
+        ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
+        Configuration configuration = configurationProvider.load();
+
+        /*
+        if (configuration.get(CMS_BASE_URL) == null || configuration.get(CMS_BASE_URL).isEmpty()) {
         }
-        
+        if (configuration.get(MC_FIRST_USERNAME) == null || configuration.get(MC_FIRST_USERNAME).isEmpty()) {
+        }
+        if (configuration.get(MC_FIRST_PASSWORD) == null || configuration.get(MC_FIRST_PASSWORD).isEmpty()) {
+        }*/
+
+        Properties properties = new Properties();
+
+        String token = new AASTokenFetcher().getAASToken(configuration.get(MC_FIRST_USERNAME),configuration.get(MC_FIRST_PASSWORD),
+            new TlsConnection(new URL(configuration.get(AAS_API_URL)), new InsecureTlsPolicy()));
+                                properties.setProperty("bearer.token", token);
+
+        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get("cms.base.url")), new InsecureTlsPolicy()));
+
+        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(cakey, dn).toString(), CertificateType.FLAVOR_SIGNING.getValue());
+        log.info(cacert.toString());
+
         String privateKeyPem = RsaUtil.encodePemPrivateKey(cakey.getPrivate());
         String cacertPem = X509Util.encodePemCertificate(cacert);
         

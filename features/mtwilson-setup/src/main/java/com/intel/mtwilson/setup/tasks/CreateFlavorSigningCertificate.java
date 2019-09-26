@@ -10,6 +10,7 @@ import com.intel.dcsg.cpg.io.pem.Pem;
 import com.intel.dcsg.cpg.tls.policy.TlsConnection;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicyBuilder;
+import com.intel.dcsg.cpg.tls.policy.impl.InsecureTlsPolicy;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.jaxrs2.client.CMSClient;
 import com.intel.mtwilson.core.common.model.CertificateType;
@@ -23,15 +24,9 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Properties;
-import javax.security.auth.x500.X500Principal;
 
+import com.intel.mtwilson.setup.utils.CertificateUtils;
 import org.apache.commons.io.IOUtils;
-import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.bouncycastle.pkcs.PKCS10CertificationRequest;
-import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
-import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 
 
 /**
@@ -76,9 +71,7 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
             configuration("Verification User password is not provided");
         }
         try {
-            String token = new AASTokenFetcher().getAASToken(getConfiguration().get(AAS_API_URL),
-                    getConfiguration().get(MC_FIRST_USERNAME),
-                    getConfiguration().get(MC_FIRST_PASSWORD));
+            String token = new AASTokenFetcher().getAASToken(getConfiguration().get(MC_FIRST_USERNAME), getConfiguration().get(MC_FIRST_PASSWORD), new TlsConnection(new URL(getConfiguration().get(AAS_API_URL)), new InsecureTlsPolicy()));
             properties.setProperty("bearer.token", token);
         } catch (Exception e) {
             configuration("Could not download AAS token");
@@ -129,7 +122,8 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
 
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(getConfiguration().get("cms.base.url")), tlsPolicy));
         X509Certificate cmsCACert = cmsClient.getCACertificate();
-        X509Certificate flavorSigningCert = cmsClient.getCertificate(getCSR(flavorSigningKey).toString(), CertificateType.FLAVOR_SIGNING.getValue());
+        CertificateUtils.getCSR(flavorSigningKey, flavorSigningCSRDistinguishedName);
+        X509Certificate flavorSigningCert = cmsClient.getCertificate(CertificateUtils.getCSR(flavorSigningKey, flavorSigningCSRDistinguishedName).toString(), CertificateType.FLAVOR_SIGNING.getValue());
 
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X509");
         X509Certificate[] certificateChain = new X509Certificate[2];
@@ -153,13 +147,7 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
         }
     }
 
-    //Create CSR for flavor signing request
-    private Pem getCSR(KeyPair flavorSigningKey) throws OperatorCreationException, IOException {
-        PKCS10CertificationRequestBuilder csrBuilder = new JcaPKCS10CertificationRequestBuilder(new X500Principal(flavorSigningCSRDistinguishedName), flavorSigningKey.getPublic());
-        ContentSigner signGen = new JcaContentSignerBuilder("SHA384withRSA").build(flavorSigningKey.getPrivate());
-        PKCS10CertificationRequest certificateRequest = csrBuilder.build(signGen);
-        return new Pem("CERTIFICATE REQUEST", certificateRequest.getEncoded());
-    }
+
 
     private void storeKeyPair(KeyPair flavorSigningKey, X509Certificate[] certificateChain) throws Exception {
         FileInputStream keystoreFIS = new FileInputStream(getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_FILE));
