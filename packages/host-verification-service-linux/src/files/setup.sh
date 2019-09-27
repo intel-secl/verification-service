@@ -812,6 +812,8 @@ sed -i '/'"$hostAllowPropertyName"'/ s/^\([^#]\)/#\1/g' "$MTWILSON_CONFIGURATION
 # This property is needed by the UpdateSslPort command to determine the port # that should be used in the shiro.ini file
 MTWILSON_API_BASEURL="https://${MTWILSON_SERVER}:${MTWILSON_PORT_HTTPS}/mtwilson/v1"
 mtwilson config "mtwilson.api.url" "$MTWILSON_API_BASEURL" >/dev/null
+mtwilson config "mc.first.username" "$MC_FIRST_USERNAME" >/dev/null
+mtwilson config "mc.first.password" "$MC_FIRST_PASSWORD" >/dev/null
 
 # Make sure the nodeploy flag is cleared, so service setup commands will deploy their .war files
 export MTWILSON_SETUP_NODEPLOY=

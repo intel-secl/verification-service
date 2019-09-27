@@ -48,6 +48,8 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
     private static final String FLAVOR_SIGNER_KEYSTORE_PASSWORD = "flavor.signer.keystore.password";
     private static final String CMS_BASE_URL = "cms.base.url";
     private static final String AAS_API_URL = "aas.api.url";
+    private static final String MC_FIRST_USERNAME = "mc.first.username";
+    private static final String MC_FIRST_PASSWORD = "mc.first.password";
     private Properties properties = new Properties();
 
     @Override
@@ -67,9 +69,16 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
         if (getConfiguration().get(CMS_BASE_URL) == null || getConfiguration().get(CMS_BASE_URL).isEmpty()) {
             configuration("CMS Base Url is not provided");
         }
-
+        if (getConfiguration().get(MC_FIRST_USERNAME) == null || getConfiguration().get(MC_FIRST_USERNAME).isEmpty()) {
+            configuration("Verification Username is not provided");
+        }
+        if (getConfiguration().get(MC_FIRST_PASSWORD) == null || getConfiguration().get(MC_FIRST_PASSWORD).isEmpty()) {
+            configuration("Verification User password is not provided");
+        }
         try {
-            String token = new AASTokenFetcher().getAASToken(getConfiguration().get(AAS_API_URL),"admin", "password");
+            String token = new AASTokenFetcher().getAASToken(getConfiguration().get(AAS_API_URL),
+                    getConfiguration().get(MC_FIRST_USERNAME),
+                    getConfiguration().get(MC_FIRST_PASSWORD));
             properties.setProperty("bearer.token", token);
         } catch (Exception e) {
             configuration("Could not download AAS token");
