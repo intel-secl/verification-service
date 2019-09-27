@@ -69,13 +69,6 @@ public class TagCreateCaKey extends TagCommand {
         ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
         Configuration configuration = configurationProvider.load();
 
-        /*
-        if (configuration.get(CMS_BASE_URL) == null || configuration.get(CMS_BASE_URL).isEmpty()) {
-        }
-        if (configuration.get(MC_FIRST_USERNAME) == null || configuration.get(MC_FIRST_USERNAME).isEmpty()) {
-        }
-        if (configuration.get(MC_FIRST_PASSWORD) == null || configuration.get(MC_FIRST_PASSWORD).isEmpty()) {
-        }*/
 
         Properties properties = new Properties();
 
@@ -85,7 +78,7 @@ public class TagCreateCaKey extends TagCommand {
 
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get("cms.base.url")), new InsecureTlsPolicy()));
 
-        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(cakey, dn).toString(), CertificateType.FLAVOR_SIGNING.getValue());
+        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(cakey, dn).toString(), "Signing");
         log.info(cacert.toString());
 
         String privateKeyPem = RsaUtil.encodePemPrivateKey(cakey.getPrivate());

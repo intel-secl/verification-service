@@ -4,32 +4,40 @@
  */
 package com.intel.mtwilson.setup.tasks;
 
+import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.crypto.CryptographyException;
 import com.intel.dcsg.cpg.crypto.RandomUtil;
 import com.intel.dcsg.cpg.crypto.RsaCredentialX509;
 import com.intel.dcsg.cpg.crypto.RsaUtil;
 import com.intel.dcsg.cpg.crypto.SimpleKeystore;
+import com.intel.dcsg.cpg.io.FileResource;
 import com.intel.dcsg.cpg.io.pem.Pem;
+import com.intel.dcsg.cpg.tls.policy.TlsConnection;
+import com.intel.dcsg.cpg.tls.policy.impl.InsecureTlsPolicy;
 import com.intel.dcsg.cpg.validation.Fault;
 import com.intel.dcsg.cpg.x509.X509Builder;
 import com.intel.dcsg.cpg.x509.X509Util;
 import com.intel.mtwilson.My;
+import com.intel.mtwilson.configuration.ConfigurationFactory;
+import com.intel.mtwilson.configuration.ConfigurationProvider;
+import com.intel.mtwilson.core.common.model.CertificateType;
+import com.intel.mtwilson.core.common.utils.AASTokenFetcher;
+import com.intel.mtwilson.jaxrs2.client.CMSClient;
 import com.intel.mtwilson.setup.LocalSetupTask;
 import com.intel.mtwilson.setup.SetupException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.security.KeyPair;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.UnrecoverableEntryException;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
+import com.intel.mtwilson.setup.utils.CertificateUtils;
+
+import java.io.*;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.security.*;
+import java.security.cert.*;
+import java.security.cert.Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.List;
+import java.util.Properties;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -45,6 +53,16 @@ public class CreateSamlCertificate extends LocalSetupTask {
     public static final String SAML_KEYSTORE_PASSWORD = "saml.keystore.password";
     public static final String SAML_KEY_ALIAS = "saml.key.alias";
     public static final String SAML_KEY_PASSWORD = "saml.key.password";
+    private static final String CMS_BASE_URL = "cms.base.url";
+    private static final String AAS_API_URL = "aas.api.url";
+    private static final String MC_FIRST_USERNAME = "mc.first.username";
+    private static final String MC_FIRST_PASSWORD = "mc.first.password";
+    private static final String SAML_CERTIFICATE_FILE = My.configuration().getDirectoryPath() + File.separator +"saml.crt";
+    private File samlKeystoreFile;
+    private KeyStore keystore;
+    private String samlKeystorePassword;
+    FileInputStream keystoreFIS;
+
 
     public String getSamlKeystoreFile() {
         return getConfiguration().get(SAML_KEYSTORE_FILE, My.configuration().getDirectoryPath() + File.separator + "mtwilson-saml.p12");
@@ -79,8 +97,9 @@ public class CreateSamlCertificate extends LocalSetupTask {
     }
 
     public String getSamlCertificateDistinguishedName() {
-        return getConfiguration().get(SAML_CERTIFICATE_DN, "CN=mtwilson-saml,OU=mtwilson");
+        return getConfiguration().get(SAML_CERTIFICATE_DN, "CN=mtwilson-saml");
     }
+
 
     public void setSamlCertificateDistinguishedName(String samlDistinguishedName) {
         getConfiguration().set(SAML_CERTIFICATE_DN, samlDistinguishedName);
@@ -89,119 +108,69 @@ public class CreateSamlCertificate extends LocalSetupTask {
     @Override
     protected void configure() throws Exception {
         String samlKeystorePassword = getSamlKeystorePassword();
-        if (samlKeystorePassword == null || samlKeystorePassword.isEmpty()) {
-            setSamlKeystorePassword(RandomUtil.randomBase64String(16));
-            setSamlKeyPassword(getSamlKeystorePassword());
-        }
 
-        // this section about checkign the ca key availability
-        // is in configuration because it must be ready before the
-        // setup task can even run
-        // it's copied from the validate() method of CreateCertificateAuthorityKe
-        // and probably this code needs to be refactored so we don't repeat it;
-        // the challenge is whether the exception handling with configuration/validation
-        // fault logging can be refactored because the CA setup needs to log them
-        // as validation issues while dependent setups such as this SAML setup need to 
-        // log them as configuration issues here
-        byte[] combinedPrivateKeyAndCertPemBytes;
-        try (FileInputStream cakeyIn = new FileInputStream(My.configuration().getCaKeystoreFile())) { //  // throws FileNotFoundException, IOException
-            combinedPrivateKeyAndCertPemBytes = IOUtils.toByteArray(cakeyIn); // throws IOException
-        } catch (IOException e) {
-            log.debug("Cannot read saml cakey from {}", My.configuration().getCaKeystoreFile());
-            configuration("Cannot read saml ca key from: %s", My.configuration().getCaKeystoreFile());
-            return;
+        if (getConfiguration().get(SAML_KEYSTORE_PASSWORD) == null || getConfiguration().get(SAML_KEYSTORE_PASSWORD).isEmpty()) {
+            getConfiguration().set(SAML_KEYSTORE_PASSWORD, RandomUtil.randomBase64String(16));
         }
-        try {
-            PrivateKey cakey = RsaUtil.decodePemPrivateKey(new String(combinedPrivateKeyAndCertPemBytes));
-            log.debug("Read cakey {} from {}", cakey.getAlgorithm(), My.configuration().getCaKeystoreFile().getAbsolutePath());
-        } catch (CryptographyException e) {
-            log.debug("Cannot read private key from {}", My.configuration().getCaKeystoreFile().getAbsolutePath(), e);
-            configuration("Cannot read private key from: %s", My.configuration().getCaKeystoreFile().getAbsolutePath());
+        if (getConfiguration().get(SAML_KEYSTORE_FILE) == null || getConfiguration().get(SAML_KEYSTORE_FILE).isEmpty()) {
+            getConfiguration().set(SAML_KEYSTORE_FILE, My.configuration().getDirectoryPath() + File.separator + "SAML.p12");
+            log.info(getConfiguration().get(SAML_KEYSTORE_FILE));
         }
-        try {
-            X509Certificate cacert = X509Util.decodePemCertificate(new String(combinedPrivateKeyAndCertPemBytes));
-            log.debug("Read cacert {} from {}", cacert.getSubjectX500Principal().getName(), My.configuration().getCaKeystoreFile().getAbsolutePath());
-        } catch (CertificateException e) {
-            log.debug("Cannot read certificate from {}", My.configuration().getCaKeystoreFile().getAbsolutePath(), e);
-            configuration("Cannot read certificate from: %s", My.configuration().getCaKeystoreFile().getAbsolutePath());
+        if (getConfiguration().get(SAML_CERTIFICATE_DN) == null || getConfiguration().get(SAML_CERTIFICATE_DN).isEmpty()) {
+            getConfiguration().set(SAML_CERTIFICATE_DN, "CN=mtwilson-saml");
         }
-
+        if (getConfiguration().get(SAML_KEY_ALIAS) == null || getConfiguration().get(SAML_KEY_ALIAS).isEmpty()) {
+            getConfiguration().set(SAML_KEY_ALIAS, "saml-ley");
+        }
     }
 
     @Override
     protected void validate() throws Exception {
-        if (getSamlKeystorePassword() == null) {
-            configuration("SAML keystore password is not configured");
-        }
-        if (getSamlKeyPassword() == null) {
-            configuration("SAML key password is not configured");
+        if (!new File(getConfiguration().get(SAML_KEYSTORE_FILE)).exists()) {
+            validation("Saml keystore file is missing");
         }
         if (!getConfigurationFaults().isEmpty()) {
             return;
         }
 
-        File samlKeystoreFile = new File(getSamlKeystoreFile());
-        if (!samlKeystoreFile.exists()) {
-            validation("SAML keystore file is missing");
-        }
-        // keystore exists, look for the private key and cert
-        SimpleKeystore keystore = new SimpleKeystore(samlKeystoreFile, getSamlKeystorePassword());
-        for (String alias : keystore.aliases()) {
-            log.debug("Keystore alias: {}", alias);
-            // make sure it has a SAML private key and certificate inside
-            try {
-                RsaCredentialX509 credential = keystore.getRsaCredentialX509(alias, getSamlKeystorePassword());
-                log.debug("SAML certificate: {}", credential.getCertificate().getSubjectX500Principal().getName());
-            } catch (FileNotFoundException | KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException | CertificateEncodingException | CryptographyException e) {
-                log.debug("Cannot read SAML key from keystore", e);
-            }
-        }
     }
 
     @Override
     protected void execute() throws Exception {
-        // load the ca key - same code as in configure() but without exception
-        // handling 
-        byte[] combinedPrivateKeyAndCertPemBytes;
-        PrivateKey cakey;
-        X509Certificate cacert;
-        try (FileInputStream cakeyIn = new FileInputStream(My.configuration().getCaKeystoreFile())) { // ; // throws FileNotFoundException, IOException
-            combinedPrivateKeyAndCertPemBytes = IOUtils.toByteArray(cakeyIn); // throws IOException
-            cakey = RsaUtil.decodePemPrivateKey(new String(combinedPrivateKeyAndCertPemBytes));
-            cacert = X509Util.decodePemCertificate(new String(combinedPrivateKeyAndCertPemBytes));
+        KeyPair keyPair = RsaUtil.generateRsaKeyPair(3072);
+        ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
+        Configuration configuration = configurationProvider.load();
+        RSAPrivateKey privKey = (RSAPrivateKey) keyPair.getPrivate();
+// keyPair, "CN=" + endorsementIssuer
+        Properties properties = new Properties();
+
+        String token = new AASTokenFetcher().getAASToken(configuration.get(MC_FIRST_USERNAME), configuration.get(MC_FIRST_PASSWORD),
+            new TlsConnection(new URL(configuration.get(AAS_API_URL)), new InsecureTlsPolicy()));
+        properties.setProperty("bearer.token", token);
+
+        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get("cms.base.url")), new InsecureTlsPolicy()));
+
+        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, getConfiguration().get(SAML_CERTIFICATE_DN)).toString(), "Signing");
+        log.info(getConfiguration().get(SAML_CERTIFICATE_DN));
+        log.info(cacert.toString());
+        log.info(getConfiguration().get(SAML_KEYSTORE_FILE));
+        FileOutputStream newp12 = new FileOutputStream("/opt/mtwilson/configuration/" +getConfiguration().get(SAML_KEYSTORE_FILE));
+
+        try {
+            KeyStore keystore = KeyStore.getInstance("PKCS12");
+            keystore.load(null, getConfiguration().get(SAML_KEYSTORE_PASSWORD).toCharArray());
+            Certificate[] chain = {cacert};
+            keystore.setKeyEntry("1", privKey, getConfiguration().get(SAML_KEYSTORE_PASSWORD).toCharArray(), chain);
+            keystore.store(newp12, getConfiguration().get(SAML_KEYSTORE_PASSWORD).toCharArray());
+
+            FileOutputStream out = new FileOutputStream(SAML_CERTIFICATE_FILE);
+            IOUtils.write(X509Util.encodePemCertificate(cacert), out);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            newp12.close();
         }
 
-        // create a new key pair for SAML
-        KeyPair samlkey = RsaUtil.generateRsaKeyPair(3072);
-        X509Builder builder = X509Builder.factory();
-        builder.issuerName(cacert);
-        builder.issuerPrivateKey(cakey);
-        builder.subjectName(getSamlCertificateDistinguishedName());
-        builder.subjectPublicKey(samlkey.getPublic());
-        X509Certificate samlcert = builder.build();
-        if (cacert == null) {
-            List<Fault> faults = builder.getFaults();
-            for (Fault fault : faults) {
-                log.error(String.format("%s: %s", fault.getClass().getName(), fault.toString()));
-                validation(fault); 
-            }
-            throw new SetupException("Cannot generate SAML certificate");
-
-        }
-
-        File samlKeystoreFile = new File(getSamlKeystoreFile());
-        SimpleKeystore keystore = new SimpleKeystore(samlKeystoreFile, getSamlKeystorePassword());
-        keystore.addKeyPairX509(samlkey.getPrivate(), samlcert, getSamlCertificateDistinguishedName(), getSamlKeystorePassword(), cacert); // we have to provide the issuer chain since it's not self-signed,  otherwise we'll get an exception from the KeyStore provider
-        keystore.save();
-
-        Pem samlCert = new Pem("CERTIFICATE", samlcert.getEncoded());
-        Pem samlCaCert = new Pem("CERTIFICATE", cacert.getEncoded());
-        String certificateChainPem = String.format("%s\n%s", samlCert.toString(), samlCaCert.toString());
-        File certificateChainPemFile = new File(My.configuration().getDirectoryPath() + File.separator + "saml.crt.pem");
-        try (FileOutputStream certificateChainPemFileOut = new FileOutputStream(certificateChainPemFile)) {
-            IOUtils.write(certificateChainPem, certificateChainPemFileOut);
-        } catch (IOException e) {
-            validation(e, "Cannot write saml.crt.pem");
-        }
     }
+
 }

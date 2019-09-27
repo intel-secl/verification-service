@@ -1,29 +1,71 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    
+
     <groupId>com.intel.mtwilson.features</groupId>
     <artifactId>mtwilson-privacyca-setup</artifactId>
-    
+
     <packaging>jar</packaging>
-    <description>Setup tasks for Privacy CA</description>
-    
+
     <parent>
         <groupId>com.intel.mtwilson.features</groupId>
         <artifactId>mtwilson-features</artifactId>
         <version>4.6-SNAPSHOT</version>
     </parent>
-    
+
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>aspectj-maven-plugin</artifactId>
+                <version>1.9</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <complianceLevel>1.7</complianceLevel>
+                    <showWeaveInfo>true</showWeaveInfo>
+                    <aspectLibraries>
+                        <!-- security framework -->
+                        <aspectLibrary>
+                            <groupId>org.apache.shiro</groupId>
+                            <artifactId>shiro-aspectj</artifactId>
+                        </aspectLibrary>
+                    </aspectLibraries>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>aspectj-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjrt</artifactId>
+                        <version>1.8.9</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjtools</artifactId>
+                        <version>1.8.9</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>
-    
+
     <dependencies>
         <!-- common-java -->
+        <dependency>
+            <groupId>com.intel.mtwilson.integration</groupId>
+            <artifactId>mtwilson-launcher</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.integration</groupId>
+            <artifactId>mtwilson-password-vault</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-setup-ext</artifactId>
@@ -34,25 +76,70 @@
         </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.util</groupId>
-            <artifactId>mtwilson-util-tpm20</artifactId>
+            <artifactId>mtwilson-util-crypto-key</artifactId>
         </dependency>
-        
+
         <!-- mtwilson -->
         <dependency>
             <groupId>com.intel.mtwilson.features</groupId>
-            <artifactId>mtwilson-my</artifactId>
+            <artifactId>mtwilson-flavor-ws-v2</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
+        <dependency>
+            <groupId>com.intel.mtwilson.features</groupId>
+            <artifactId>mtwilson-shiro-jdbi</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.features</groupId>
+            <artifactId>mtwilson-user-management-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.features</groupId>
+            <artifactId>mtwilson-user-management-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- external -->
         <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
+            <groupId>commons-validator</groupId>
+            <artifactId>commons-validator</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcmail-jdk15on</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.features</groupId>
+            <artifactId>mtwilson-setup</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>lib-common</artifactId>
+            <version>1.3.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>lib-privacyca</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+
     </dependencies>
-    
+
 </project>

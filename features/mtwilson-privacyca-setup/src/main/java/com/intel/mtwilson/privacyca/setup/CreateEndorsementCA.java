@@ -4,32 +4,57 @@
  */
 package com.intel.mtwilson.privacyca.setup;
 
+import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.crypto.RandomUtil;
+import com.intel.dcsg.cpg.crypto.RsaUtil;
+import com.intel.dcsg.cpg.tls.policy.TlsConnection;
 import com.intel.dcsg.cpg.x509.X509Util;
 import com.intel.mtwilson.Folders;
 import com.intel.mtwilson.My;
+import com.intel.mtwilson.configuration.ConfigurationFactory;
+import com.intel.mtwilson.configuration.ConfigurationProvider;
+import com.intel.mtwilson.core.common.model.CertificateType;
+import com.intel.mtwilson.jaxrs2.client.CMSClient;
 import com.intel.mtwilson.setup.LocalSetupTask;
-import gov.niarl.his.privacyca.TpmUtils;
+import com.intel.mtwilson.core.common.utils.AASTokenFetcher;
+import com.intel.dcsg.cpg.tls.policy.impl.InsecureTlsPolicy;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.net.URL;
 import java.nio.charset.Charset;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.List;
+import java.util.Properties;
+import gov.niarl.his.privacyca.TpmUtils;
+
+import com.intel.mtwilson.setup.utils.CertificateUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author jbuhacoff
  */
 public class CreateEndorsementCA extends LocalSetupTask {
+    private static Logger log = LoggerFactory.getLogger(CreateEndorsementCA.class);
     private File endorsementPemFile;
     private File endorsementExternalPemFile;
     private String endorsementPassword;
     private String endorsementIssuer;
     private File endorsementP12;
     private int endorsementCertificateValidityDays;
-    
+    private static final String CMS_BASE_URL = "cms.base.url";
+    private static final String AAS_API_URL = "aas.api.url";
+    private static final String MC_FIRST_USERNAME = "mc.first.username";
+    private static final String MC_FIRST_PASSWORD = "mc.first.password";
+
     @Override
     protected void configure() throws Exception {
         endorsementPemFile = My.configuration().getPrivacyCaEndorsementCacertsFile();
@@ -38,9 +63,9 @@ public class CreateEndorsementCA extends LocalSetupTask {
         endorsementP12 = My.configuration().getPrivacyCaEndorsementP12();
         endorsementPassword = My.configuration().getPrivacyCaEndorsementPassword();
         endorsementCertificateValidityDays = My.configuration().getPrivacyCaEndorsementValidityDays();
-        
+
         if( endorsementPassword == null || endorsementPassword.isEmpty() ) {
-            endorsementPassword = RandomUtil.randomBase64String(16); 
+            endorsementPassword = RandomUtil.randomBase64String(16);
             getConfiguration().set("mtwilson.privacyca.ek.p12.password", endorsementPassword);
         }
     }
@@ -60,10 +85,40 @@ public class CreateEndorsementCA extends LocalSetupTask {
 
     @Override
     protected void execute() throws Exception {
-        TpmUtils.createCaP12(3072, endorsementIssuer, endorsementPassword, endorsementP12.getAbsolutePath(), endorsementCertificateValidityDays);
+        KeyPair keyPair = RsaUtil.generateRsaKeyPair(3072);
+        ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
+        Configuration configuration = configurationProvider.load();
+        RSAPrivateKey privKey = (RSAPrivateKey) keyPair.getPrivate();
+// keyPair, "CN=" + endorsementIssuer
+        Properties properties = new Properties();
+
+        String token = new AASTokenFetcher().getAASToken(configuration.get(MC_FIRST_USERNAME),configuration.get(MC_FIRST_PASSWORD),
+            new TlsConnection(new URL(configuration.get(AAS_API_URL)), new InsecureTlsPolicy()));
+        properties.setProperty("bearer.token", token);
+
+        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get("cms.base.url")), new InsecureTlsPolicy()));
+
+        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, "CN="+endorsementIssuer).toString(), "Signing");
+        log.info(endorsementIssuer);
+        log.info(cacert.toString());
+        FileOutputStream newp12 = new FileOutputStream(endorsementP12.getAbsolutePath());
+
+        try {
+            KeyStore keystore = KeyStore.getInstance("PKCS12");
+            keystore.load(null, endorsementPassword.toCharArray());
+            Certificate[] chain = {cacert};
+            keystore.setKeyEntry("1", privKey, endorsementPassword.toCharArray(), chain);
+            keystore.store(newp12, endorsementPassword.toCharArray());
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            newp12.close();
+        }
+
         X509Certificate pcaCert = TpmUtils.certFromP12(endorsementP12.getAbsolutePath(), endorsementPassword);
         String self = X509Util.encodePemCertificate(pcaCert);
-        
+        log.info(self);
+        log.info(pcaCert.toString());
         // read in additional external maufacturer ECs
         String ekCacerts = "";
         String ekExternalCacertsFileContent = FileUtils.readFileToString(endorsementExternalPemFile, Charset.forName("UTF-8"));

@@ -4,14 +4,34 @@
  */
 package com.intel.mtwilson.privacyca.setup;
 
+import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.crypto.RandomUtil;
+import com.intel.dcsg.cpg.tls.policy.TlsConnection;
+import com.intel.dcsg.cpg.tls.policy.impl.InsecureTlsPolicy;
 import com.intel.dcsg.cpg.x509.X509Util;
 import com.intel.mtwilson.My;
+import com.intel.mtwilson.configuration.ConfigurationFactory;
+import com.intel.mtwilson.configuration.ConfigurationProvider;
+import com.intel.mtwilson.core.common.model.CertificateType;
+import com.intel.mtwilson.core.common.utils.AASTokenFetcher;
+import com.intel.mtwilson.jaxrs2.client.CMSClient;
 import com.intel.mtwilson.setup.LocalSetupTask;
+import com.intel.mtwilson.setup.utils.CertificateUtils;
 import gov.niarl.his.privacyca.TpmUtils;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.net.URL;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
+import java.util.Properties;
+
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -23,7 +43,13 @@ public class CreatePrivacyCA extends LocalSetupTask {
     private String identityIssuer;
     private File identityP12;
     private int identityCertificateValidityDays;
-    
+    private static final String CMS_BASE_URL = "cms.base.url";
+    private static final String AAS_API_URL = "aas.api.url";
+    private static final String MC_FIRST_USERNAME = "mc.first.username";
+    private static final String MC_FIRST_PASSWORD = "mc.first.password";
+    private static Logger log = LoggerFactory.getLogger(CreatePrivacyCA.class);
+
+
     @Override
     protected void configure() throws Exception {
         identityPemFile = My.configuration().getPrivacyCaIdentityCacertsFile();
@@ -50,7 +76,39 @@ public class CreatePrivacyCA extends LocalSetupTask {
 
     @Override
     protected void execute() throws Exception {
-        TpmUtils.createCaP12(3072, identityIssuer, identityPassword, identityP12.getAbsolutePath(), identityCertificateValidityDays);
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(3072);
+        KeyPair keyPair = keyGen.generateKeyPair();
+        RSAPrivateKey privKey = (RSAPrivateKey) keyPair.getPrivate();
+// keyPair, "CN=" + endorsementIssuer
+        ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
+        Configuration configuration = configurationProvider.load();
+        Properties properties = new Properties();
+
+        String token = new AASTokenFetcher().getAASToken(configuration.get(MC_FIRST_USERNAME),configuration.get(MC_FIRST_PASSWORD),
+            new TlsConnection(new URL(configuration.get(AAS_API_URL)), new InsecureTlsPolicy()));
+        properties.setProperty("bearer.token", token);
+
+        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get("cms.base.url")), new InsecureTlsPolicy()));
+
+        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, "CN="+identityIssuer).toString(), "Signing-CA");
+        log.info(identityIssuer);
+        log.info(cacert.toString());
+
+        FileOutputStream newp12 = new FileOutputStream(identityP12.getAbsolutePath());
+
+        try {
+            KeyStore keystore = KeyStore.getInstance("PKCS12");
+            keystore.load(null, identityPassword.toCharArray());
+            Certificate[] chain = {cacert};
+            keystore.setKeyEntry("1", privKey, identityPassword.toCharArray(), chain);
+            keystore.store(newp12, identityPassword.toCharArray());
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            newp12.close();
+        }
+
         X509Certificate pcaCert = TpmUtils.certFromP12(identityP12.getAbsolutePath(), identityPassword);
         String self = X509Util.encodePemCertificate(pcaCert);
         String existingPrivacyAuthorities = "";
