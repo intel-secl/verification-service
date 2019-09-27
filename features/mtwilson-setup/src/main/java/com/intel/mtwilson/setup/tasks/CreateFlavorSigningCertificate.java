@@ -46,9 +46,11 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
     private static final String MC_FIRST_USERNAME = "mc.first.username";
     private static final String MC_FIRST_PASSWORD = "mc.first.password";
     private Properties properties = new Properties();
+    private File truststorep12;
 
     @Override
     protected void configure() {
+        truststorep12 = My.configuration().getTruststoreFile();
         if (getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD) == null || getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_PASSWORD).isEmpty()) {
             getConfiguration().set(FLAVOR_SIGNER_KEYSTORE_PASSWORD, RandomUtil.randomBase64String(16));
         }
@@ -109,7 +111,8 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
 
     @Override
     protected void execute() throws Exception {
-        TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().insecure().build();
+        TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12,
+            "changeit").build();
         File flavorSigningKeystoreFile = new File(getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_FILE));
 
         if (flavorSigningKeystoreFile.createNewFile()) {
@@ -119,6 +122,8 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
         }
         // create a new key pair for flavor signing
         KeyPair flavorSigningKey = RsaUtil.generateRsaKeyPair(3072);
+
+
 
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(getConfiguration().get("cms.base.url")), tlsPolicy));
         X509Certificate cmsCACert = cmsClient.getCACertificate();

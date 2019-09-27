@@ -6,6 +6,8 @@ package com.intel.mtwilson.tag.setup.cmd;
 
 import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.tls.policy.TlsConnection;
+import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
+import com.intel.dcsg.cpg.tls.policy.TlsPolicyBuilder;
 import com.intel.dcsg.cpg.tls.policy.impl.InsecureTlsPolicy;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
 import com.intel.mtwilson.configuration.ConfigurationProvider;
@@ -68,26 +70,27 @@ public class TagCreateCaKey extends TagCommand {
         KeyPair cakey = RsaUtil.generateRsaKeyPair(3072);
         ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
         Configuration configuration = configurationProvider.load();
-
+        TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(My.configuration().getTruststoreFile(),
+            "changeit").build();
 
         Properties properties = new Properties();
 
         String token = new AASTokenFetcher().getAASToken(configuration.get(MC_FIRST_USERNAME),configuration.get(MC_FIRST_PASSWORD),
-            new TlsConnection(new URL(configuration.get(AAS_API_URL)), new InsecureTlsPolicy()));
-                                properties.setProperty("bearer.token", token);
+            new TlsConnection(new URL(configuration.get(AAS_API_URL)), tlsPolicy));
+        properties.setProperty("bearer.token", token);
 
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(CMS_BASE_URL)), new InsecureTlsPolicy()));
 
-        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(cakey, dn).toString(), CertificateType.SIGNING.getValue());
-        log.info(cacert.toString());
+        X509Certificate tagcert = cmsClient.getCertificate(CertificateUtils.getCSR(cakey, dn).toString(), CertificateType.SIGNING.getValue());
+        log.info(tagcert.toString());
 
         String privateKeyPem = RsaUtil.encodePemPrivateKey(cakey.getPrivate());
-        String cacertPem = X509Util.encodePemCertificate(cacert);
+        String tagCertPem = X509Util.encodePemCertificate(tagcert);
         
-        String combinedPrivateKeyAndCertPem = privateKeyPem + cacertPem;
+        String combinedPrivateKeyAndCertPem = privateKeyPem + tagCertPem;
         
         byte[] combinedPrivateKeyAndCertPemBytes = combinedPrivateKeyAndCertPem.getBytes("UTF-8");
-        byte[] cacertPemContent = cacertPem.getBytes("UTF-8");
+        byte[] cacertPemContent = tagCertPem.getBytes("UTF-8");
         
         // for now... there can only be ONE CA private key in the database  (but we support storing multiple certs)
         File cakeyFile = TagJdbi.fileDao().findByName(PRIVATEKEY_FILE);
@@ -107,7 +110,7 @@ public class TagCreateCaKey extends TagCommand {
             TagJdbi.fileDao().insert(new UUID(), CACERTS_FILE, "text/plain", cacertPemContent);
         }
         else {
-            // append new cacert to existing file in database
+            // append new tagcert to existing file in database
             byte[] content = ByteArray.concat(cacertsFile.getContent(), cacertPemContent);
             TagJdbi.fileDao().update(cacertsFile.getId(), CACERTS_FILE, "text/plain", content);
             // and write to disk also for easy sharing with mtwilson: tag-cacerts.pem
@@ -122,7 +125,7 @@ public class TagCreateCaKey extends TagCommand {
     public static void main(String args[]) throws Exception {
         TagCreateCaKey cmd = new TagCreateCaKey();
         cmd.setOptions(new MapConfiguration(new Properties()));
-        cmd.execute(new String[] { "CN=Asset CA,OU=Datacenter,C=US" });
+        cmd.execute(new String[] { "CN=asset-tag-service" });
         
     }    
     
