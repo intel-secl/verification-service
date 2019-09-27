@@ -150,7 +150,7 @@ public class CreateSamlCertificate extends LocalSetupTask {
 
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get("cms.base.url")), new InsecureTlsPolicy()));
 
-        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, getConfiguration().get(SAML_CERTIFICATE_DN)).toString(), "Signing");
+        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, getConfiguration().get(SAML_CERTIFICATE_DN)).toString(), CertificateType.SIGNING.getValue());
         log.info(getConfiguration().get(SAML_CERTIFICATE_DN));
         log.info(cacert.toString());
         log.info(getConfiguration().get(SAML_KEYSTORE_FILE));

@@ -76,9 +76,9 @@ public class TagCreateCaKey extends TagCommand {
             new TlsConnection(new URL(configuration.get(AAS_API_URL)), new InsecureTlsPolicy()));
                                 properties.setProperty("bearer.token", token);
 
-        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get("cms.base.url")), new InsecureTlsPolicy()));
+        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(CMS_BASE_URL)), new InsecureTlsPolicy()));
 
-        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(cakey, dn).toString(), "Signing");
+        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(cakey, dn).toString(), CertificateType.SIGNING.getValue());
         log.info(cacert.toString());
 
         String privateKeyPem = RsaUtil.encodePemPrivateKey(cakey.getPrivate());

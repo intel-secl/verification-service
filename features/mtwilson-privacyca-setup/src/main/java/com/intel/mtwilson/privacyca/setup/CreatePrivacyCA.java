@@ -91,7 +91,7 @@ public class CreatePrivacyCA extends LocalSetupTask {
 
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get("cms.base.url")), new InsecureTlsPolicy()));
 
-        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, "CN="+identityIssuer).toString(), "Signing-CA");
+        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, "CN="+identityIssuer).toString(), CertificateType.SIGNING_CA.getValue());
         log.info(identityIssuer);
         log.info(cacert.toString());
 

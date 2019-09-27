@@ -98,7 +98,7 @@ public class CreateEndorsementCA extends LocalSetupTask {
 
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get("cms.base.url")), new InsecureTlsPolicy()));
 
-        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, "CN="+endorsementIssuer).toString(), "Signing");
+        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, "CN="+endorsementIssuer).toString(), CertificateType.SIGNING.getValue());
         log.info(endorsementIssuer);
         log.info(cacert.toString());
         FileOutputStream newp12 = new FileOutputStream(endorsementP12.getAbsolutePath());
