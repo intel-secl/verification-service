@@ -1,6 +1,6 @@
 /**
- * Author:  ddhawal
- * Created: Oct 26, 2018
+ * Author:  arijitgh
+ * Created: June 28, 2019
  */
 
 ALTER TABLE mw_flavor ADD COLUMN signature text UNIQUE;
