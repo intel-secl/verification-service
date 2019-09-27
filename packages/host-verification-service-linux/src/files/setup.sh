@@ -755,6 +755,8 @@ mtwilson config "saml.validity.seconds" "$SAML_VALIDITY_SECONDS" >/dev/null
 mtwilson config "cms.base.url" "$CMS_BASE_URL" >/dev/null
 #AAS configuration
 mtwilson config "aas.api.url" "$AAS_API_URL" >/dev/null
+#Get CMS CA Certificate
+curl --insecure -X GET -H "Accept: application/x-pem-file" -w "%{http_code}" {$CMS_BASE_URL}/ca-certificates -o {$MTWILSON_CONFIGURATION}/cms-ca.cert
 
 #Skip flavor signature configuration
 mtwilson config "skip.flavor.signature.verification" "$SKIP_FLAVOR_SIGNATURE_VERIFICATION" >/dev/null

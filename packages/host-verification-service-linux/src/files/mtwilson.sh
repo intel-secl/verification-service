@@ -112,11 +112,12 @@ chmod 600 "$MTWILSON_APPLICATION_LOG_FILE"
 MTWILSON_HTTP_LOG_FILE=${MTWILSON_HTTP_LOG_FILE:-$MTWILSON_LOGS/http.log}
 JAVA_REQUIRED_VERSION=${JAVA_REQUIRED_VERSION:-1.7}
 JAVA_OPTS=${JAVA_OPTS:-"-Dlogback.configurationFile=$MTWILSON_CONFIGURATION/logback.xml -Dlog4j.configuration=file:$MTWILSON_CONFIGURATION/log4j.properties -Djdk.tls.ephemeralDHKeySize=2048"}
+JAVA_OPTS="${JAVA_OPTS} -Djava.net.preferIPv4Stack=true"
 
 MTWILSON_SETUP_FIRST_TASKS=${MTWILSON_SETUP_FIRST_TASKS:-"filesystem update-extensions-cache-file"}
 MTWILSON_SETUP_MANAGER_TASKS="update-ssl-port create-endorsement-ca create-privacy-ca";
 MTWILSON_PRESETUP_TASKS="create-data-encryption-key"
-MTWILSON_SETUP_TASKS=${MTWILSON_SETUP_TASKS:-"create-certificate-authority-key create-flavor-signing-certificate create-admin-user create-default-flavorgroups initialize-db jetty-ports jetty-tls-keystore password-vault shiro-ssl-port sign-existing-unsigned-flavors"}
+MTWILSON_SETUP_TASKS=${MTWILSON_SETUP_TASKS:-"create-certificate-authority-key create-flavor-signing-certificate create-admin-user create-default-flavorgroups initialize-db jetty-ports create-tls-certificate password-vault shiro-ssl-port sign-existing-unsigned-flavors"}
 
 # RHEL 7.6 needs PID file for systemd startup service
 # The location is identified as below in mtwilson.sh

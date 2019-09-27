@@ -27,8 +27,6 @@ public class SetupTest {
         tasks.add(new CreateMtWilsonPropertiesFile());
         tasks.add(new CreateCertificateAuthorityKey());
         CreateTlsCertificate createTlsCertificate = new CreateTlsCertificate();
-        createTlsCertificate.setDnsAlternativeName("localhost");
-        createTlsCertificate.setIpAlternativeName("127.0.0.1");
         tasks.add(createTlsCertificate);
         CreateSamlCertificate createSamlCertificate = new CreateSamlCertificate();
         tasks.add(createSamlCertificate);

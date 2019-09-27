@@ -59,6 +59,10 @@
     <dependencies>  
         <!-- common-java -->
         <dependency>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>mtwilson-core-jetty9</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-launcher</artifactId>
         </dependency>
