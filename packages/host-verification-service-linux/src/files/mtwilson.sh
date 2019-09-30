@@ -270,23 +270,6 @@ mtwilson_setup_keystore() {
 
   $MTWILSON_BIN/mtwilson config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,jersey-media-multipart}" >/dev/null
   $MTWILSON_BIN/mtwilson config mtwilson.extensions.packageIncludeFilter.startsWith "${MTWILSON_EXTENSIONS_PACKAGEINCLUDEFILTER_STARTSWITH:-com.intel,org.glassfish.jersey.media.multipart}" >/dev/null
-
-  keytool=${JAVA_HOME}/bin/keytool
-  samlkey_exists=`$keytool -list -keystore ${SAML_KEYSTORE_FILE} -storepass ${SAML_KEYSTORE_PASSWORD} | grep PrivateKeyEntry | grep "^${SAML_KEY_ALIAS}"`
-  if [ -n "${samlkey_exists}" ]; then
-    echo "SAML key with alias ${SAML_KEY_ALIAS} already exists in ${SAML_KEYSTORE_FILE}"
-  else
-    $keytool -genkey -alias ${SAML_KEY_ALIAS} -keyalg RSA  -keysize 3072 -keystore ${SAML_KEYSTORE_FILE} -storepass ${SAML_KEYSTORE_PASSWORD} -dname "CN=mtwilson, OU=Mt Wilson, O=Intel, L=Folsom, ST=CA, C=US" -validity 3650  -keypass ${SAML_KEY_PASSWORD}
-  fi
-  chmod 600 ${SAML_KEYSTORE_FILE}
-  # export the SAML certificate so it can be easily provided to API clients
-  $keytool -export -alias ${SAML_KEY_ALIAS} -keystore ${SAML_KEYSTORE_FILE}  -storepass ${SAML_KEYSTORE_PASSWORD} -file ${MTWILSON_CONFIGURATION}/saml.crt
-  openssl x509 -in ${MTWILSON_CONFIGURATION}/saml.crt -inform der -out ${MTWILSON_CONFIGURATION}/saml.crt.pem -outform pem
-  chmod 600 ${MTWILSON_CONFIGURATION}/saml.crt ${MTWILSON_CONFIGURATION}/saml.crt.pem
-  chown $MTWILSON_USERNAME:$MTWILSON_USERNAME $SAML_KEYSTORE_FILE ${MTWILSON_CONFIGURATION}/saml.crt ${MTWILSON_CONFIGURATION}/saml.crt.pem 
-  saml_issuer=""
-  saml_issuer="https://${MTWILSON_SERVER:-127.0.0.1}:${MTWILSON_PORT_HTTPS:-8443}"
-  $MTWILSON_BIN/mtwilson config "saml.issuer" "${saml_issuer}" >/dev/null
 }
 
 mtwilson_generate_master_password() {
