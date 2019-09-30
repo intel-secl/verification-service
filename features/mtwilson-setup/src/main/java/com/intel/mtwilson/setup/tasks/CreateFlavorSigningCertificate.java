@@ -128,7 +128,7 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(getConfiguration().get("cms.base.url")), tlsPolicy));
         X509Certificate cmsCACert = cmsClient.getCACertificate();
         CertificateUtils.getCSR(flavorSigningKey, flavorSigningCSRDistinguishedName);
-        X509Certificate flavorSigningCert = cmsClient.getCertificate(CertificateUtils.getCSR(flavorSigningKey, flavorSigningCSRDistinguishedName).toString(), CertificateType.FLAVOR_SIGNING.getValue());
+        X509Certificate flavorSigningCert = cmsClient.getCertificate(CertificateUtils.getCSR(flavorSigningKey, flavorSigningCSRDistinguishedName).toString(), CertificateType.SIGNING.getValue());
 
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X509");
         X509Certificate[] certificateChain = new X509Certificate[2];
