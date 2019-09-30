@@ -88,7 +88,7 @@ public class ReplaceSamlKeyPair extends InteractiveCommand {
 
         String samlKeyAlias = configuration.get(SAML_KEY_ALIAS, null);
         if (samlKeyAlias == null) {
-            samlKeyAlias = "samlkey1";
+            samlKeyAlias = "saml-key";
         }
         try (PrivateKeyStore keystore = new PrivateKeyStore(KeyStore.getDefaultType(), new FileResource(keystoreFile), keystorePassword)) {
             // remove existing keypair from keystore

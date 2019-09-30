@@ -744,12 +744,12 @@ mtwilson config "mtwilson.audit.log.num.rotations" "$MTWILSON_AUDIT_LOG_NUM_ROTA
 
 # SAML configuration parameters (these are static ones). The issuer and passwords
 # are written by asctl.sh
-export SAML_KEYSTORE_FILE=${SAML_KEYSTORE_FILE:-SAML.p12}
-mtwilson config "saml.keystore.file" "$SAML_KEYSTORE_FILE" >/dev/null
-export SAML_KEY_ALIAS=${SAML_KEY_ALIAS:-samlkey1}
+#export SAML_KEYSTORE_FILE=${SAML_KEYSTORE_FILE:-SAML.p12}
+#mtwilson config "saml.keystore.file" "$SAML_KEYSTORE_FILE" >/dev/null
+export SAML_KEY_ALIAS=${SAML_KEY_ALIAS:-saml-key}
 mtwilson config "saml.key.alias" "$SAML_KEY_ALIAS" >/dev/null
-export SAML_VALIDITY_SECONDS=${SAML_VALIDITY_SECONDS:-86400}
-mtwilson config "saml.validity.seconds" "$SAML_VALIDITY_SECONDS" >/dev/null
+#export SAML_VALIDITY_SECONDS=${SAML_VALIDITY_SECONDS:-86400}
+#mtwilson config "saml.validity.seconds" "$SAML_VALIDITY_SECONDS" >/dev/null
 
 #CMS configuration
 mtwilson config "cms.base.url" "$CMS_BASE_URL" >/dev/null

@@ -44,7 +44,6 @@ public class CreateSamlCertificate extends LocalSetupTask {
     public static final String SAML_KEYSTORE_FILE = "saml.keystore.file";
     public static final String SAML_KEYSTORE_PASSWORD = "saml.keystore.password";
     public static final String SAML_KEY_ALIAS = "saml.key.alias";
-    public static final String SAML_KEY_PASSWORD = "saml.key.password";
     private static final String CMS_BASE_URL = "cms.base.url";
     private static final String AAS_API_URL = "aas.api.url";
     private static final String MC_FIRST_USERNAME = "mc.first.username";
@@ -53,39 +52,38 @@ public class CreateSamlCertificate extends LocalSetupTask {
     private static final String SAML_CERTIFICATE_CERT_PEM = "saml.crt.pem";
     private static final String SAML_KEYSTORE_NAME="SAML.p12";
     private File truststorep12;
-    private File samlKeystoreFile;
-    private KeyStore keystore;
-    private String samlKeystorePassword;
-    FileInputStream keystoreFIS;
+    private Configuration configuration;
 
 
     public String getSamlKeystorePassword() {
-
-        return getConfiguration().get(SAML_KEYSTORE_PASSWORD, null); // no default here, will return null if not configured: only the configure() method will generate a new random password if necessary
+        return configuration.get(SAML_KEYSTORE_PASSWORD, null); // no default here, will return null if not configured: only the configure() method will generate a new random password if necessary
     }
 
 
     @Override
     protected void configure() throws Exception {
+        ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
+        configuration = configurationProvider.load();
+
         truststorep12 = My.configuration().getTruststoreFile();
-        if (getConfiguration().get(SAML_KEYSTORE_PASSWORD) == null || getConfiguration().get(SAML_KEYSTORE_PASSWORD).isEmpty()) {
-            getConfiguration().set(SAML_KEYSTORE_PASSWORD, RandomUtil.randomBase64String(16));
+        if (configuration.get(SAML_KEYSTORE_PASSWORD) == null || configuration.get(SAML_KEYSTORE_PASSWORD).isEmpty()) {
+            configuration.set(SAML_KEYSTORE_PASSWORD, RandomUtil.randomBase64String(16));
         }
-        if (getConfiguration().get(SAML_KEYSTORE_FILE) == null || getConfiguration().get(SAML_KEYSTORE_FILE).isEmpty()) {
-            getConfiguration().set(SAML_KEYSTORE_FILE, My.configuration().getDirectoryPath() + File.separator + SAML_KEYSTORE_NAME);
-            log.info(getConfiguration().get(SAML_KEYSTORE_FILE));
+        if (configuration.get(SAML_KEYSTORE_FILE) == null || configuration.get(SAML_KEYSTORE_FILE).isEmpty()) {
+            configuration.set(SAML_KEYSTORE_FILE, My.configuration().getDirectoryPath() + File.separator + SAML_KEYSTORE_NAME);
         }
-        if (getConfiguration().get(SAML_CERTIFICATE_DN) == null || getConfiguration().get(SAML_CERTIFICATE_DN).isEmpty()) {
-            getConfiguration().set(SAML_CERTIFICATE_DN, "CN=mtwilson-saml");
+        if (configuration.get(SAML_CERTIFICATE_DN) == null || configuration.get(SAML_CERTIFICATE_DN).isEmpty()) {
+            configuration.set(SAML_CERTIFICATE_DN, "CN=mtwilson-saml");
         }
-        if (getConfiguration().get(SAML_KEY_ALIAS) == null || getConfiguration().get(SAML_KEY_ALIAS).isEmpty()) {
-            getConfiguration().set(SAML_KEY_ALIAS, "saml-ley");
+        if (configuration.get(SAML_KEY_ALIAS) == null || configuration.get(SAML_KEY_ALIAS).isEmpty()) {
+            configuration.set(SAML_KEY_ALIAS, "saml-key");
         }
+        configurationProvider.save(configuration);
     }
 
     @Override
     protected void validate() throws Exception {
-        if (!new File(getConfiguration().get(SAML_KEYSTORE_FILE)).exists()) {
+        if (!new File(configuration.get(SAML_KEYSTORE_FILE)).exists()) {
             validation("Saml keystore file is missing");
         }
         if (!getConfigurationFaults().isEmpty()) {
@@ -97,8 +95,6 @@ public class CreateSamlCertificate extends LocalSetupTask {
     @Override
     protected void execute() throws Exception {
         KeyPair keyPair = RsaUtil.generateRsaKeyPair(3072);
-        ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
-        Configuration configuration = configurationProvider.load();
         RSAPrivateKey privKey = (RSAPrivateKey) keyPair.getPrivate();
         Properties properties = new Properties();
 
@@ -111,15 +107,15 @@ public class CreateSamlCertificate extends LocalSetupTask {
 
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(CMS_BASE_URL)), tlsPolicy));
 
-        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, getConfiguration().get(SAML_CERTIFICATE_DN)).toString(), CertificateType.SIGNING.getValue());
-        FileOutputStream newp12 = new FileOutputStream(My.configuration().getDirectoryPath() + File.separator +getConfiguration().get(SAML_KEYSTORE_FILE));
+        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, configuration.get(SAML_CERTIFICATE_DN)).toString(), CertificateType.SIGNING.getValue());
+        FileOutputStream newp12 = new FileOutputStream(configuration.get(SAML_KEYSTORE_FILE));
 
         try {
             KeyStore keystore = KeyStore.getInstance("PKCS12");
-            keystore.load(null, getConfiguration().get(SAML_KEYSTORE_PASSWORD).toCharArray());
+            keystore.load(null, configuration.get(SAML_KEYSTORE_PASSWORD).toCharArray());
             Certificate[] chain = {cacert};
-            keystore.setKeyEntry("1", privKey, getConfiguration().get(SAML_KEYSTORE_PASSWORD).toCharArray(), chain);
-            keystore.store(newp12, getConfiguration().get(SAML_KEYSTORE_PASSWORD).toCharArray());
+            keystore.setKeyEntry(configuration.get(SAML_KEY_ALIAS), privKey, configuration.get(SAML_KEYSTORE_PASSWORD).toCharArray(), chain);
+            keystore.store(newp12, configuration.get(SAML_KEYSTORE_PASSWORD).toCharArray());
 
             FileOutputStream out = new FileOutputStream(My.configuration().getDirectoryPath() + File.separator + SAML_CERTIFICATE_CERT);
             IOUtils.write(X509Util.encodePemCertificate(cacert), out);

@@ -251,24 +251,21 @@ mtwilson_setup_keystore() {
 
   # Setup SAML params
   $MTWILSON_BIN/mtwilson config "saml.key.alias" "$SAML_KEY_ALIAS" >/dev/null
-  export SAML_VALIDITY_SECONDS=${SAML_VALIDITY_SECONDS:-86400}
-  $MTWILSON_BIN/mtwilson config "saml.validity.seconds" "$SAML_VALIDITY_SECONDS" >/dev/null
-
 
   # create saml key
   echo "Creating SAML key..."
   if [ ! -f $SAML_KEYSTORE_FILE ]; then
     SAML_KEYSTORE_FILE=${MTWILSON_CONFIGURATION}/${SAML_KEYSTORE_FILE}
   fi
-  if [ -z "$SAML_KEYSTORE_PASSWORD" ]; then
-    SAML_KEYSTORE_PASSWORD=$(generate_password 16)
-    SAML_KEY_PASSWORD=$SAML_KEYSTORE_PASSWORD
-    $MTWILSON_BIN/mtwilson config "saml.keystore.password" "${SAML_KEYSTORE_PASSWORD}" >/dev/null
-    $MTWILSON_BIN/mtwilson config "saml.key.password" "${SAML_KEY_PASSWORD}" >/dev/null
-  fi
+
+  $MTWILSON_BIN/mtwilson config "saml.keystore.password" "changeit" >/dev/null
+  $MTWILSON_BIN/mtwilson config "saml.key.password" "changeit" >/dev/null
 
   $MTWILSON_BIN/mtwilson config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,jersey-media-multipart}" >/dev/null
   $MTWILSON_BIN/mtwilson config mtwilson.extensions.packageIncludeFilter.startsWith "${MTWILSON_EXTENSIONS_PACKAGEINCLUDEFILTER_STARTSWITH:-com.intel,org.glassfish.jersey.media.multipart}" >/dev/null
+
+  saml_issuer="https://${MTWILSON_SERVER:-127.0.0.1}:${MTWILSON_PORT_HTTPS:-8443}"
+  $MTWILSON_BIN/mtwilson config "saml.issuer" "${saml_issuer}" >/dev/null
 }
 
 mtwilson_generate_master_password() {
