@@ -73,7 +73,8 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
             configuration("Verification User password is not provided");
         }
         try {
-            String token = new AASTokenFetcher().getAASToken(getConfiguration().get(MC_FIRST_USERNAME), getConfiguration().get(MC_FIRST_PASSWORD), new TlsConnection(new URL(getConfiguration().get(AAS_API_URL)), new InsecureTlsPolicy()));
+            TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12, "changeit").build();
+            String token = new AASTokenFetcher().getAASToken(getConfiguration().get(MC_FIRST_USERNAME), getConfiguration().get(MC_FIRST_PASSWORD), new TlsConnection(new URL(getConfiguration().get(AAS_API_URL)), tlsPolicy));
             properties.setProperty("bearer.token", token);
         } catch (Exception e) {
             configuration("Could not download AAS token");

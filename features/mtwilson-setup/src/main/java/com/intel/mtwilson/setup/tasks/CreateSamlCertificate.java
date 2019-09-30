@@ -109,12 +109,9 @@ public class CreateSamlCertificate extends LocalSetupTask {
             new TlsConnection(new URL(configuration.get(AAS_API_URL)), tlsPolicy));
         properties.setProperty("bearer.token", token);
 
-        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(CMS_BASE_URL)), new InsecureTlsPolicy()));
+        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(CMS_BASE_URL)), tlsPolicy));
 
         X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, getConfiguration().get(SAML_CERTIFICATE_DN)).toString(), CertificateType.SIGNING.getValue());
-        log.info(getConfiguration().get(SAML_CERTIFICATE_DN));
-        log.info(cacert.toString());
-        log.info(getConfiguration().get(SAML_KEYSTORE_FILE));
         FileOutputStream newp12 = new FileOutputStream(My.configuration().getDirectoryPath() + File.separator +getConfiguration().get(SAML_KEYSTORE_FILE));
 
         try {
@@ -127,7 +124,7 @@ public class CreateSamlCertificate extends LocalSetupTask {
             FileOutputStream out = new FileOutputStream(My.configuration().getDirectoryPath() + File.separator + SAML_CERTIFICATE_CERT);
             IOUtils.write(X509Util.encodePemCertificate(cacert), out);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw e;
         } finally {
             newp12.close();
         }

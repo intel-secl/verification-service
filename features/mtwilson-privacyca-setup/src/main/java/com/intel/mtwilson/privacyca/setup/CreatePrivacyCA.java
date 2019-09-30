@@ -95,11 +95,9 @@ public class CreatePrivacyCA extends LocalSetupTask {
             new TlsConnection(new URL(configuration.get(AAS_API_URL)), tlsPolicy));
         properties.setProperty("bearer.token", token);
 
-        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(CMS_BASE_URL)), new InsecureTlsPolicy()));
+        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(CMS_BASE_URL)), tlsPolicy));
 
         X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, "CN="+identityIssuer).toString(), CertificateType.SIGNING_CA.getValue());
-        log.info(identityIssuer);
-        log.info(cacert.toString());
 
         FileOutputStream newp12 = new FileOutputStream(identityP12.getAbsolutePath());
 
