@@ -937,8 +937,8 @@ public class Reports extends MtWilsonClient {
      */        
     public TrustAssertion verifyTrustAssertion(String saml) throws KeyManagementException, KeyStoreException, 
             NoSuchAlgorithmException, UnrecoverableEntryException, CertificateEncodingException {
-        String keystorePath = getConfiguration().get("mtwilson.api.keystore");
-        Password keystorePassword = getPassword("mtwilson.api.keystore.password");
+        String keystorePath = getConfiguration().get("mtwilson.api.truststore");
+        Password keystorePassword = getPassword("mtwilson.api.truststore.password");
         if( keystorePath != null && !keystorePath.isEmpty() && keystorePassword != null ) {
             SimpleKeystore keystore = new SimpleKeystore(new File(keystorePath), keystorePassword);
             X509Certificate[] trustedSamlCertificates;
