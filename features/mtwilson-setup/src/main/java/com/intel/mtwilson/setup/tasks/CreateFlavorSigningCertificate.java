@@ -10,7 +10,6 @@ import com.intel.dcsg.cpg.io.pem.Pem;
 import com.intel.dcsg.cpg.tls.policy.TlsConnection;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicyBuilder;
-import com.intel.dcsg.cpg.tls.policy.impl.InsecureTlsPolicy;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.jaxrs2.client.CMSClient;
 import com.intel.mtwilson.core.common.model.CertificateType;
@@ -26,6 +25,7 @@ import java.security.cert.X509Certificate;
 import java.util.Properties;
 
 import com.intel.mtwilson.setup.utils.CertificateUtils;
+import com.intel.mtwilson.core.common.utils.AASConstants;
 import org.apache.commons.io.IOUtils;
 
 
@@ -41,10 +41,6 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
     private static final String FLAVOR_SIGNER_CERTIFICATE_DN = "mtwilson.flavor.signing.dn";
     private static final String FLAVOR_SIGNER_KEYSTORE_FILE = "flavor.signer.keystore.file";
     private static final String FLAVOR_SIGNER_KEYSTORE_PASSWORD = "flavor.signer.keystore.password";
-    private static final String CMS_BASE_URL = "cms.base.url";
-    private static final String AAS_API_URL = "aas.api.url";
-    private static final String MC_FIRST_USERNAME = "mc.first.username";
-    private static final String MC_FIRST_PASSWORD = "mc.first.password";
     private Properties properties = new Properties();
     private File truststorep12;
 
@@ -63,19 +59,19 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
         if (getConfiguration().get(FLAVOR_SIGNING_KEY_ALIAS) == null || getConfiguration().get(FLAVOR_SIGNING_KEY_ALIAS).isEmpty()) {
             getConfiguration().set(FLAVOR_SIGNING_KEY_ALIAS, "flavor-signing-key");
         }
-        if (getConfiguration().get(CMS_BASE_URL) == null || getConfiguration().get(CMS_BASE_URL).isEmpty()) {
+        if (getConfiguration().get(AASConstants.CMS_BASE_URL) == null || getConfiguration().get(AASConstants.CMS_BASE_URL).isEmpty()) {
             configuration("CMS Base Url is not provided");
         }
-        if (getConfiguration().get(MC_FIRST_USERNAME) == null || getConfiguration().get(MC_FIRST_USERNAME).isEmpty()) {
+        if (getConfiguration().get(AASConstants.MC_FIRST_USERNAME) == null || getConfiguration().get(AASConstants.MC_FIRST_USERNAME).isEmpty()) {
             configuration("Verification Username is not provided");
         }
-        if (getConfiguration().get(MC_FIRST_PASSWORD) == null || getConfiguration().get(MC_FIRST_PASSWORD).isEmpty()) {
+        if (getConfiguration().get(AASConstants.MC_FIRST_PASSWORD) == null || getConfiguration().get(AASConstants.MC_FIRST_PASSWORD).isEmpty()) {
             configuration("Verification User password is not provided");
         }
         try {
             TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12, "changeit").build();
-            String token = new AASTokenFetcher().getAASToken(getConfiguration().get(MC_FIRST_USERNAME), getConfiguration().get(MC_FIRST_PASSWORD), new TlsConnection(new URL(getConfiguration().get(AAS_API_URL)), tlsPolicy));
-            properties.setProperty("bearer.token", token);
+            String token = new AASTokenFetcher().getAASToken(getConfiguration().get(AASConstants.MC_FIRST_USERNAME), getConfiguration().get(AASConstants.MC_FIRST_PASSWORD), new TlsConnection(new URL(getConfiguration().get(AASConstants.AAS_API_URL)), tlsPolicy));
+            properties.setProperty(AASConstants.BEARER_TOKEN, token);
         } catch (Exception e) {
             configuration("Could not download AAS token");
         }

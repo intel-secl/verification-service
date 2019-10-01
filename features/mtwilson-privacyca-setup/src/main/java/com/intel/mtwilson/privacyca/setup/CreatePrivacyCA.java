@@ -9,7 +9,6 @@ import com.intel.dcsg.cpg.crypto.RandomUtil;
 import com.intel.dcsg.cpg.tls.policy.TlsConnection;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicyBuilder;
-import com.intel.dcsg.cpg.tls.policy.impl.InsecureTlsPolicy;
 import com.intel.dcsg.cpg.x509.X509Util;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
@@ -19,6 +18,7 @@ import com.intel.mtwilson.core.common.utils.AASTokenFetcher;
 import com.intel.mtwilson.jaxrs2.client.CMSClient;
 import com.intel.mtwilson.setup.LocalSetupTask;
 import com.intel.mtwilson.setup.utils.CertificateUtils;
+import com.intel.mtwilson.core.common.utils.AASConstants;
 import gov.niarl.his.privacyca.TpmUtils;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -46,10 +46,6 @@ public class CreatePrivacyCA extends LocalSetupTask {
     private File identityP12;
     private File truststorep12;
     private int identityCertificateValidityDays;
-    private static final String CMS_BASE_URL = "cms.base.url";
-    private static final String AAS_API_URL = "aas.api.url";
-    private static final String MC_FIRST_USERNAME = "mc.first.username";
-    private static final String MC_FIRST_PASSWORD = "mc.first.password";
     private static Logger log = LoggerFactory.getLogger(CreatePrivacyCA.class);
 
 
@@ -91,11 +87,11 @@ public class CreatePrivacyCA extends LocalSetupTask {
 
         TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12,
             "changeit").build();
-        String token = new AASTokenFetcher().getAASToken(configuration.get(MC_FIRST_USERNAME),configuration.get(MC_FIRST_PASSWORD),
-            new TlsConnection(new URL(configuration.get(AAS_API_URL)), tlsPolicy));
-        properties.setProperty("bearer.token", token);
+        String token = new AASTokenFetcher().getAASToken(configuration.get(AASConstants.MC_FIRST_USERNAME),configuration.get(AASConstants.MC_FIRST_PASSWORD),
+            new TlsConnection(new URL(configuration.get(AASConstants.AAS_API_URL)), tlsPolicy));
+        properties.setProperty(AASConstants.BEARER_TOKEN, token);
 
-        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(CMS_BASE_URL)), tlsPolicy));
+        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(AASConstants.CMS_BASE_URL)), tlsPolicy));
 
         X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, "CN="+identityIssuer).toString(), CertificateType.SIGNING_CA.getValue());
 

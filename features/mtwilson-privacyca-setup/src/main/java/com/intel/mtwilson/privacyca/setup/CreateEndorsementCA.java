@@ -11,7 +11,6 @@ import com.intel.dcsg.cpg.tls.policy.TlsConnection;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicyBuilder;
 import com.intel.dcsg.cpg.x509.X509Util;
-import com.intel.mtwilson.Folders;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
 import com.intel.mtwilson.configuration.ConfigurationProvider;
@@ -19,19 +18,19 @@ import com.intel.mtwilson.core.common.model.CertificateType;
 import com.intel.mtwilson.jaxrs2.client.CMSClient;
 import com.intel.mtwilson.setup.LocalSetupTask;
 import com.intel.mtwilson.core.common.utils.AASTokenFetcher;
-import com.intel.dcsg.cpg.tls.policy.impl.InsecureTlsPolicy;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.List;
 import java.util.Properties;
+
+import com.intel.mtwilson.core.common.utils.AASConstants;
 import gov.niarl.his.privacyca.TpmUtils;
 
 import com.intel.mtwilson.setup.utils.CertificateUtils;
@@ -53,10 +52,6 @@ public class CreateEndorsementCA extends LocalSetupTask {
     private File endorsementP12;
     private File truststorep12;
     private int endorsementCertificateValidityDays;
-    private static final String CMS_BASE_URL = "cms.base.url";
-    private static final String AAS_API_URL = "aas.api.url";
-    private static final String MC_FIRST_USERNAME = "mc.first.username";
-    private static final String MC_FIRST_PASSWORD = "mc.first.password";
 
     @Override
     protected void configure() throws Exception {
@@ -98,11 +93,11 @@ public class CreateEndorsementCA extends LocalSetupTask {
         TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12,
             "changeit").build();
 
-        String token = new AASTokenFetcher().getAASToken(configuration.get(MC_FIRST_USERNAME),configuration.get(MC_FIRST_PASSWORD),
-            new TlsConnection(new URL(configuration.get(AAS_API_URL)), tlsPolicy));
-        properties.setProperty("bearer.token", token);
+        String token = new AASTokenFetcher().getAASToken(configuration.get(AASConstants.MC_FIRST_USERNAME),configuration.get(AASConstants.MC_FIRST_PASSWORD),
+            new TlsConnection(new URL(configuration.get(AASConstants.AAS_API_URL)), tlsPolicy));
+        properties.setProperty(AASConstants.BEARER_TOKEN, token);
 
-        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(CMS_BASE_URL)), tlsPolicy));
+        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(AASConstants.CMS_BASE_URL)), tlsPolicy));
 
         X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, "CN="+endorsementIssuer).toString(), CertificateType.SIGNING.getValue());
         FileOutputStream newp12 = new FileOutputStream(endorsementP12.getAbsolutePath());

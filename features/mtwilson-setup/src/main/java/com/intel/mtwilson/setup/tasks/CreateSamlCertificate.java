@@ -11,7 +11,6 @@ import com.intel.dcsg.cpg.io.pem.Pem;
 import com.intel.dcsg.cpg.tls.policy.TlsConnection;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicyBuilder;
-import com.intel.dcsg.cpg.tls.policy.impl.InsecureTlsPolicy;
 import com.intel.dcsg.cpg.x509.X509Util;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
@@ -30,6 +29,7 @@ import java.security.cert.Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Properties;
 
+import com.intel.mtwilson.core.common.utils.AASConstants;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -44,15 +44,15 @@ public class CreateSamlCertificate extends LocalSetupTask {
     public static final String SAML_KEYSTORE_FILE = "saml.keystore.file";
     public static final String SAML_KEYSTORE_PASSWORD = "saml.keystore.password";
     public static final String SAML_KEY_ALIAS = "saml.key.alias";
-    private static final String CMS_BASE_URL = "cms.base.url";
-    private static final String AAS_API_URL = "aas.api.url";
-    private static final String MC_FIRST_USERNAME = "mc.first.username";
-    private static final String MC_FIRST_PASSWORD = "mc.first.password";
     private static final String SAML_CERTIFICATE_CERT = "saml.crt";
     private static final String SAML_CERTIFICATE_CERT_PEM = "saml.crt.pem";
     private static final String SAML_KEYSTORE_NAME="SAML.p12";
+    private static final String DEFAULT_SAML_DN = "CN=mtwilson-saml";
+    private static final String DEFAULT_SAML_KEYSTORE_ALIAS = "saml-key";
+    private static final String SAML_KEYSTORE_FORMAT = "PKCS12";
     private File truststorep12;
     private Configuration configuration;
+    private String samlKeystorePassword;
 
 
     public String getSamlKeystorePassword() {
@@ -69,14 +69,15 @@ public class CreateSamlCertificate extends LocalSetupTask {
         if (configuration.get(SAML_KEYSTORE_PASSWORD) == null || configuration.get(SAML_KEYSTORE_PASSWORD).isEmpty()) {
             configuration.set(SAML_KEYSTORE_PASSWORD, RandomUtil.randomBase64String(16));
         }
+        samlKeystorePassword = configuration.get(SAML_KEYSTORE_PASSWORD);
         if (configuration.get(SAML_KEYSTORE_FILE) == null || configuration.get(SAML_KEYSTORE_FILE).isEmpty()) {
             configuration.set(SAML_KEYSTORE_FILE, My.configuration().getDirectoryPath() + File.separator + SAML_KEYSTORE_NAME);
         }
         if (configuration.get(SAML_CERTIFICATE_DN) == null || configuration.get(SAML_CERTIFICATE_DN).isEmpty()) {
-            configuration.set(SAML_CERTIFICATE_DN, "CN=mtwilson-saml");
+            configuration.set(SAML_CERTIFICATE_DN, DEFAULT_SAML_DN);
         }
         if (configuration.get(SAML_KEY_ALIAS) == null || configuration.get(SAML_KEY_ALIAS).isEmpty()) {
-            configuration.set(SAML_KEY_ALIAS, "saml-key");
+            configuration.set(SAML_KEY_ALIAS, DEFAULT_SAML_KEYSTORE_ALIAS);
         }
         configurationProvider.save(configuration);
     }
@@ -98,20 +99,19 @@ public class CreateSamlCertificate extends LocalSetupTask {
         RSAPrivateKey privKey = (RSAPrivateKey) keyPair.getPrivate();
         Properties properties = new Properties();
 
-        TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12,
-            "changeit").build();
+        TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12,samlKeystorePassword).build();
 
-        String token = new AASTokenFetcher().getAASToken(configuration.get(MC_FIRST_USERNAME), configuration.get(MC_FIRST_PASSWORD),
-            new TlsConnection(new URL(configuration.get(AAS_API_URL)), tlsPolicy));
-        properties.setProperty("bearer.token", token);
+        String token = new AASTokenFetcher().getAASToken(configuration.get(AASConstants.MC_FIRST_PASSWORD), configuration.get(AASConstants.MC_FIRST_PASSWORD),
+            new TlsConnection(new URL(configuration.get(AASConstants.AAS_API_URL)), tlsPolicy));
+        properties.setProperty(AASConstants.BEARER_TOKEN, token);
 
-        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(CMS_BASE_URL)), tlsPolicy));
+        CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(AASConstants.CMS_BASE_URL)), tlsPolicy));
 
         X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, configuration.get(SAML_CERTIFICATE_DN)).toString(), CertificateType.SIGNING.getValue());
         FileOutputStream newp12 = new FileOutputStream(configuration.get(SAML_KEYSTORE_FILE));
 
         try {
-            KeyStore keystore = KeyStore.getInstance("PKCS12");
+            KeyStore keystore = KeyStore.getInstance(SAML_KEYSTORE_FORMAT);
             keystore.load(null, configuration.get(SAML_KEYSTORE_PASSWORD).toCharArray());
             Certificate[] chain = {cacert};
             keystore.setKeyEntry(configuration.get(SAML_KEY_ALIAS), privKey, configuration.get(SAML_KEYSTORE_PASSWORD).toCharArray(), chain);
