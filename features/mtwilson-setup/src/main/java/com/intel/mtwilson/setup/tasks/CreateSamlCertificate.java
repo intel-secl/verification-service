@@ -101,7 +101,8 @@ public class CreateSamlCertificate extends LocalSetupTask {
 
         TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12,samlKeystorePassword).build();
 
-        String token = new AASTokenFetcher().getAASToken(configuration.get(AASConstants.MC_FIRST_PASSWORD), configuration.get(AASConstants.MC_FIRST_PASSWORD),
+        String token = new AASTokenFetcher().getAASToken(configuration.get(AASConstants.MC_FIRST_USERNAME),
+                configuration.get(AASConstants.MC_FIRST_PASSWORD),
             new TlsConnection(new URL(configuration.get(AASConstants.AAS_API_URL)), tlsPolicy));
         properties.setProperty(AASConstants.BEARER_TOKEN, token);
 
