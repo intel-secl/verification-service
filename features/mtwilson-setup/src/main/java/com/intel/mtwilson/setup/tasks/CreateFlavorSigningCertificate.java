@@ -24,7 +24,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Properties;
 
-import com.intel.mtwilson.setup.utils.CertificateUtils;
+import com.intel.mtwilson.core.common.utils.CertificateUtils;
 import com.intel.mtwilson.core.common.utils.AASConstants;
 import org.apache.commons.io.IOUtils;
 

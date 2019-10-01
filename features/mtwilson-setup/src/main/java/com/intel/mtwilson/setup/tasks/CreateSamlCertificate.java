@@ -19,7 +19,7 @@ import com.intel.mtwilson.core.common.model.CertificateType;
 import com.intel.mtwilson.core.common.utils.AASTokenFetcher;
 import com.intel.mtwilson.jaxrs2.client.CMSClient;
 import com.intel.mtwilson.setup.LocalSetupTask;
-import com.intel.mtwilson.setup.utils.CertificateUtils;
+import com.intel.mtwilson.core.common.utils.CertificateUtils;
 
 import java.io.*;
 import java.net.URL;

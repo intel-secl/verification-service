@@ -33,7 +33,7 @@ import java.util.Properties;
 import com.intel.mtwilson.core.common.utils.AASConstants;
 import gov.niarl.his.privacyca.TpmUtils;
 
-import com.intel.mtwilson.setup.utils.CertificateUtils;
+import com.intel.mtwilson.core.common.utils.CertificateUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;

@@ -27,7 +27,7 @@ import java.net.URL;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Properties;
-import com.intel.mtwilson.setup.utils.CertificateUtils;
+import com.intel.mtwilson.core.common.utils.CertificateUtils;
 import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
