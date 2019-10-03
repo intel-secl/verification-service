@@ -99,14 +99,14 @@ public class CreateEndorsementCA extends LocalSetupTask {
 
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(AASConstants.CMS_BASE_URL)), tlsPolicy));
 
-        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, "CN="+endorsementIssuer).toString(), CertificateType.SIGNING.getValue());
+        X509Certificate[] endorsementCertChain = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, "CN="+endorsementIssuer).toString(), CertificateType.SIGNING.getValue());
         FileOutputStream newp12 = new FileOutputStream(endorsementP12.getAbsolutePath());
 
         try {
             KeyStore keystore = KeyStore.getInstance("PKCS12");
             keystore.load(null, endorsementPassword.toCharArray());
-            Certificate[] chain = {cacert};
-            keystore.setKeyEntry("1", privKey, endorsementPassword.toCharArray(), chain);
+            Certificate[] chain = {endorsementCertChain[0]};
+            keystore.setKeyEntry("endorsement-cert", privKey, endorsementPassword.toCharArray(), chain);
             keystore.store(newp12, endorsementPassword.toCharArray());
         } catch (Exception e) {
             e.printStackTrace();

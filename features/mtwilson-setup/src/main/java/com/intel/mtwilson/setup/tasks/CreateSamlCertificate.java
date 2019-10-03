@@ -108,26 +108,30 @@ public class CreateSamlCertificate extends LocalSetupTask {
 
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(AASConstants.CMS_BASE_URL)), tlsPolicy));
 
-        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, configuration.get(SAML_CERTIFICATE_DN)).toString(), CertificateType.SIGNING.getValue());
+        X509Certificate[] samlCertChain = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, configuration.get(SAML_CERTIFICATE_DN)).toString(), CertificateType.SIGNING.getValue());
         FileOutputStream newp12 = new FileOutputStream(configuration.get(SAML_KEYSTORE_FILE));
 
         try {
             KeyStore keystore = KeyStore.getInstance(SAML_KEYSTORE_FORMAT);
             keystore.load(null, configuration.get(SAML_KEYSTORE_PASSWORD).toCharArray());
-            Certificate[] chain = {cacert};
+            Certificate[] chain = {samlCertChain[0]};
             keystore.setKeyEntry(configuration.get(SAML_KEY_ALIAS), privKey, configuration.get(SAML_KEYSTORE_PASSWORD).toCharArray(), chain);
             keystore.store(newp12, configuration.get(SAML_KEYSTORE_PASSWORD).toCharArray());
 
             FileOutputStream out = new FileOutputStream(My.configuration().getDirectoryPath() + File.separator + SAML_CERTIFICATE_CERT);
-            IOUtils.write(X509Util.encodePemCertificate(cacert), out);
+            IOUtils.write(X509Util.encodePemCertificate(samlCertChain[0]), out);
         } catch (Exception e) {
             throw e;
         } finally {
             newp12.close();
         }
 
-        Pem samlSigningCertEncoded = new Pem("CERTIFICATE", cacert.getEncoded());
-        String certificateChainPem = String.format("%s", samlSigningCertEncoded.toString());
+        Pem certEncoded;
+        String certificateChainPem = "";
+        for (int certIndex = 0; certIndex < samlCertChain.length; certIndex ++) {
+            certEncoded = new Pem("CERTIFICATE", samlCertChain[certIndex].getEncoded());
+            certificateChainPem = certificateChainPem + String.format("%s\n", certEncoded.toString());
+        }
         File certificateChainPemFile = new File(My.configuration().getDirectoryPath() + File.separator + SAML_CERTIFICATE_CERT_PEM);
         FileOutputStream certificateChainPemFileOut = new FileOutputStream(certificateChainPemFile);
         IOUtils.write(certificateChainPem, certificateChainPemFileOut);

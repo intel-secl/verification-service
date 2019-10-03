@@ -125,15 +125,14 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(getConfiguration().get("cms.base.url")), tlsPolicy));
         X509Certificate cmsCACert = cmsClient.getCACertificate();
         CertificateUtils.getCSR(flavorSigningKey, flavorSigningCSRDistinguishedName);
-        X509Certificate flavorSigningCert = cmsClient.getCertificate(CertificateUtils.getCSR(flavorSigningKey, flavorSigningCSRDistinguishedName).toString(), CertificateType.SIGNING.getValue());
+        X509Certificate[] flavorSigningCert = cmsClient.getCertificate(CertificateUtils.getCSR(flavorSigningKey, flavorSigningCSRDistinguishedName).toString(), CertificateType.SIGNING.getValue());
 
-        CertificateFactory certificateFactory = CertificateFactory.getInstance("X509");
-        X509Certificate[] certificateChain = new X509Certificate[2];
-        certificateChain[0] = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(flavorSigningCert.getEncoded()));
-        certificateChain[1] = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(cmsCACert.getEncoded()));
+        X509Certificate[] certificateChain = new X509Certificate[flavorSigningCert.length + 1];
+        System.arraycopy(flavorSigningCert, 0, certificateChain, 0, flavorSigningCert.length);
+        certificateChain[flavorSigningCert.length] = cmsCACert;
 
         storeKeyPair(flavorSigningKey, certificateChain);
-        storeCertificateChain(cmsCACert, flavorSigningCert);
+        storeCertificateChain(certificateChain);
     }
 
     private void initializeKeystore() throws Exception {
@@ -174,10 +173,13 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
     }
 
 
-    private void storeCertificateChain(X509Certificate cmsCACert, X509Certificate flavorSigningCert) throws CertificateException {
-        Pem flavorSigningCertEncoded = new Pem("CERTIFICATE", flavorSigningCert.getEncoded());
-        Pem flavorSigningCaCert = new Pem("CERTIFICATE", cmsCACert.getEncoded());
-        String certificateChainPem = String.format("%s\n%s", flavorSigningCertEncoded.toString(), flavorSigningCaCert.toString());
+    private void storeCertificateChain(X509Certificate[] certificateChain) throws CertificateException {
+        Pem certEncoded;
+        String certificateChainPem = "";
+        for (int certIndex = 0; certIndex < certificateChain.length - 1; certIndex ++) {
+            certEncoded = new Pem("CERTIFICATE", certificateChain[certIndex].getEncoded());
+            certificateChainPem = certificateChainPem + String.format("%s\n", certEncoded.toString());
+        }
         File certificateChainPemFile = new File(My.configuration().getDirectoryPath() + File.separator + "flavor-signer.crt.pem");
         try (FileOutputStream certificateChainPemFileOut = new FileOutputStream(certificateChainPemFile)) {
             IOUtils.write(certificateChainPem, certificateChainPemFileOut);

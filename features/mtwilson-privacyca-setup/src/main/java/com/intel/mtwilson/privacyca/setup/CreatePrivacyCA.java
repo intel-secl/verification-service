@@ -93,15 +93,15 @@ public class CreatePrivacyCA extends LocalSetupTask {
 
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(AASConstants.CMS_BASE_URL)), tlsPolicy));
 
-        X509Certificate cacert = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, "CN="+identityIssuer).toString(), CertificateType.SIGNING_CA.getValue());
+        X509Certificate[] privacyCaCertChain = cmsClient.getCertificate(CertificateUtils.getCSR(keyPair, "CN="+identityIssuer).toString(), CertificateType.SIGNING_CA.getValue());
 
         FileOutputStream newp12 = new FileOutputStream(identityP12.getAbsolutePath());
 
         try {
             KeyStore keystore = KeyStore.getInstance("PKCS12");
             keystore.load(null, identityPassword.toCharArray());
-            Certificate[] chain = {cacert};
-            keystore.setKeyEntry("1", privKey, identityPassword.toCharArray(), chain);
+            Certificate[] chain = {privacyCaCertChain[0]};
+            keystore.setKeyEntry("privacy-ca", privKey, identityPassword.toCharArray(), chain);
             keystore.store(newp12, identityPassword.toCharArray());
         } catch (Exception e) {
             e.printStackTrace();

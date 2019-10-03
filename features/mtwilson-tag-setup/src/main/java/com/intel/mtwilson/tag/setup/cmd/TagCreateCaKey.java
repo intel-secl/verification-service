@@ -74,9 +74,9 @@ public class TagCreateCaKey extends TagCommand {
 
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(AASConstants.CMS_BASE_URL)), tlsPolicy));
 
-        X509Certificate tagcert = cmsClient.getCertificate(CertificateUtils.getCSR(cakey, dn).toString(), CertificateType.SIGNING.getValue());
+        X509Certificate[] tagcert = cmsClient.getCertificate(CertificateUtils.getCSR(cakey, dn).toString(), CertificateType.SIGNING.getValue());
         String privateKeyPem = RsaUtil.encodePemPrivateKey(cakey.getPrivate());
-        String tagCertPem = X509Util.encodePemCertificate(tagcert);
+        String tagCertPem = X509Util.encodePemCertificate(tagcert[0]);
         
         String combinedPrivateKeyAndCertPem = privateKeyPem + tagCertPem;
         
