@@ -295,11 +295,11 @@ fi
 # 5.2 Install prerequisites
 if [ "$(whoami)" == "root" ]; then
   if [ "$IS_RPM" != "true" ]; then
-    MTWILSON_YUM_PACKAGES="zip unzip openssl xmlstarlet wget net-tools policycoreutils-python"
+    MTWILSON_YUM_PACKAGES="zip unzip openssl wget net-tools policycoreutils-python"
   fi
-  MTWILSON_APT_PACKAGES="zip unzip openssl xmlstarlet policycoreutils "
-  MTWILSON_YAST_PACKAGES="zip unzip openssl xmlstarlet"
-  MTWILSON_ZYPPER_PACKAGES="zip unzip openssl xmlstarlet"
+  MTWILSON_APT_PACKAGES="zip unzip openssl policycoreutils "
+  MTWILSON_YAST_PACKAGES="zip unzip openssl"
+  MTWILSON_ZYPPER_PACKAGES="zip unzip openssl"
   if [ "$IS_RPM" != "true" ]; then
     install_packages "Installer requirements" "MTWILSON"
     if [ $? -ne 0 ]; then echo_failure "Failed to install prerequisites through package manager"; exit 1; fi
