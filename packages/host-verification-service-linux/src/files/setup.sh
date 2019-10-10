@@ -295,7 +295,7 @@ fi
 # 5.2 Install prerequisites
 if [ "$(whoami)" == "root" ]; then
   if [ "$IS_RPM" != "true" ]; then
-    MTWILSON_YUM_PACKAGES="zip unzip openssl wget net-tools policycoreutils-python"
+    MTWILSON_YUM_PACKAGES="zip unzip openssl wget net-tools python3-policycoreutils"
   fi
   MTWILSON_APT_PACKAGES="zip unzip openssl policycoreutils "
   MTWILSON_YAST_PACKAGES="zip unzip openssl"
@@ -769,6 +769,10 @@ postgres_write_connection_properties "$MTWILSON_CONFIGURATION/mtwilson.propertie
 update_property_in_file "dbcp.validation.query" "$MTWILSON_CONFIGURATION/mtwilson.properties" "select 1"
 mtwilson config "dbcp.validation.on.borrow" "true" >/dev/null
 mtwilson config "dbcp.validation.on.return" "false" >/dev/null
+
+# Jetty TLS configuration
+mtwilson config jetty.tls.cert.ip $JETTY_TLS_CERT_IP > /dev/null
+mtwilson config jetty.tls.cert.dns $JETTY_TLS_CERT_DNS > /dev/null
 
 # Gather default configuration
 MTWILSON_SERVER_IP_ADDRESS=${MTWILSON_SERVER_IP_ADDRESS:-$(hostaddress)}
