@@ -34,11 +34,22 @@ public class CaCertificateRepository implements DocumentRepository<CaCertificate
     @Override
     public CaCertificateCollection search(CaCertificateFilterCriteria criteria) {
         if( criteria.domain != null ) { 
-            if(  criteria.domain.equals("ek") ||  criteria.domain.equals("endorsement") ) {
+            if(  criteria.domain.equals("ek") || criteria.domain.equals("endorsement")) {
             // corresponds to URL /ca-certificates?domain=ek
                 String certFile = My.configuration().getPrivacyCaEndorsementCacertsFile().getAbsolutePath();//MSConfig.getConfiguration().getString("mtwilson.privacyca.certificate.list.file");
                 try {
                     CaCertificateCollection cacerts = readCaCertCollection(certFile);
+                    return cacerts;
+                }
+                catch(IOException | CertificateException e) {
+                    log.debug("Failed to read certificates for domain: {}", criteria.domain);
+                    throw new RepositorySearchException(e, criteria);
+                }
+            }
+            if(criteria.domain.equals("saml")) {
+                // corresponds to URL /ca-certificates?domain=saml
+                try {
+                    CaCertificateCollection cacerts = readCaCertCollection(criteria.domain + ".crt.pem");
                     return cacerts;
                 }
                 catch(IOException | CertificateException e) {

@@ -30,22 +30,24 @@ public class RuleAllOfFlavors extends BaseRule {
     private String privacyCaCert;
     private String tagCaCert;
     private String flavorSigningCertPath;
+    private String caCertPath;
     private Boolean skipFlavorSignatureVerification;
     
     protected RuleAllOfFlavors() {
     } // for desearializing jackson
 
-    public RuleAllOfFlavors(SignedFlavorCollection allOfFlavors, String privacyCaCert, String tagCaCert, String flavorSigningCertPath, Boolean skipFlavorSignatureVerification) {
+    public RuleAllOfFlavors(SignedFlavorCollection allOfFlavors, String privacyCaCert, String tagCaCert, String flavorSigningCertPath, String caCertPath, Boolean skipFlavorSignatureVerification) {
         this.allOfFlavors = allOfFlavors;
         this.privacyCaCert = privacyCaCert;
         this.tagCaCert = tagCaCert;
         this.flavorSigningCertPath = flavorSigningCertPath;
+        this.caCertPath = caCertPath;
         this.skipFlavorSignatureVerification = skipFlavorSignatureVerification;
     }
 
     // HostManifest is required if vendor details are missing in flavor e.g. [SOFTWARE, ASSET_TAG]
     private VendorTrustPolicyReader getVendorTrustPolicyReader(SignedFlavor signedFlavor, HostManifest hostManifest) {
-        HostTrustPolicyManager policymanager = new HostTrustPolicyManager(signedFlavor, hostManifest, privacyCaCert, tagCaCert, flavorSigningCertPath, skipFlavorSignatureVerification);
+        HostTrustPolicyManager policymanager = new HostTrustPolicyManager(signedFlavor, hostManifest, privacyCaCert, tagCaCert, flavorSigningCertPath, caCertPath, skipFlavorSignatureVerification);
         VendorTrustPolicyReader trustPolicy = policymanager.getVendorTrustPolicyReader();
         return trustPolicy;
     }

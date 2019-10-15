@@ -91,7 +91,8 @@ import org.opensaml.core.xml.io.MarshallingException;
 public class FlavorVerify extends QueueOperation {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FlavorVerify.class);
     private final String flavorSigningCertPath = My.configuration().getDirectoryPath() + File.separator + "flavor-signer.crt.pem";
-    
+    private final String caCertPath = My.configuration().getDirectoryPath() + File.separator + "cms-ca.cert";
+
     private UUID hostId;
     private boolean forceUpdate;
     
@@ -373,7 +374,7 @@ public class FlavorVerify extends QueueOperation {
                 // call verifier
                 String privacyCaCert = My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath();
                 String tagCaCert = My.configuration().getAssetTagCaCertificateFile().getAbsolutePath();
-                Verifier verifier = new Verifier(privacyCaCert, tagCaCert, flavorSigningCertPath);
+                Verifier verifier = new Verifier(privacyCaCert, tagCaCert, flavorSigningCertPath, caCertPath);
                 TrustReport individualTrustReport = verifier.verify(hostManifest, cachedFlavor, MSConfig.getConfiguration().getBoolean("skip.flavor.signature.verification"));
 
                 // if the flavor is trusted, add it to the collective trust report and to the return object
@@ -426,7 +427,7 @@ public class FlavorVerify extends QueueOperation {
                 // call verifier
                 String privacyCaCert = My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath();
                 String tagCaCert = My.configuration().getAssetTagCaCertificateFile().getAbsolutePath();
-                Verifier verifier = new Verifier(privacyCaCert, tagCaCert, flavorSigningCertPath);
+                Verifier verifier = new Verifier(privacyCaCert, tagCaCert, flavorSigningCertPath, caCertPath);
                 List<FlavorMatchPolicy> flavorMatchPolicies= hostTrustRequirements.getFlavorMatchPolicy().getFlavorMatchPolicies();
                 for(FlavorMatchPolicy flavorMatchPolicy : flavorMatchPolicies) {
                     if (flavorMatchPolicy.getFlavorPart().getValue().equals(signedFlavor.getFlavor().getMeta().getDescription().getFlavorPart())) {
@@ -554,6 +555,7 @@ public class FlavorVerify extends QueueOperation {
                 My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath(),
                 My.configuration().getAssetTagCaCertificateFile().getAbsolutePath(),
                 flavorSigningCertPath,
+                caCertPath,
                 MSConfig.getConfiguration().getBoolean("skip.flavor.signature.verification"));
         ruleAllOfFlavors.setMarkers(getAllOfMarkers(hostTrustRequirements));
         trustReport = ruleAllOfFlavors.addFaults(trustReport);  // Add faults if every 'All of' flavors are not present
@@ -591,6 +593,7 @@ public class FlavorVerify extends QueueOperation {
                 My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath(),
                 My.configuration().getAssetTagCaCertificateFile().getAbsolutePath(),
                 flavorSigningCertPath,
+                caCertPath,
                 MSConfig.getConfiguration().getBoolean("skip.flavor.signature.verification"));
         ruleAllOfFlavors.setMarkers(getAllOfMarkers(hostTrustRequirements));
         if (areAllOfFlavorsMissingInCachedTrustReport(cachedTrustReport, ruleAllOfFlavors)) {
@@ -625,6 +628,7 @@ public class FlavorVerify extends QueueOperation {
                 My.configuration().getPrivacyCaIdentityCacertsFile().getAbsolutePath(),
                 My.configuration().getAssetTagCaCertificateFile().getAbsolutePath(),
                 flavorSigningCertPath,
+                caCertPath,
                 MSConfig.getConfiguration().getBoolean("skip.flavor.signature.verification"));
         ruleAllOfFlavors.setMarkers(getAllOfMarkers(hostTrustRequirements));
         if (areAllOfFlavorsMissingInCachedTrustReport(cachedTrustReport, ruleAllOfFlavors)) {
