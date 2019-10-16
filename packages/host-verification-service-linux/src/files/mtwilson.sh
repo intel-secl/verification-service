@@ -155,7 +155,6 @@ print_help() {
         echo -e "Usage: mtwilson export-config [outfile|--in=infile|--out=outfile|--stdout] [--env-password=PASSWORD_VAR]"
         echo -e "Usage: mtwilson config [key] [--delete|newValue]"
         echo -e "Usage: mtwilson replace-root-key-pair [--private-key=private-key-file] [--cert-chain=cert-chain-file]"
-        echo -e "Usage: mtwilson replace-tls-key-pair  [--private-key=private-key-file] [--cert-chain=cert-chain-file]"
         echo -e "Usage: mtwilson replace-saml-key-pair [--private-key=private-key-file] [--cert-chain=cert-chain-file]"
         echo -e "Usage: mtwilson replace-tag-key-pair  [--private-key=private-key-file] [--cert-chain=cert-chain-file]"
         echo -e "Usage: mtwilson replace-pca-key-pair  [--private-key=private-key-file] [--cert-chain=cert-chain-file]"
