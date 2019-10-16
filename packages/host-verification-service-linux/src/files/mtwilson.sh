@@ -117,7 +117,7 @@ JAVA_OPTS="${JAVA_OPTS} -Djava.net.preferIPv4Stack=true"
 MTWILSON_SETUP_FIRST_TASKS=${MTWILSON_SETUP_FIRST_TASKS:-"filesystem update-extensions-cache-file"}
 MTWILSON_SETUP_MANAGER_TASKS="update-ssl-port jetty-ports create-tls-certificate password-vault shiro-ssl-port create-endorsement-ca create-privacy-ca";
 MTWILSON_PRESETUP_TASKS="create-data-encryption-key"
-MTWILSON_SETUP_TASKS=${MTWILSON_SETUP_TASKS:-"create-flavor-signing-certificate create-default-flavorgroups sign-existing-unsigned-flavors create-saml-certificate"}
+MTWILSON_SETUP_TASKS=${MTWILSON_SETUP_TASKS:-"create-certificate-authority-key create-flavor-signing-certificate create-default-flavorgroups sign-existing-unsigned-flavors create-saml-certificate"}
 
 # RHEL 7.6 needs PID file for systemd startup service
 # The location is identified as below in mtwilson.sh

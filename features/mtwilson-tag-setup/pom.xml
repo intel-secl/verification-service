@@ -75,12 +75,6 @@
             <artifactId>mtwilson-tag-ws-v2</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.intel.mtwilson.features</groupId>
-            <artifactId>mtwilson-setup</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
     
 </project>

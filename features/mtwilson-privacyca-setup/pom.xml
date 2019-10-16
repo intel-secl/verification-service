@@ -1,18 +1,18 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    
+
     <groupId>com.intel.mtwilson.features</groupId>
     <artifactId>mtwilson-privacyca-setup</artifactId>
-    
+
     <packaging>jar</packaging>
     <description>Setup tasks for Privacy CA</description>
-    
+
     <parent>
         <groupId>com.intel.mtwilson.features</groupId>
         <artifactId>mtwilson-features</artifactId>
         <version>4.6-SNAPSHOT</version>
     </parent>
-    
+
     <build>
         <plugins>
             <plugin>
@@ -21,7 +21,7 @@
             </plugin>
         </plugins>
     </build>
-    
+
     <dependencies>
         <!-- common-java -->
         <dependency>
@@ -36,18 +36,14 @@
             <groupId>com.intel.mtwilson.util</groupId>
             <artifactId>mtwilson-util-tpm20</artifactId>
         </dependency>
-       <dependency>
-            <groupId>com.intel.mtwilson.core</groupId>
-            <artifactId>lib-common</artifactId>
-	    <version>1.3.1</version>
-        </dependency> 
+
         <!-- mtwilson -->
         <dependency>
             <groupId>com.intel.mtwilson.features</groupId>
             <artifactId>mtwilson-my</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
+
         <!-- external -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
@@ -58,5 +54,5 @@
             <artifactId>bcmail-jdk15on</artifactId>
         </dependency>
     </dependencies>
-    
+
 </project>
