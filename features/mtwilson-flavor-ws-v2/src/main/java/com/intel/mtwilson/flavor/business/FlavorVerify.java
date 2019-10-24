@@ -720,9 +720,6 @@ public class FlavorVerify extends QueueOperation {
                         if(HardwareFeature.CBNT.equals(feature)) {
                             samlMap.put("FEATURE_cbntProfile", details.getMeta().get("profile"));
                         }
-                        if(HardwareFeature.MKTME.equals(feature)) {
-                            samlMap.put("FEATURE_mktmeAlgorithm", details.getMeta().get("encryption_algorithm"));
-                        }
                     }
                 }
             }
