@@ -189,7 +189,6 @@ mtwilson_complete_setup() {
   # useful configuration files
 
 
-  postgres_create_database
   echo "Running database setup scripts..."
   $MTWILSON_BIN/mtwilson setup InitDatabasePostgresql
 

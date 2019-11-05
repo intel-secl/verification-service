@@ -5,14 +5,20 @@
 
 package com.intel.mtwilson.flavor.rest.v2.resource;
 
+import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
+import com.intel.dcsg.cpg.tls.policy.TlsPolicyBuilder;
 import com.intel.dcsg.cpg.tls.policy.impl.PublicKeyTlsPolicy;
+import com.intel.dcsg.cpg.x509.repository.PublicKeyRepository;
+import com.intel.mtwilson.configuration.ConfigurationFactory;
+import com.intel.mtwilson.configuration.ConfigurationProvider;
+import com.intel.mtwilson.core.common.datatypes.Vendor;
 import com.intel.mtwilson.core.common.model.HostInfo;
+import com.intel.mtwilson.core.common.utils.AASConstants;
 import com.intel.mtwilson.flavor.rest.v2.model.Host;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkCreateCriteria;
 import com.intel.dcsg.cpg.validation.ValidationUtil;
-import com.intel.dcsg.cpg.x509.repository.PublicKeyRepository;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.core.host.connector.HostConnector;
 import com.intel.mtwilson.core.host.connector.HostConnectorFactory;
@@ -38,9 +44,8 @@ import com.intel.mtwilson.core.common.model.HostManifest;
 import com.intel.mtwilson.repository.RepositoryInvalidInputException;
 
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
+import java.security.PublicKey;
+import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.BeanParam;
@@ -82,10 +87,6 @@ import com.intel.mtwilson.tls.policy.TlsPolicyDescriptor;
 import com.intel.mtwilson.tls.policy.TlsProtection;
 import com.intel.mtwilson.core.common.model.HostComponents;
 import java.net.MalformedURLException;
-import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
@@ -101,6 +102,7 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 public class HostResource {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(HostResource.class);
+    public static final String KEYSTORE_PASSWORD = "changeit";
     private static final String INSECURE = "INSECURE";
     private static final String TRUST_FIRST_CERTIFICATE = "TRUST_FIRST_CERTIFICATE";
     private final HostRepository repository;
@@ -634,18 +636,11 @@ public class HostResource {
     }
 
     public HostManifest getHostManifest(TlsPolicyDescriptor tlsPolicyDescriptor, ConnectionString connectionString, UUID tlsPolicyId) throws IOException {
-        HostTlsPolicy hostTlsPolicy = getHostTlsPolicy(tlsPolicyId);
-        tlsPolicyDescriptor = getTlsPolicyDescriptor(tlsPolicyDescriptor, hostTlsPolicy);
-        // check if the tlsPolicyDescriptor is allowed. Throw error if not allowed.
-        validateTlsPolicyDescriptor(tlsPolicyDescriptor);
-
-        // get the host manifest
-        TlsPolicy tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(tlsPolicyDescriptor);
-        HostConnector hostConnector = new HostConnectorFactory().getHostConnector(connectionString, tlsPolicy);
-        HostManifest hostManifest = hostConnector.getHostManifest();
-
-        storeTlsPolicyDescriptor(hostTlsPolicy, tlsPolicy);
-        return hostManifest;
+        TlsPolicy tlsPolicy = getHostTlsPolicy(tlsPolicyDescriptor, connectionString, tlsPolicyId);
+        ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
+        Configuration configuration = configurationProvider.load();
+        HostConnector hostConnector = new HostConnectorFactory().getHostConnector(connectionString, configuration.get(AASConstants.AAS_API_URL), tlsPolicy);
+        return hostConnector.getHostManifest();
     }
 
     private void storeTlsPolicyDescriptor(HostTlsPolicy hostTlsPolicy, TlsPolicy tlsPolicy) {
@@ -674,19 +669,28 @@ public class HostResource {
     }
 
     private HostInfo getHostInfo(TlsPolicyDescriptor tlsPolicyDescriptor, ConnectionString connectionString, UUID tlsPolicyId) throws IOException {
-        HostTlsPolicy hostTlsPolicy = getHostTlsPolicy(tlsPolicyId);
-        tlsPolicyDescriptor = getTlsPolicyDescriptor(tlsPolicyDescriptor, hostTlsPolicy);
+        TlsPolicy tlsPolicy = getHostTlsPolicy(tlsPolicyDescriptor, connectionString, tlsPolicyId);
+        ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
+        Configuration configuration = configurationProvider.load();
+        HostConnector hostConnector = new HostConnectorFactory().getHostConnector(connectionString, configuration.get(AASConstants.AAS_API_URL), tlsPolicy);
+        return  hostConnector.getHostDetails();
+    }
 
-        // check if the tlsPolicyDescriptor is allowed. Throw error if not allowed.
-        validateTlsPolicyDescriptor(tlsPolicyDescriptor);
+    private TlsPolicy getHostTlsPolicy(TlsPolicyDescriptor tlsPolicyDescriptor, ConnectionString connectionString, UUID tlsPolicyId) throws IOException {
+        TlsPolicy tlsPolicy;
+        if (!Vendor.VMWARE.equals(connectionString.getVendor())) {
+            tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(My.configuration().getTruststoreFile(), KEYSTORE_PASSWORD).build();
+        } else {
+            HostTlsPolicy hostTlsPolicy = getHostTlsPolicy(tlsPolicyId);
+            tlsPolicyDescriptor = getTlsPolicyDescriptor(tlsPolicyDescriptor, hostTlsPolicy);
 
-        // get the host info
-        TlsPolicy tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(tlsPolicyDescriptor);
-        HostConnector hostConnector = new HostConnectorFactory().getHostConnector(connectionString, tlsPolicy);
-        HostInfo hostInfo = hostConnector.getHostDetails();
+            // check if the tlsPolicyDescriptor is allowed. Throw error if not allowed.
+            validateTlsPolicyDescriptor(tlsPolicyDescriptor);
 
-        storeTlsPolicyDescriptor(hostTlsPolicy, tlsPolicy);
-        return hostInfo;
+            tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(tlsPolicyDescriptor);
+            storeTlsPolicyDescriptor(hostTlsPolicy, tlsPolicy);
+        }
+        return tlsPolicy;
     }
 
     private void validateTlsPolicyDescriptor(TlsPolicyDescriptor tlsPolicyDescriptor) {
@@ -738,7 +742,7 @@ public class HostResource {
         }
         return tlsPolicyDescriptor;
     }
-    
+
     public void linkFlavorgroupsToHost(List<String> flavorgroupNames, UUID hostId) {
         FlavorgroupLocator flavorgroupLocator = new FlavorgroupLocator();
         List<UUID> flavorgroupIds = new ArrayList();

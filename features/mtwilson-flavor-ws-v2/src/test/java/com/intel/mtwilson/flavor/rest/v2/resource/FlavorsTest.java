@@ -5,6 +5,7 @@
 
 package com.intel.mtwilson.flavor.rest.v2.resource;
 
+import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.extensions.Extensions;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
@@ -12,6 +13,9 @@ import com.intel.dcsg.cpg.tls.policy.impl.CertificateDigestTlsPolicy;
 import com.intel.dcsg.cpg.tls.policy.impl.InsecureTlsPolicy;
 import com.intel.dcsg.cpg.tls.policy.impl.PublicKeyDigestTlsPolicy;
 import com.intel.dcsg.cpg.tls.policy.impl.PublicKeyTlsPolicy;
+import com.intel.mtwilson.configuration.ConfigurationFactory;
+import com.intel.mtwilson.configuration.ConfigurationProvider;
+import com.intel.mtwilson.core.common.utils.AASConstants;
 import com.intel.mtwilson.core.flavor.common.FlavorPart;
 import com.intel.mtwilson.core.flavor.model.Flavor;
 import com.intel.mtwilson.core.host.connector.HostConnector;
@@ -69,9 +73,13 @@ public class FlavorsTest {
         mwHost.setTlsPolicyId("TRUST_FIRST_CERTIFICATE");
         
         TlsPolicy tlsPolicy = new InsecureTlsPolicy();
-        
+        ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
+        Configuration configuration = configurationProvider.load();
+        String credentials = ";u="+configuration.get(AASConstants.MC_FIRST_USERNAME) + ";p="+configuration.get(AASConstants.MC_FIRST_PASSWORD);
+
         HostConnectorFactory hostConnectorFactory = new HostConnectorFactory();
-        HostConnector hostConnector = hostConnectorFactory.getHostConnector(connectionString, tlsPolicy);
+        HostConnector hostConnector = hostConnectorFactory.getHostConnector(connectionString + credentials,
+                configuration.get(AASConstants.AAS_API_URL), tlsPolicy);
         HostManifest hostManifest = hostConnector.getHostManifest();
     }
 }

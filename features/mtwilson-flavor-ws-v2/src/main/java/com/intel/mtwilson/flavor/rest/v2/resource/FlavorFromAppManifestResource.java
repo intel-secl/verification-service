@@ -4,9 +4,14 @@
  */
 package com.intel.mtwilson.flavor.rest.v2.resource;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
+import com.intel.dcsg.cpg.tls.policy.TlsPolicyBuilder;
+import com.intel.mtwilson.My;
+import com.intel.mtwilson.configuration.ConfigurationFactory;
+import com.intel.mtwilson.configuration.ConfigurationProvider;
+import com.intel.mtwilson.core.common.utils.AASConstants;
 import com.intel.mtwilson.core.common.utils.ManifestUtils;
 import com.intel.mtwilson.core.common.utils.MeasurementUtils;
 import com.intel.mtwilson.core.flavor.SoftwareFlavor;
@@ -21,11 +26,9 @@ import com.intel.mtwilson.flavor.rest.v2.utils.FlavorGroupUtils;
 import com.intel.mtwilson.flavor.rest.v2.utils.FlavorUtils;
 import com.intel.mtwilson.flavor.rest.v2.utils.HostConnectorUtils;
 import com.intel.mtwilson.jaxrs2.mediatype.DataMediaType;
-import com.intel.mtwilson.jaxrs2.provider.JacksonObjectMapperProvider;
 import com.intel.mtwilson.launcher.ws.ext.V2;
 import com.intel.mtwilson.ms.common.MSConfig;
 import com.intel.mtwilson.repository.RepositoryException;
-import com.intel.mtwilson.tls.policy.factory.TlsPolicyFactoryUtil;
 import com.intel.mtwilson.util.crypto.keystore.PrivateKeyStore;
 import com.intel.wml.manifest.xml.Manifest;
 import com.intel.wml.manifest.xml.ManifestRequest;
@@ -34,17 +37,15 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.security.Key;
-import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.intel.mtwilson.core.common.model.SoftwareFlavorPrefix;
+
+import static com.intel.mtwilson.flavor.rest.v2.resource.HostResource.KEYSTORE_PASSWORD;
 
 /**
  *
@@ -66,9 +67,8 @@ public class FlavorFromAppManifestResource {
         log.info("FlavorFromAppManifestResource - Got request to create software flavor from app manifest {}.", manifestRequest.getManifest());
         validateDefaultManifest(manifestRequest.getManifest());
         try {
-            TlsPolicy tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(
-                    HostConnectorUtils.getTlsPolicyDescriptor(manifestRequest.getConnectionString(),
-                            getHostId(manifestRequest)));
+            TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(My.configuration().getTruststoreFile(), KEYSTORE_PASSWORD).build();
+
             //call host connector to get measurement from manifest
             String manifestXml = ManifestUtils.getManifestString(manifestRequest.getManifest());
             Measurement measurementXml = getMeasurementFromManifest(manifestRequest,
@@ -129,9 +129,12 @@ public class FlavorFromAppManifestResource {
         try {
             log.debug("Calling the host Connector library getMeasurementFromManifest method to retrieve the measurement");
             HostConnectorFactory factory = new HostConnectorFactory();
+            ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
+            Configuration configuration = configurationProvider.load();
+
             HostConnector hostConnector = factory.getHostConnector(
                     HostConnectorUtils.getHostConnectionString(manifestRequest.getConnectionString(),
-                            getHostId(manifestRequest)), tlsPolicy);
+                            getHostId(manifestRequest)), configuration.get(AASConstants.AAS_API_URL), tlsPolicy);
             return hostConnector.getMeasurementFromManifest(manifest);
         } catch (IOException ex) {
             log.error("Unable to get measurement from manifest.");

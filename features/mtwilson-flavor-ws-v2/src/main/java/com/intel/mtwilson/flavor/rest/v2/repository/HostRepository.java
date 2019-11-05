@@ -5,9 +5,14 @@
 
 package com.intel.mtwilson.flavor.rest.v2.repository;
 
+import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.mountwilson.as.common.ASException;
 import com.intel.mtwilson.My;
+import com.intel.mtwilson.configuration.ConfigurationFactory;
+import com.intel.mtwilson.configuration.ConfigurationProvider;
+import com.intel.mtwilson.core.common.datatypes.Vendor;
+import com.intel.mtwilson.core.common.utils.AASConstants;
 import com.intel.mtwilson.flavor.controller.exceptions.NonexistentEntityException;
 import com.intel.mtwilson.flavor.controller.MwHostJpaController;
 import com.intel.mtwilson.flavor.controller.MwHostStatusJpaController;
@@ -379,20 +384,18 @@ public class HostRepository {
         String credential;
         String username;
         String password;
-        
-        MwHostCredential mwHostCredential;
-        
+
         //if credentials not specified in connection string, retrieve from credential table
         if(!connectionString.contains("u=") || !connectionString.contains("p=")) {
-            String hostName  = null;
+            String hostName = null;
             // If the connection string is for VMware, we would have this substring from which we need to extract
             // the host name. Otherwise we can extract the host name after the https:// in the connection string.
             if (connectionString.contains("h=")) {
                 String params = connectionString.substring(connectionString.indexOf(';') + 1); // get everything after the first semicolon 
                 String[] parts = params.split(";");
-                for (String partInfo : parts){
+                for (String partInfo : parts) {
                     if (partInfo.startsWith("h=")) {
-                        hostName = partInfo.substring(2); 
+                        hostName = partInfo.substring(2);
                         break;
                     }
                 }
@@ -402,7 +405,7 @@ public class HostRepository {
             if (hostName == null || hostName.isEmpty()) {
                 throw new IllegalArgumentException("Host connection string is formatted incorrectly, cannot retrieve host name");
             }
-            mwHostCredential = My.jpa().mwHostCredential().findByHostName(hostName);
+            MwHostCredential mwHostCredential = My.jpa().mwHostCredential().findByHostName(hostName);
 
             if (mwHostCredential == null || mwHostCredential.getCredential() == null || mwHostCredential.getCredential().isEmpty()) {
                 throw new IllegalArgumentException("Credentials must be provided for the host connection string");
@@ -414,9 +417,17 @@ public class HostRepository {
             connectionString = String.format("%s;%s", connectionString, credential);
         } else {
             ConnectionString cs = new ConnectionString(connectionString);
-            username = cs.getUserName();
-            password = cs.getPassword();
+            if (!Vendor.VMWARE.equals(cs.getVendor())) {
+                ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
+                Configuration configuration = configurationProvider.load();
+                username = "u=" + configuration.get(AASConstants.MC_FIRST_USERNAME);
+                password = "p=" + configuration.get(AASConstants.MC_FIRST_PASSWORD);
+            } else {
+                username = cs.getUserName();
+                password = cs.getPassword();
+            }
             credential = String.format("%s;%s", username, password);
+            connectionString = String.format("%s;%s", connectionString, credential);
         }
         
         // validate credential information values are not null or empty

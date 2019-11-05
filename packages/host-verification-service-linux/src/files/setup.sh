@@ -13,7 +13,6 @@
 # 5.1 Install Java
 # 5.2 Install prerequisites
 # 5.3 Install logrotate
-# 5.4 Install postgres
 # 6. Copy scripts to application
 # 7. extract mtwilson
 # 8. configure mtwilson TLS policies
@@ -57,6 +56,8 @@ export DATABASE_VENDOR=postgres
 export POSTGRES_HOSTNAME=${DATABASE_HOSTNAME}
 export POSTGRES_PORTNUM=${DATABASE_PORTNUM}
 export POSTGRES_DATABASE=${DATABASE_SCHEMA}
+export POSTGRES_USERNAME=${DATABASE_USERNAME}
+export POSTGRES_PASSWORD=${DATABASE_PASSWORD}
 export POSTGRESQL_KEEP_PGPASS=${POSTGRESQL_KEEP_PGPASS:-true}
 export INSTALL_PKGS=${INSTALL_PKGS:-"java logrotate postgres privacyca SERVICES PORTALS"}
 export MTWILSON_TLS_POLICY_ALLOW=${MTWILSON_TLS_POLICY_ALLOW:-"certificate,certificate-digest,public-key,public-key-digest,TRUST_FIRST_CERTIFICATE,INSECURE"}
@@ -64,7 +65,6 @@ export MTWILSON_DEFAULT_TLS_POLICY_ID=${MTWILSON_DEFAULT_TLS_POLICY_ID:-"TRUST_F
 export JAVA_REQUIRED_VERSION=${JAVA_REQUIRED_VERSION:-1.8}
 export PRIVACYCA_DOWNLOAD_USERNAME=${PRIVACYCA_DOWNLOAD_USERNAME:-pca-admin}
 export PRIVACYCA_DOWNLOAD_PASSWORD=${PRIVACYCA_DOWNLOAD_PASSWORD:-PrivacyCaPassword}
-export POSTGRES_REQUIRED_VERSION=${POSTGRES_REQUIRED_VERSION:-9.4}
 export DATABASE_VENDOR=${DATABASE_VENDOR:-postgres}
 export ADD_POSTGRESQL_REPO=${ADD_POSTGRESQL_REPO:-yes}
 export MTWILSON_API_SSL_VERIFY_HOSTNAME=${MTWILSON_API_SSL_VERIFY_HOSTNAME:-false}
@@ -309,7 +309,7 @@ else
 fi
 
 if [ -z "$INSTALL_PKGS" ]; then
-  INSTALL_PKGS="postgres privacyca SERVICES"
+  INSTALL_PKGS="privacyca SERVICES"
 fi
 
 FIRST=0
@@ -341,146 +341,6 @@ if [ ! -z "$opt_logrotate" ]; then
   ./$logrotate_installer
   if [ $? -ne 0 ]; then echo_failure "Failed to install log rotation"; exit -1; fi
   #echo "Log Rotate installed" | tee -a  $INSTALL_LOG_FILE
-fi
-
-
-
-# 5.4 Install postgres
-if [[ -z "$opt_postgres" && -z "$opt_mysql" ]]; then
- echo_warning "Relying on an existing database installation"
-fi
-
-# before database root portion of executed code
-export POSTGRES_USERNAME=${DATABASE_USERNAME}
-export POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-if using_postgres; then
-  postgres_installed=1
-#  touch ${MTWILSON_HOME}/.pgpass
-#  chmod 0600 ${MTWILSON_HOME}/.pgpass
-#  chown ${MTWILSON_USERNAME}:${MTWILSON_USERNAME} ${MTWILSON_HOME}/.pgpass
-#  if [ "$POSTGRES_HOSTNAME" == "127.0.0.1" ] || [ "$POSTGRES_HOSTNAME" == "localhost" ]; then
-#    PGPASS_HOSTNAME=localhost
-#  else
-#    PGPASS_HOSTNAME="$POSTGRES_HOSTNAME"
-#  fi
-#  echo "$POSTGRES_HOSTNAME:$POSTGRES_PORTNUM:$POSTGRES_DATABASE:$POSTGRES_USERNAME:$POSTGRES_PASSWORD" > ${MTWILSON_HOME}/.pgpass
-#  echo "$PGPASS_HOSTNAME:$POSTGRES_PORTNUM:$POSTGRES_DATABASE:$POSTGRES_USERNAME:$POSTGRES_PASSWORD" >> ${MTWILSON_HOME}/.pgpass
-#  if [ $(whoami) == "root" ]; then cp ${MTWILSON_HOME}/.pgpass ~/.pgpass;
-#  fi
-   setup_pgpass
-fi
-
-# database root portion of executed code
-if [ "$(whoami)" == "root" ]; then
-  if using_postgres; then
-    # Copy the www.postgresql.org PGP public key so add_postgresql_install_packages can add it later if needed
-    if [ -d "/etc/apt" ]; then
-      mkdir -p /etc/apt/trusted.gpg.d
-      chmod 755 /etc/apt/trusted.gpg.d
-      cp ACCC4CF8.asc "/etc/apt/trusted.gpg.d"
-    fi
-    POSTGRES_SERVER_APT_PACKAGES="postgresql-9.4"
-    POSTGRES_SERVER_YUM_PACKAGES="postgresql94"
-    if [ "$IS_RPM" != "true" ]; then
-      add_postgresql_install_packages "POSTGRES_SERVER"
-    fi
-    if [ $? -ne 0 ]; then echo_failure "Failed to add postgresql repository to local package manager"; exit -1; fi
-
-    postgres_userinput_connection_properties
-    if [ -n "$opt_postgres" ]; then
-      # Install Postgres server (if user selected localhost)
-      if [[ "$POSTGRES_HOSTNAME" == "127.0.0.1" || "$POSTGRES_HOSTNAME" == "localhost" || -n `echo "$(hostaddress_list)" | grep "$POSTGRES_HOSTNAME"` ]]; then
-        echo "Installing postgres server..."
-        # when we install postgres server on ubuntu it prompts us for root pw
-        # we preset it so we can send all output to the log
-        aptget_detect; dpkg_detect; yum_detect;
-        if [[ -n "$aptget" ]]; then
-          echo "postgresql app-pass password $POSTGRES_PASSWORD" | debconf-set-selections
-        fi
-        postgres_installed=0 #postgres is being installed
-        # don't need to restart postgres server unless the install script says we need to (by returning zero)
-        postgres_server_install
-        if [ $? -ne 0 ]; then echo_failure "Failed to install postgresql server"; exit -1; fi
-        postgres_restart >> $INSTALL_LOG_FILE
-        #sleep 10
-        # postgres server end
-      fi
-      # postgres client install here
-      echo "Installing postgres client..."
-      if [ "$IS_RPM" != "true" ]; then
-        postgres_install
-      fi
-      if [ $? -ne 0 ]; then echo_failure "Failed to install postgresql"; exit -1; fi
-      # do not need to restart postgres server after installing the client.
-      #postgres_restart >> $INSTALL_LOG_FILE
-      #sleep 10
-      echo "Installation of postgres client complete"
-      # postgres client install end
-    else
-      echo_warning "Relying on an existing Postgres installation"
-    fi
-  fi
-fi
-
-# after database root portion of executed code
-if using_postgres; then
-  if [ -z "$SKIP_DATABASE_INIT" ]; then
-    # postgres db init here
-    postgres_create_database
-    if [ $? -ne 0 ]; then
-      echo_failure "Cannot create database"
-      exit 1
-    fi
-    #postgres_restart >> $INSTALL_LOG_FILE
-    #sleep 10
-    #export is_postgres_available postgres_connection_error
-    if [ -z "$is_postgres_available" ]; then
-      echo_warning "Run 'mtwilson setup' after a database is available";
-    fi
-    # postgress db init end
-  else
-    echo_warning "Skipping init of database"
-  fi
-  if [ $postgres_installed -eq 0 ]; then
-    postgres_server_detect
-    has_local_postgres_peer=`grep "^local.*all.*postgres.*peer" $postgres_pghb_conf`
-    if [ -z "$has_local_postgres_peer" ]; then
-      echo "Adding PostgreSQL local 'peer' authentication for 'postgres' user..."
-      sed -i '/^.*TYPE.*DATABASE.*USER.*ADDRESS.*METHOD/a local all postgres peer' $postgres_pghb_conf
-    fi
-    has_local_peer=`grep "^local.*all.*all.*peer" $postgres_pghb_conf`
-    if [ -n "$has_local_peer" ]; then
-      echo "Replacing PostgreSQL local 'peer' authentication with 'md5' authentication..."
-      sed -i 's/^local.*all.*all.*peer/local all all md5/' $postgres_pghb_conf
-    fi
-    has_max_connections=`grep "^max_connections" $postgres_conf`
-    if [ -n "$has_max_connections" ]; then
-      postgres_max_connections=$(cat "$postgres_conf" 2>/dev/null | grep "^max_connections" | head -n 1 | sed 's/#.*//' | awk -F '=' '{ print $2 }' | sed -e 's/^[ \t]*//' | sed -e 's/[ \t]*$//')
-      if [ -z $postgres_max_connections ] || [ $postgres_max_connections -lt 400 ]; then
-        echo "Changing postgresql configuration to set max connections to 400...";
-        sed -i 's/^max_connections.*/max_connections = 400/' $postgres_conf
-      fi
-    else
-      echo "Setting postgresql max connections to 400...";
-      echo "max_connections = 400" >> $postgres_conf
-    fi
-    has_shared_buffers=`grep "^shared_buffers" $postgres_conf`
-    if [ -n "$has_shared_buffers" ]; then
-      echo "Changing postgresql configuration to set shared buffers size to 400MB...";
-      sed -i 's/^shared_buffers.*/shared_buffers = 400MB/' $postgres_conf
-    else
-      echo "Setting postgresql shared buffers size to 400MB...";
-      echo "shared_buffers = 400MB" >> $postgres_conf
-    fi
-    if [ "$POSTGRESQL_KEEP_PGPASS" != "true" ]; then
-      if [ -f ${MTWILSON_CONFIGURATION}/.pgpass ]; then
-        echo "Removing .pgpass file to prevent insecure database password storage in plaintext..."
-        rm -f ${MTWILSON_CONFIGURATION}/.pgpass
-        if [ $(whoami) == "root" ]; then rm -f ~/.pgpass; fi
-      fi
-    fi
-    postgres_restart >> $INSTALL_LOG_FILE
-  fi
 fi
 
 ########################################################################################################################
@@ -854,17 +714,6 @@ mtwilson setup update-extensions-cache-file --force 2> /dev/null
 set_owner_for_mtwilson_directories
 
 # 10. ASCTL SETUP
-############################################################# ASCTL SETUP START #############################################################
-
-# create and setup database
-if using_postgres; then
-  if [ ! -n "$psql" ]; then
-    echo "psql not defined"
-    exit 1
-  fi
-fi
-
-############################################################# ASCTL SETUP END #############################################################
 
 # 11. setup the director, unless the NOSETUP variable is defined
 if [ -z "$MTWILSON_NOSETUP" ]; then
@@ -876,14 +725,6 @@ mtwilson start
 
 ########################################################################################################################
 # 12. tag service installation
-
-#call create-database
-#mtwilson setup initialize-db --force
-
-#mtwilson tag-init-database
-#mtwilson tag-create-ca-key "CN=assetTagService"
-#mtwilson tag-export-file cacerts | grep -v ":" >> ${MTWILSON_CONFIGURATION}/tag-cacerts.pem
-
 #for tag encryption
 mkdir -p /opt/mtwilson/features/tag/var
 mkdir -p /opt/mtwilson/features/tag/bin

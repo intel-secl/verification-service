@@ -4,10 +4,14 @@
  */
 package com.intel.mtwilson.flavor.rest.v2.utils;
 
+import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.mtwilson.My;
+import com.intel.mtwilson.configuration.ConfigurationFactory;
+import com.intel.mtwilson.configuration.ConfigurationProvider;
 import com.intel.mtwilson.core.common.datatypes.ConnectionString;
-import com.intel.mtwilson.flavor.data.MwHostCredential;
+import com.intel.mtwilson.core.common.datatypes.Vendor;
+import com.intel.mtwilson.core.common.utils.AASConstants;
 import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
 import com.intel.mtwilson.flavor.rest.v2.model.Host;
 import com.intel.mtwilson.flavor.rest.v2.model.HostLocator;
@@ -36,50 +40,36 @@ public class HostConnectorUtils {
         }
     }
 
+    public static ConnectionString getConnectionStringWithCredentials(String connectionString, UUID hostId) throws IOException {
+        String credential = getCredentialsForHost(connectionString, hostId);
+        return new ConnectionString(String.format("%s;%s", connectionString, credential));
+    }
+
     public static String getHostConnectionString(String connectionString, UUID hostId) throws IOException {
-        if(connectionString != null) {
-            return connectionString;
+        if(connectionString == null) {
+            connectionString = getHostByIdentifier(hostId).getConnectionString();
+        }
+
+        if(!connectionString.contains("u=") || !connectionString.contains("p=")) {
+            return String.format("%s;%s", connectionString, getCredentialsForHost(connectionString, hostId));
         } else {
-            Host host = getHostByIdentifier(hostId);
-            MwHostCredential credential = My.jpa().mwHostCredential().findByHostId(host.getId().toString());
-            return String.format("%s;%s",host.getConnectionString(), credential.getCredential());
+            return connectionString;
         }
     }
 
-    public static TlsPolicyDescriptor getTlsPolicyDescriptor(String connectionString, UUID hostId) throws IOException {
-        if(hostId != null) {
-            return getTlsPolicyDescriptorFromHost(connectionString, hostId);
-        } else if (connectionString != null){
-            return getTlsPolicyDescriptorFromConnectionString(connectionString);
+    public static String getCredentialsForHost(String connectionString, UUID id) throws IOException {
+        String credential;
+        ConnectionString cs = new ConnectionString(connectionString);
+        if (!Vendor.VMWARE.equals(cs.getVendor())) { //Not using
+            ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
+            Configuration configuration = configurationProvider.load();
+            String username = "u=" + configuration.get(AASConstants.MC_FIRST_USERNAME);
+            String password = "p=" + configuration.get(AASConstants.MC_FIRST_PASSWORD);
+            credential = String.format("%s;%s", username, password);
+        } else {
+            credential = My.jpa().mwHostCredential().findByHostId(id.toString()).getCredential();
         }
-        throw new IllegalArgumentException("Cannot determine appropriate TLS policy for host");
-    }
-
-    private static TlsPolicyDescriptor getTlsPolicyDescriptorFromHost(String connectionString, UUID hostId) throws IOException {
-        Host host = getHostByIdentifier(hostId);
-        String tlsPolicyId = host.getTlsPolicyId();
-        //TODO: replace tls policy with actual policy
-        return new HostResource().getTlsPolicy(tlsPolicyId, new ConnectionString(
-                getHostConnectionString(connectionString, hostId)), true);
-    }
-
-    private static TlsPolicyDescriptor getTlsPolicyDescriptorFromConnectionString(String connectionString) throws IOException {
-        ConnectionString hostConnectionString = HostRepository.generateConnectionString(connectionString);
-
-        // connect to the host and retrieve the host manifest
-        TlsPolicyDescriptor tlsPolicyDescriptor = new HostResource().getTlsPolicy(
-                null, hostConnectionString, true);
-
-        if (tlsPolicyDescriptor == null) {
-            throw new IllegalArgumentException("Cannot determine appropriate TLS policy for host");
-        }
-
-        // check if the tlsPolicyDescriptor is allowed. Throw error if not allowed.
-        if (!HostTlsPolicyFilter.isTlsPolicyAllowed(tlsPolicyDescriptor.getPolicyType())) {
-            log.error("TLS policy {} is not allowed", tlsPolicyDescriptor.getPolicyType());
-            throw new TlsPolicyAllowedException("TLS policy is not allowed");
-        }
-        return tlsPolicyDescriptor;
+        return credential;
     }
 
     private static Host getHostByIdentifier(UUID hostId) {

@@ -20,7 +20,6 @@ import java.io.*;
 import java.net.URL;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Properties;
 
@@ -36,6 +35,7 @@ import org.apache.commons.io.IOUtils;
 public class CreateFlavorSigningCertificate extends LocalSetupTask {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CreateFlavorSigningCertificate.class);
+    private static final String KEYSTORE_PASSWORD = "changeit";
     private String flavorSigningCSRDistinguishedName = "CN=VS Flavor Signing Certificate,OU=Verification Service";
     private static final String FLAVOR_SIGNING_KEY_ALIAS = "flavor.signing.key.alias";
     private static final String FLAVOR_SIGNER_CERTIFICATE_DN = "mtwilson.flavor.signing.dn";
@@ -69,7 +69,7 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
             configuration("Verification User password is not provided");
         }
         try {
-            TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12, "changeit").build();
+            TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12, KEYSTORE_PASSWORD).build();
             String token = new AASTokenFetcher().getAASToken(getConfiguration().get(AASConstants.MC_FIRST_USERNAME), getConfiguration().get(AASConstants.MC_FIRST_PASSWORD), new TlsConnection(new URL(getConfiguration().get(AASConstants.AAS_API_URL)), tlsPolicy));
             properties.setProperty(AASConstants.BEARER_TOKEN, token);
         } catch (Exception e) {
@@ -109,7 +109,7 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
     @Override
     protected void execute() throws Exception {
         TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12,
-            "changeit").build();
+                KEYSTORE_PASSWORD).build();
         File flavorSigningKeystoreFile = new File(getConfiguration().get(FLAVOR_SIGNER_KEYSTORE_FILE));
 
         if (flavorSigningKeystoreFile.createNewFile()) {

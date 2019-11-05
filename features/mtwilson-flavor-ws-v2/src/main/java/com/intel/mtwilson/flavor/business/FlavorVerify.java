@@ -7,12 +7,10 @@ package com.intel.mtwilson.flavor.business;
 
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.x509.X509Util;
-import com.intel.dcsg.cpg.configuration.CommonsConfiguration;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.core.common.model.HardwareFeature;
 import com.intel.mtwilson.core.common.model.HardwareFeatureDetails;
 import com.intel.mtwilson.core.flavor.common.FlavorPart;
-import com.intel.mtwilson.core.flavor.model.Flavor;
 import com.intel.mtwilson.core.flavor.model.SignedFlavor;
 import com.intel.mtwilson.core.verifier.Verifier;
 import com.intel.mtwilson.core.verifier.policy.Fault;
@@ -22,8 +20,6 @@ import com.intel.mtwilson.core.verifier.policy.TrustReport;
 import com.intel.mtwilson.features.queue.QueueOperation;
 import com.intel.mtwilson.flavor.business.policy.rule.RequiredFlavorTypeExists;
 import com.intel.mtwilson.flavor.business.policy.rule.RuleAllOfFlavors;
-import com.intel.mtwilson.flavor.data.MwFlavor;
-import com.intel.mtwilson.flavor.data.MwHostCredential;
 import com.intel.mtwilson.flavor.model.*;
 
 import static com.intel.mtwilson.flavor.model.MatchPolicy.MatchType.ALL_OF;
@@ -39,11 +35,11 @@ import com.intel.mtwilson.flavor.rest.v2.repository.HostRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.HostStatusRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.ReportRepository;
 import com.intel.mtwilson.flavor.rest.v2.resource.HostResource;
+import com.intel.mtwilson.flavor.rest.v2.utils.HostConnectorUtils;
 import com.intel.mtwilson.flavor.saml.IssuerConfigurationFactory;
 import com.intel.mtwilson.i18n.HostState;
 import static com.intel.mtwilson.i18n.HostState.CONNECTED;
 import static com.intel.mtwilson.i18n.HostState.QUEUE;
-import com.intel.mtwilson.core.common.datatypes.ConnectionString;
 import com.intel.mtwilson.core.common.model.HostComponents;
 import com.intel.mtwilson.core.common.model.HostManifest;
 import static com.intel.mtwilson.features.queue.model.QueueState.COMPLETED;
@@ -80,7 +76,6 @@ import javax.xml.stream.XMLStreamReader;
 import org.apache.commons.beanutils.BeanMap;
 import org.apache.commons.lang.WordUtils;
 import org.apache.shiro.util.CollectionUtils;
-import org.opensaml.core.config.Configuration;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
 /**
@@ -221,9 +216,8 @@ public class FlavorVerify extends QueueOperation {
             HostState hostState = QUEUE;
             HostManifest hostManifest = null;
             try {
-                MwHostCredential credential = My.jpa().mwHostCredential().findByHostId(hostId.toString());
                 hostManifest = new HostResource().getHostManifest(host,
-                        new ConnectionString(String.format("%s;%s", host.getConnectionString(), credential.getCredential())));
+                        HostConnectorUtils.getConnectionStringWithCredentials(host.getConnectionString(), hostId));
             } catch (Exception e) {
                 // detect the host state from the error response
                 hostState = new HostStatusResource().determineHostState(e);

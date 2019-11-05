@@ -6,20 +6,24 @@
 package com.intel.mtwilson.flavor.rest.v2.rpc;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.crypto.Sha384Digest;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
+import com.intel.dcsg.cpg.tls.policy.TlsPolicyBuilder;
+import com.intel.mtwilson.configuration.ConfigurationFactory;
+import com.intel.mtwilson.configuration.ConfigurationProvider;
+import com.intel.mtwilson.core.common.datatypes.Vendor;
+import com.intel.mtwilson.core.common.utils.AASConstants;
 import com.intel.mtwilson.core.flavor.model.SignedFlavor;
+import com.intel.mtwilson.flavor.rest.v2.utils.HostConnectorUtils;
 import com.intel.mtwilson.launcher.ws.ext.RPC;
 import com.intel.mtwilson.ms.common.MSConfig;
 import com.intel.mtwilson.repository.RepositoryException;
 import com.intel.mtwilson.repository.RepositoryInvalidInputException;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.Key;
-import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.util.Date;
 
@@ -45,6 +49,7 @@ import com.intel.mtwilson.tls.policy.factory.TlsPolicyFactoryUtil;
 import java.util.*;
 
 import static com.intel.mtwilson.core.flavor.common.FlavorPart.ASSET_TAG;
+import static com.intel.mtwilson.flavor.rest.v2.resource.HostResource.KEYSTORE_PASSWORD;
 
 
 /**
@@ -121,8 +126,14 @@ public class DeployTagCertificate implements Runnable{
                 MwHostCredential  credential = My.jpa().mwHostCredential().findByHostId(hostObj.getId().toString());
                 ConnectionString connectionString =  new ConnectionString(String.format("%s;%s",hostObj.getConnectionString(), credential.getCredential()));
                 TlsPolicyDescriptor tlsPolicyDescriptor = new HostResource().getTlsPolicy(tlsPolicyId, connectionString, true);
-                TlsPolicy tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(tlsPolicyDescriptor);
+                TlsPolicy tlsPolicy;
+                if (!Vendor.VMWARE.equals(connectionString.getVendor())) {
+                    tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(My.configuration().getTruststoreFile(), KEYSTORE_PASSWORD).build();
+                } else {
+                    tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(tlsPolicyDescriptor);
+                }
                 //call asset tag provisioner to deploy asset tag to host (it will call host connector to deploy it)
+
                 deployAssetTagToHost(tagSha384, hostObj, tlsPolicy);
                 
                 X509AttributeCertificate attrcert = X509AttributeCertificate.valueOf(obj.getCertificate());
@@ -161,11 +172,12 @@ public class DeployTagCertificate implements Runnable{
         try {
             //Assettag provisioner core library method call
             ProvisionAssetTag provisionTag = new ProvisionAssetTag();
-            MwHostCredential  credential = My.jpa().mwHostCredential().findByHostId(host.getId().toString());
-            provisionTag.provisionTagCertificate(String.format("%s;%s",host.getConnectionString(), credential.getCredential()),
-                                                 certSha384,
-                                                 tlsPolicy);
-
+            ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
+            Configuration configuration = configurationProvider.load();
+            provisionTag.provisionTagCertificate(HostConnectorUtils.getHostConnectionString(host.getConnectionString(), host.getId()),
+                    configuration.get(AASConstants.AAS_API_URL),
+                    certSha384,
+                    tlsPolicy);
         } catch (IOException ex) {
             log.error("Unable to deploy asset tag to host.");
             throw new IOException("Unable to deploy asset tag to host.", ex);
