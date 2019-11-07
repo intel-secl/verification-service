@@ -220,7 +220,7 @@ if [ -d /etc/intel/cloudsecurity ]; then
   ls -l /etc/intel >>$INSTALL_LOG_FILE
   if [ -w /etc/intel/cloudsecurity ]; then
     echo "Migrating configuration from /etc/intel/cloudsecurity to $MTWILSON_CONFIGURATION" >>$INSTALL_LOG_FILE
-    mkdir -p $MTWILSON_CONFIGURATION $MTWILSON_CONFIGURATION/trustedjwt $MTWILSON_CONFIGURATION/trustedca
+     mkdir -p $MTWILSON_CONFIGURATION
     cp -r /etc/intel/cloudsecurity/* $MTWILSON_CONFIGURATION
     chown -R $MTWILSON_USERNAME:$MTWILSON_USERNAME $MTWILSON_CONFIGURATION
     rm -rf /etc/intel/cloudsecurity
@@ -229,8 +229,8 @@ if [ -d /etc/intel/cloudsecurity ]; then
     echo_failure "Cannot migrate configuration from /etc/intel/cloudsecurity to $MTWILSON_CONFIGURATION"
     exit 1
   fi
-else  
-  mkdir -p $MTWILSON_CONFIGURATION $MTWILSON_CONFIGURATION/trustedjwt $MTWILSON_CONFIGURATION/trustedca
+else
+  mkdir -p $MTWILSON_CONFIGURATION
   if [ $? -ne 0 ]; then
     echo_failure "Cannot create directory: $MTWILSON_CONFIGURATION"
     exit 1
@@ -615,6 +615,7 @@ mtwilson config "saml.key.alias" "$SAML_KEY_ALIAS" >/dev/null
 mtwilson config "cms.base.url" "$CMS_BASE_URL" >/dev/null
 #AAS configuration
 mtwilson config "aas.api.url" "$AAS_API_URL" >/dev/null
+
 #Get CMS CA Certificate
 curl --insecure -X GET -H "Accept: application/x-pem-file" -w "%{http_code}" $CMS_BASE_URL/ca-certificates -o $MTWILSON_CONFIGURATION/cms-ca.cert
 
@@ -676,8 +677,8 @@ sed -i '/'"$hostAllowPropertyName"'/ s/^\([^#]\)/#\1/g' "$MTWILSON_CONFIGURATION
 # This property is needed by the UpdateSslPort command to determine the port # that should be used in the shiro.ini file
 MTWILSON_API_BASEURL="https://${MTWILSON_SERVER}:${MTWILSON_PORT_HTTPS}/mtwilson/v1"
 mtwilson config "mtwilson.api.url" "$MTWILSON_API_BASEURL" >/dev/null
-mtwilson config "mc.first.username" "$MC_FIRST_USERNAME" >/dev/null
-mtwilson config "mc.first.password" "$MC_FIRST_PASSWORD" >/dev/null
+mtwilson config "mtwilson.admin.username" "$MC_FIRST_USERNAME" >/dev/null
+mtwilson config "mtwilson.admin.password" "$MC_FIRST_PASSWORD" >/dev/null
 
 # Make sure the nodeploy flag is cleared, so service setup commands will deploy their .war files
 export MTWILSON_SETUP_NODEPLOY=

@@ -5,6 +5,7 @@
 
 package com.intel.mtwilson.certificate.client.jaxrs;
 
+import com.intel.dcsg.cpg.tls.policy.TlsConnection;
 import com.intel.mtwilson.jaxrs2.client.MtWilsonClient;
 import com.intel.mtwilson.jaxrs2.mediatype.CryptoMediaType;
 import java.security.cert.X509Certificate;
@@ -55,7 +56,11 @@ public class CaCertificates extends MtWilsonClient {
     public CaCertificates(Properties properties) throws Exception {
         super(properties);
     }
-    
+
+    public CaCertificates(Properties properties, TlsConnection tlsConnection) throws Exception {
+        super(properties, tlsConnection);
+    }
+
     /**
     * Retrieves the details of the specified certificate.
     * @param certificateId Id of the certificate being requested. Possible options include "root", "saml", "tls", and "privacy".

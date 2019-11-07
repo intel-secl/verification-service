@@ -26,8 +26,6 @@ public class SetupTest {
         tasks.add(new ConfigureFilesystem());
         tasks.add(new CreateMtWilsonPropertiesFile());
         tasks.add(new CreateCertificateAuthorityKey());
-        CreateTlsCertificate createTlsCertificate = new CreateTlsCertificate();
-        tasks.add(createTlsCertificate);
         CreateSamlCertificate createSamlCertificate = new CreateSamlCertificate();
         tasks.add(createSamlCertificate);
         tasks.add(new ConfigureDatabase());
