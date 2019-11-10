@@ -43,6 +43,7 @@ public class CreateSamlCertificate extends LocalSetupTask {
     public static final String SAML_CERTIFICATE_DN = "saml.certificate.dn";
     public static final String SAML_KEYSTORE_FILE = "saml.keystore.file";
     public static final String SAML_KEYSTORE_PASSWORD = "saml.keystore.password";
+    private static final String SAML_TRUSTSTORE_PASSWORD = "changeit";
     public static final String SAML_KEY_ALIAS = "saml.key.alias";
     private static final String SAML_CERTIFICATE_CERT = "saml.crt";
     private static final String SAML_CERTIFICATE_CERT_PEM = "saml.crt.pem";
@@ -52,13 +53,10 @@ public class CreateSamlCertificate extends LocalSetupTask {
     private static final String SAML_KEYSTORE_FORMAT = "PKCS12";
     private File truststorep12;
     private Configuration configuration;
-    private String samlKeystorePassword;
-
 
     public String getSamlKeystorePassword() {
         return configuration.get(SAML_KEYSTORE_PASSWORD, null); // no default here, will return null if not configured: only the configure() method will generate a new random password if necessary
     }
-
 
     @Override
     protected void configure() throws Exception {
@@ -69,7 +67,6 @@ public class CreateSamlCertificate extends LocalSetupTask {
         if (configuration.get(SAML_KEYSTORE_PASSWORD) == null || configuration.get(SAML_KEYSTORE_PASSWORD).isEmpty()) {
             configuration.set(SAML_KEYSTORE_PASSWORD, RandomUtil.randomBase64String(16));
         }
-        samlKeystorePassword = configuration.get(SAML_KEYSTORE_PASSWORD);
         if (configuration.get(SAML_KEYSTORE_FILE) == null || configuration.get(SAML_KEYSTORE_FILE).isEmpty()) {
             configuration.set(SAML_KEYSTORE_FILE, My.configuration().getDirectoryPath() + File.separator + SAML_KEYSTORE_NAME);
         }
@@ -99,7 +96,7 @@ public class CreateSamlCertificate extends LocalSetupTask {
         RSAPrivateKey privKey = (RSAPrivateKey) keyPair.getPrivate();
         Properties properties = new Properties();
 
-        TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12,samlKeystorePassword).build();
+        TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12, SAML_TRUSTSTORE_PASSWORD).build();
 
         String token = new AASTokenFetcher().getAASToken(configuration.get(AASConstants.MC_FIRST_USERNAME),
                 configuration.get(AASConstants.MC_FIRST_PASSWORD),

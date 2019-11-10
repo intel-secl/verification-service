@@ -204,8 +204,6 @@ mtwilson_complete_setup() {
   $MTWILSON_BIN/mtwilson config "tag.provision.external" "$TAG_PROVISION_EXTERNAL" >/dev/null
   export TAG_PROVISION_XML_ENCRYPTION_REQUIRED=${TAG_PROVISION_XML_ENCRYPTION_REQUIRED:-false}
   $MTWILSON_BIN/mtwilson config "tag.provision.xml.encryption.required" "$TAG_PROVISION_XML_ENCRYPTION_REQUIRED" >/dev/null
-  export TAG_PROVISION_XML_PASSWORD=${TAG_PROVISION_XML_PASSWORD:-TagProvisionPassword}
-  $MTWILSON_BIN/mtwilson config "tag.provision.xml.encryption.password" "$TAG_PROVISION_XML_PASSWORD" >/dev/null
 
   $MTWILSON_BIN/mtwilson config jetty.port $MTWILSON_PORT_HTTP >/dev/null
   $MTWILSON_BIN/mtwilson config jetty.secure.port $MTWILSON_PORT_HTTPS >/dev/null
@@ -256,8 +254,12 @@ mtwilson_setup_keystore() {
     SAML_KEYSTORE_FILE=${MTWILSON_CONFIGURATION}/${SAML_KEYSTORE_FILE}
   fi
 
-  $MTWILSON_BIN/mtwilson config "saml.keystore.password" "changeit" >/dev/null
-  $MTWILSON_BIN/mtwilson config "saml.key.password" "changeit" >/dev/null
+  if [ -z "$SAML_KEYSTORE_PASSWORD" ]; then
+      SAML_KEYSTORE_PASSWORD=$(generate_password 16)
+      SAML_KEY_PASSWORD=$SAML_KEYSTORE_PASSWORD
+      $MTWILSON_BIN/mtwilson config "saml.keystore.password" "${SAML_KEYSTORE_PASSWORD}" >/dev/null
+      $MTWILSON_BIN/mtwilson config "saml.key.password" "${SAML_KEY_PASSWORD}" >/dev/null
+  fi
 
   $MTWILSON_BIN/mtwilson config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,jersey-media-multipart}" >/dev/null
   $MTWILSON_BIN/mtwilson config mtwilson.extensions.packageIncludeFilter.startsWith "${MTWILSON_EXTENSIONS_PACKAGEINCLUDEFILTER_STARTSWITH:-com.intel,org.glassfish.jersey.media.multipart}" >/dev/null
