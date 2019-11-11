@@ -611,11 +611,10 @@ mtwilson config "saml.key.alias" "$SAML_KEY_ALIAS" >/dev/null
 
 #CMS configuration
 mtwilson config "cms.base.url" "$CMS_BASE_URL" >/dev/null
+mtwilson config "cms.tls.cert.sha384" "$CMS_TLS_CERT_SHA384" >/dev/null
+
 #AAS configuration
 mtwilson config "aas.api.url" "$AAS_API_URL" >/dev/null
-
-#Get CMS CA Certificate
-curl --insecure -X GET -H "Accept: application/x-pem-file" -w "%{http_code}" $CMS_BASE_URL/ca-certificates -o $MTWILSON_CONFIGURATION/cms-ca.cert
 
 #Skip flavor signature configuration
 mtwilson config "skip.flavor.signature.verification" "$SKIP_FLAVOR_SIGNATURE_VERIFICATION" >/dev/null
