@@ -13,7 +13,6 @@ import com.intel.dcsg.cpg.tls.policy.TlsPolicyBuilder;
 import com.intel.mtwilson.My;
 import com.intel.mtwilson.jaxrs2.client.CMSClient;
 import com.intel.mtwilson.core.common.model.CertificateType;
-import com.intel.mtwilson.core.common.utils.AASTokenFetcher;
 import com.intel.mtwilson.setup.LocalSetupTask;
 
 import java.io.*;
@@ -41,6 +40,7 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
     private static final String FLAVOR_SIGNER_CERTIFICATE_DN = "mtwilson.flavor.signing.dn";
     private static final String FLAVOR_SIGNER_KEYSTORE_FILE = "flavor.signer.keystore.file";
     private static final String FLAVOR_SIGNER_KEYSTORE_PASSWORD = "flavor.signer.keystore.password";
+    private static final String BEARER_TOKEN = "BEARER_TOKEN";
     private Properties properties = new Properties();
     private File truststorep12;
 
@@ -69,9 +69,13 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
             configuration("Verification User password is not provided");
         }
         try {
-            TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12, KEYSTORE_PASSWORD).build();
-            String token = new AASTokenFetcher().getAASToken(getConfiguration().get(AASConstants.MC_FIRST_USERNAME), getConfiguration().get(AASConstants.MC_FIRST_PASSWORD), new TlsConnection(new URL(getConfiguration().get(AASConstants.AAS_API_URL)), tlsPolicy));
-            properties.setProperty(AASConstants.BEARER_TOKEN, token);
+            String token = System.getenv(BEARER_TOKEN);
+            if (token == null || token.isEmpty() ){
+                throw new Exception("BEARER_TOKEN cannot be empty");
+            }
+            else{
+                properties.setProperty(AASConstants.BEARER_TOKEN, token);
+            }
         } catch (Exception e) {
             configuration("Could not download AAS token");
         }

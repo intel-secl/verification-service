@@ -16,7 +16,6 @@ import com.intel.mtwilson.My;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
 import com.intel.mtwilson.configuration.ConfigurationProvider;
 import com.intel.mtwilson.core.common.model.CertificateType;
-import com.intel.mtwilson.core.common.utils.AASTokenFetcher;
 import com.intel.mtwilson.jaxrs2.client.CMSClient;
 import com.intel.mtwilson.setup.LocalSetupTask;
 import com.intel.mtwilson.core.common.utils.CertificateUtils;
@@ -51,6 +50,7 @@ public class CreateSamlCertificate extends LocalSetupTask {
     private static final String DEFAULT_SAML_DN = "CN=mtwilson-saml";
     private static final String DEFAULT_SAML_KEYSTORE_ALIAS = "saml-key";
     private static final String SAML_KEYSTORE_FORMAT = "PKCS12";
+    private static final String BEARER_TOKEN = "BEARER_TOKEN";
     private File truststorep12;
     private Configuration configuration;
 
@@ -98,10 +98,13 @@ public class CreateSamlCertificate extends LocalSetupTask {
 
         TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12, SAML_TRUSTSTORE_PASSWORD).build();
 
-        String token = new AASTokenFetcher().getAASToken(configuration.get(AASConstants.MC_FIRST_USERNAME),
-                configuration.get(AASConstants.MC_FIRST_PASSWORD),
-            new TlsConnection(new URL(configuration.get(AASConstants.AAS_API_URL)), tlsPolicy));
-        properties.setProperty(AASConstants.BEARER_TOKEN, token);
+        String token = System.getenv(BEARER_TOKEN);
+        if (token == null || token.isEmpty() ){
+            throw new Exception("BEARER_TOKEN cannot be empty");
+        }
+        else{
+            properties.setProperty(AASConstants.BEARER_TOKEN, token);
+        }
 
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(AASConstants.CMS_BASE_URL)), tlsPolicy));
 
