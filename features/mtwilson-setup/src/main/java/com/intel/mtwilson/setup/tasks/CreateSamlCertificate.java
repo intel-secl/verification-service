@@ -50,7 +50,7 @@ public class CreateSamlCertificate extends LocalSetupTask {
     private static final String DEFAULT_SAML_DN = "CN=mtwilson-saml";
     private static final String DEFAULT_SAML_KEYSTORE_ALIAS = "saml-key";
     private static final String SAML_KEYSTORE_FORMAT = "PKCS12";
-    private static final String BEARER_TOKEN = "BEARER_TOKEN";
+    private static final String BEARER_TOKEN_ENV = "BEARER_TOKEN";
     private File truststorep12;
     private Configuration configuration;
 
@@ -98,13 +98,12 @@ public class CreateSamlCertificate extends LocalSetupTask {
 
         TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(truststorep12, SAML_TRUSTSTORE_PASSWORD).build();
 
-        String token = System.getenv(BEARER_TOKEN);
+        String token = System.getenv(BEARER_TOKEN_ENV);
         if (token == null || token.isEmpty() ){
-            throw new Exception("BEARER_TOKEN cannot be empty");
+            configuration("BEARER_TOKEN not set in the environment");
+            return;
         }
-        else{
-            properties.setProperty(AASConstants.BEARER_TOKEN, token);
-        }
+        properties.setProperty(AASConstants.BEARER_TOKEN, token);
 
         CMSClient cmsClient = new CMSClient(properties, new TlsConnection(new URL(configuration.get(AASConstants.CMS_BASE_URL)), tlsPolicy));
 

@@ -40,7 +40,7 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
     private static final String FLAVOR_SIGNER_CERTIFICATE_DN = "mtwilson.flavor.signing.dn";
     private static final String FLAVOR_SIGNER_KEYSTORE_FILE = "flavor.signer.keystore.file";
     private static final String FLAVOR_SIGNER_KEYSTORE_PASSWORD = "flavor.signer.keystore.password";
-    private static final String BEARER_TOKEN = "BEARER_TOKEN";
+    private static final String BEARER_TOKEN_ENV = "BEARER_TOKEN";
     private Properties properties = new Properties();
     private File truststorep12;
 
@@ -69,13 +69,12 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
             configuration("Verification User password is not provided");
         }
         try {
-            String token = System.getenv(BEARER_TOKEN);
+            String token = System.getenv(BEARER_TOKEN_ENV);
             if (token == null || token.isEmpty() ){
-                throw new Exception("BEARER_TOKEN cannot be empty");
+                configuration("BEARER_TOKEN not set in the environment");
+		return;
             }
-            else{
-                properties.setProperty(AASConstants.BEARER_TOKEN, token);
-            }
+            properties.setProperty(AASConstants.BEARER_TOKEN, token);
         } catch (Exception e) {
             configuration("Could not download AAS token");
         }
