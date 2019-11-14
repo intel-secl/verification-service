@@ -341,6 +341,12 @@ if [ ! -z "$opt_logrotate" ]; then
   #echo "Log Rotate installed" | tee -a  $INSTALL_LOG_FILE
 fi
 
+# 5.4 Setup pg_config
+if using_postgres; then
+  postgres_installed=1
+   setup_pgpass
+fi
+
 ########################################################################################################################
 # 6. Copy scripts to application
 #cp version script to configuration directory
