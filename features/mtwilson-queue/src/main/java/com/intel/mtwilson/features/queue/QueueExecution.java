@@ -114,7 +114,7 @@ public class QueueExecution implements Runnable {
     @Override
     public void run() {
         threadExecutor = Executors.newFixedThreadPool(maxThreads);
-        
+        QueueRepository queueRepositoryObject = new QueueRepository();
         // try to login as superuser
         try {
             // define shiro superuser credentials, create subject and bind it to thread
@@ -225,6 +225,13 @@ public class QueueExecution implements Runnable {
                             case TIMEOUT:
                                 log.debug("Thread timed out");
                                 break;
+                            case CONNECTION_FAILURE:
+                                log.debug("Failed to connect to host. Removing queue entry from repository");
+                                Queue queueEntry = new Queue();
+                                QueueLocator queueLocator = new QueueLocator();
+                                queueEntry.setId(queueEntryId);
+                                queueLocator.copyTo(queueEntry);
+                                queueRepositoryObject.delete(queueLocator);
                             case ERROR:
                                 runningCommand.cancel(true);
                                 log.error("Exception while retrieving queue operation.");

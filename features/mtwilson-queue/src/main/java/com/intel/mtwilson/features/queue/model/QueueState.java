@@ -15,5 +15,6 @@ public enum QueueState {
     COMPLETED,
     RETURNED,
     TIMEOUT,
+    CONNECTION_FAILURE,
     ERROR;
 }

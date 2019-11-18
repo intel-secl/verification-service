@@ -636,11 +636,26 @@ public class HostResource {
     }
 
     public HostManifest getHostManifest(TlsPolicyDescriptor tlsPolicyDescriptor, ConnectionString connectionString, UUID tlsPolicyId) throws IOException {
-        TlsPolicy tlsPolicy = getHostTlsPolicy(tlsPolicyDescriptor, connectionString, tlsPolicyId);
+        TlsPolicy tlsPolicy;
+        HostTlsPolicy hostTlsPolicy = null;
+        if (!Vendor.VMWARE.equals(connectionString.getVendor())) {
+            tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(My.configuration().getTruststoreFile(), KEYSTORE_PASSWORD).build();
+        } else {
+            hostTlsPolicy = getHostTlsPolicy(tlsPolicyId);
+            tlsPolicyDescriptor = getTlsPolicyDescriptor(tlsPolicyDescriptor, hostTlsPolicy);
+
+            // check if the tlsPolicyDescriptor is allowed. Throw error if not allowed.
+            validateTlsPolicyDescriptor(tlsPolicyDescriptor);
+
+            tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(tlsPolicyDescriptor);
+        }
         ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
         Configuration configuration = configurationProvider.load();
         HostConnector hostConnector = new HostConnectorFactory().getHostConnector(connectionString, configuration.get(AASConstants.AAS_API_URL), tlsPolicy);
-        return hostConnector.getHostManifest();
+        HostManifest manifest = hostConnector.getHostManifest();
+        // tlsPolicy gets populated in hostConnector, hence it's important to store it after that
+        storeTlsPolicyDescriptor(hostTlsPolicy, tlsPolicy);
+        return manifest;
     }
 
     private void storeTlsPolicyDescriptor(HostTlsPolicy hostTlsPolicy, TlsPolicy tlsPolicy) {
@@ -669,28 +684,26 @@ public class HostResource {
     }
 
     private HostInfo getHostInfo(TlsPolicyDescriptor tlsPolicyDescriptor, ConnectionString connectionString, UUID tlsPolicyId) throws IOException {
-        TlsPolicy tlsPolicy = getHostTlsPolicy(tlsPolicyDescriptor, connectionString, tlsPolicyId);
-        ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
-        Configuration configuration = configurationProvider.load();
-        HostConnector hostConnector = new HostConnectorFactory().getHostConnector(connectionString, configuration.get(AASConstants.AAS_API_URL), tlsPolicy);
-        return  hostConnector.getHostDetails();
-    }
-
-    private TlsPolicy getHostTlsPolicy(TlsPolicyDescriptor tlsPolicyDescriptor, ConnectionString connectionString, UUID tlsPolicyId) throws IOException {
         TlsPolicy tlsPolicy;
+        HostTlsPolicy hostTlsPolicy = null;
         if (!Vendor.VMWARE.equals(connectionString.getVendor())) {
             tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(My.configuration().getTruststoreFile(), KEYSTORE_PASSWORD).build();
         } else {
-            HostTlsPolicy hostTlsPolicy = getHostTlsPolicy(tlsPolicyId);
+            hostTlsPolicy = getHostTlsPolicy(tlsPolicyId);
             tlsPolicyDescriptor = getTlsPolicyDescriptor(tlsPolicyDescriptor, hostTlsPolicy);
 
             // check if the tlsPolicyDescriptor is allowed. Throw error if not allowed.
             validateTlsPolicyDescriptor(tlsPolicyDescriptor);
 
             tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(tlsPolicyDescriptor);
-            storeTlsPolicyDescriptor(hostTlsPolicy, tlsPolicy);
         }
-        return tlsPolicy;
+        ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
+        Configuration configuration = configurationProvider.load();
+        HostConnector hostConnector = new HostConnectorFactory().getHostConnector(connectionString, configuration.get(AASConstants.AAS_API_URL), tlsPolicy);
+        HostInfo hostInfo = hostConnector.getHostDetails();
+        // tlsPolicy gets populated in hostConnector, hence it's important to store it after that
+        storeTlsPolicyDescriptor(hostTlsPolicy, tlsPolicy);
+        return  hostInfo;
     }
 
     private void validateTlsPolicyDescriptor(TlsPolicyDescriptor tlsPolicyDescriptor) {

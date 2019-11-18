@@ -18,6 +18,7 @@ import com.intel.mtwilson.core.verifier.policy.RuleResult;
 import com.intel.mtwilson.core.verifier.policy.TrustMarker;
 import com.intel.mtwilson.core.verifier.policy.TrustReport;
 import com.intel.mtwilson.features.queue.QueueOperation;
+import com.intel.mtwilson.features.queue.model.QueueState;
 import com.intel.mtwilson.flavor.business.policy.rule.RequiredFlavorTypeExists;
 import com.intel.mtwilson.flavor.business.policy.rule.RuleAllOfFlavors;
 import com.intel.mtwilson.flavor.model.*;
@@ -45,8 +46,9 @@ import com.intel.mtwilson.core.common.model.HostManifest;
 import static com.intel.mtwilson.features.queue.model.QueueState.COMPLETED;
 import static com.intel.mtwilson.features.queue.model.QueueState.TIMEOUT;
 import static com.intel.mtwilson.features.queue.model.QueueState.ERROR;
+import static com.intel.mtwilson.i18n.HostState.*;
+
 import com.intel.mtwilson.flavor.rest.v2.resource.HostStatusResource;
-import static com.intel.mtwilson.i18n.HostState.CONNECTION_TIMEOUT;
 
 import java.io.File;
 import java.security.cert.X509Certificate;
@@ -223,6 +225,8 @@ public class FlavorVerify extends QueueOperation {
                 hostState = new HostStatusResource().determineHostState(e);
                 if(hostState.equals(CONNECTION_TIMEOUT))
                     this.setQueueState(TIMEOUT);
+                else if (hostState.equals(CONNECTION_FAILURE))
+                    this.setQueueState(QueueState.CONNECTION_FAILURE);
                 else
                     this.setQueueState(ERROR);
             }
