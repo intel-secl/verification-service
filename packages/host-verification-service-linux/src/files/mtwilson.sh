@@ -151,7 +151,6 @@ if no_java ${JAVA_REQUIRED_VERSION:-$DEFAULT_JAVA_REQUIRED_VERSION}; then echo "
 print_help() {
         echo -e "Usage: mtwilson help|start|stop|restart|status|uninstall|uninstall --purge|version|fingerprint|java-detect|erase-data|erase-users|zeroize"
         echo -e "Usage: mtwilson setup [--force|--noexec] [task1 task2 ...]" 
-        echo -e "Usage: mtwilson login-password [username] [password] --permissions [domain1:action1]"
         echo -e "Usage: mtwilson export-config [outfile|--in=infile|--out=outfile|--stdout] [--env-password=PASSWORD_VAR]"
         echo -e "Usage: mtwilson config [key] [--delete|newValue]"
         echo -e "Usage: mtwilson replace-root-key-pair [--private-key=private-key-file] [--cert-chain=cert-chain-file]"
