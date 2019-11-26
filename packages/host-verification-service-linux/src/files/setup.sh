@@ -635,8 +635,13 @@ mtwilson config "dbcp.validation.on.borrow" "true" >/dev/null
 mtwilson config "dbcp.validation.on.return" "false" >/dev/null
 
 # Jetty TLS configuration
-mtwilson config jetty.tls.cert.ip $JETTY_TLS_CERT_IP > /dev/null
-mtwilson config jetty.tls.cert.dns $JETTY_TLS_CERT_DNS > /dev/null
+if [ -n "$VS_TLS_CERT_IP" ]; then
+    mtwilson config jetty.tls.cert.ip $VS_TLS_CERT_IP > /dev/null
+fi
+
+if [ -n "$VS_TLS_CERT_DNS" ]; then
+    mtwilson config jetty.tls.cert.dns $VS_TLS_CERT_DNS > /dev/null
+fi
 
 # Gather default configuration
 MTWILSON_SERVER_IP_ADDRESS=${MTWILSON_SERVER_IP_ADDRESS:-$(hostaddress)}
