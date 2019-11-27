@@ -97,10 +97,11 @@ Running the container
     with the verification server details
 
     * mtwilson.env
-        Contains the Admin Username and password. If provided this user is created on verification-service
+        Contains the Admin Username and password. This is service user credentials which needs to be get from AAS,
+        using which VS can communicate with other services.
 
-        MC_FIRST_USERNAME=<Admin user>
-        MC_FIRST_PASSWORD=<Admin password>
+        VS_SERVICE_USERNAME=<Admin user>
+        VS_SERVICE_PASSWORD=<Admin password>
 
     * db.password
 
