@@ -58,6 +58,7 @@ export POSTGRES_PORTNUM=${DATABASE_PORTNUM}
 export POSTGRES_DATABASE=${DATABASE_SCHEMA}
 export POSTGRES_USERNAME=${DATABASE_USERNAME}
 export POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+export MTWILSON_NOSETUP=${MTWILSON_NOSETUP:-false}
 export POSTGRESQL_KEEP_PGPASS=${POSTGRESQL_KEEP_PGPASS:-true}
 export INSTALL_PKGS=${INSTALL_PKGS:-"java logrotate postgres privacyca SERVICES PORTALS"}
 export MTWILSON_TLS_POLICY_ALLOW=${MTWILSON_TLS_POLICY_ALLOW:-"certificate,certificate-digest,public-key,public-key-digest,TRUST_FIRST_CERTIFICATE,INSECURE"}
@@ -724,8 +725,8 @@ set_owner_for_mtwilson_directories
 
 # 10. ASCTL SETUP
 
-# 11. setup the director, unless the NOSETUP variable is defined
-if [ -z "$MTWILSON_NOSETUP" ]; then
+# 11. setup the director, unless the NOSETUP variable is set to true
+if [ "$MTWILSON_NOSETUP" = "false" ]; then
   mtwilson setup
 fi
 
