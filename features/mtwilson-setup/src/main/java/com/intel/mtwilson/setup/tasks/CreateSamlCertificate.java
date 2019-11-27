@@ -44,7 +44,6 @@ public class CreateSamlCertificate extends LocalSetupTask {
     public static final String SAML_KEYSTORE_PASSWORD = "saml.keystore.password";
     private static final String SAML_TRUSTSTORE_PASSWORD = "changeit";
     public static final String SAML_KEY_ALIAS = "saml.key.alias";
-    private static final String SAML_CERTIFICATE_CERT = "saml.crt";
     private static final String SAML_CERTIFICATE_CERT_PEM = "saml.crt.pem";
     private static final String SAML_KEYSTORE_NAME="SAML.p12";
     private static final String DEFAULT_SAML_DN = "CN=mtwilson-saml";
@@ -117,8 +116,6 @@ public class CreateSamlCertificate extends LocalSetupTask {
             keystore.setKeyEntry(configuration.get(SAML_KEY_ALIAS), privKey, configuration.get(SAML_KEYSTORE_PASSWORD).toCharArray(), chain);
             keystore.store(newp12, configuration.get(SAML_KEYSTORE_PASSWORD).toCharArray());
 
-            FileOutputStream out = new FileOutputStream(My.configuration().getDirectoryPath() + File.separator + SAML_CERTIFICATE_CERT);
-            IOUtils.write(X509Util.encodePemCertificate(samlCertChain[0]), out);
         } catch (Exception e) {
             throw e;
         } finally {

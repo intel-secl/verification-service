@@ -105,13 +105,7 @@ public class ReplaceSamlKeyPair extends InteractiveCommand {
             // store it in the keystore
             keystore.set(samlKeyAlias, privateKey, certChainArray);
         }
-        
-        // write public key cert to saml.crt
-        File certificateChainDerFile = new File(Folders.configuration() + File.separator + "saml.crt");
-        try (FileOutputStream out = new FileOutputStream(certificateChainDerFile)) {
-            IOUtils.write(publicKeyCert.getEncoded(), out);
-        }
-        
+
         // write pem formatted public key cert to saml.crt.pem
         String publicKeyCertString = X509Util.encodePemCertificate(publicKeyCert);
         File certificateChainPemFile = new File(Folders.configuration() + File.separator + "saml.crt.pem");

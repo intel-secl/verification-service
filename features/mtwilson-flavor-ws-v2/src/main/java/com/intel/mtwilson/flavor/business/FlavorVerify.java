@@ -88,7 +88,7 @@ import org.opensaml.core.xml.io.MarshallingException;
 public class FlavorVerify extends QueueOperation {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FlavorVerify.class);
     private final String flavorSigningCertPath = My.configuration().getDirectoryPath() + File.separator + "flavor-signer.crt.pem";
-    private final String caCertPath = My.configuration().getDirectoryPath() + File.separator + "cms-ca.cert";
+    private final String caCertPath = My.configuration().getDirectoryPath() + File.separator + "cms-ca-cert.pem";
 
     private UUID hostId;
     private boolean forceUpdate;
