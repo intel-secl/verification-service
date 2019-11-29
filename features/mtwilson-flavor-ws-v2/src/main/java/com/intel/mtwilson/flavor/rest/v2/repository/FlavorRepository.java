@@ -45,26 +45,26 @@ public class FlavorRepository {
 
     public SignedFlavorCollection search(FlavorFilterCriteria criteria) {
         log.debug("flavor:search - got request to search for flavors");
-        SignedFlavorCollection flavorCollection = new SignedFlavorCollection();
+        SignedFlavorCollection signedFlavorCollection = new SignedFlavorCollection();
         try {
             MwFlavorJpaController mwFlavorJpaController = My.jpa().mwFlavor();
             if (criteria.filter == false) {
                 List<MwFlavor> mwFlavorList = mwFlavorJpaController.findMwFlavorEntities();
                 if (mwFlavorList != null && !mwFlavorList.isEmpty()) {
                     for (MwFlavor mwFlavor : mwFlavorList) {
-			flavorCollection.getSignedFlavors().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
+                        signedFlavorCollection.getSignedFlavors().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
                     }
                 }
             } else if (criteria.id != null) {
                 MwFlavor mwFlavor = mwFlavorJpaController.findMwFlavor(criteria.id.toString());
                 if (mwFlavor != null) {
-			flavorCollection.getSignedFlavors().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
+                    signedFlavorCollection.getSignedFlavors().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
                 }
             } else if (criteria.key != null && !criteria.key.isEmpty() && criteria.value != null && !criteria.value.isEmpty()) {
                 List<MwFlavor> mwFlavorList = mwFlavorJpaController.findMwFlavorByKeyValue(criteria.key, criteria.value);
                 if (mwFlavorList != null && !mwFlavorList.isEmpty()) {
                     for (MwFlavor mwFlavor : mwFlavorList) {
-                        flavorCollection.getSignedFlavors().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
+                        signedFlavorCollection.getSignedFlavors().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
                     }
                 }
             } else if (criteria.flavorgroupId != null || criteria.hostManifest != null
@@ -83,7 +83,7 @@ public class FlavorRepository {
                         criteria.flavorgroupId, criteria.hostManifest, criteria.flavorPartsWithLatest);
                 if (mwFlavorList != null && !mwFlavorList.isEmpty()) {
                     for (MwFlavor mwFlavor : mwFlavorList) {
-                        flavorCollection.getSignedFlavors().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
+                        signedFlavorCollection.getSignedFlavors().add(new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature()));
                     }
                 }
             } else {
@@ -94,11 +94,11 @@ public class FlavorRepository {
             log.error("flavor:search - error during search for flavors", ex);
             throw new RepositorySearchException(ex, criteria);
         }
-        log.debug("flavor:search - returning back {} flavor results", flavorCollection.getSignedFlavors().size());
-        return flavorCollection;
+        log.debug("flavor:search - returning back {} flavor results", signedFlavorCollection.getSignedFlavors().size());
+        return signedFlavorCollection;
     }
 
-    public Flavor retrieve(FlavorLocator locator) {
+    public SignedFlavor retrieve(FlavorLocator locator) {
         log.debug("flavor:retrieve - got request to retrieve flavor");
         if (locator == null || (locator.id == null && locator.pathId == null)) {
             return null;
@@ -109,12 +109,12 @@ public class FlavorRepository {
             if (locator.pathId != null) {
                 MwFlavor mwFlavor = mwFlavorJpaController.findMwFlavor(locator.pathId.toString());
                 if (mwFlavor != null) {
-                    return mwFlavor.getContent();
+                    return new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature());
                 }
             } else if (locator.id != null) {
                 MwFlavor mwFlavor = mwFlavorJpaController.findMwFlavor(locator.id.toString());
                 if (mwFlavor != null) {
-                    return mwFlavor.getContent();
+                    return new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature());
                 }
             }
         } catch (Exception ex) {
@@ -184,7 +184,7 @@ public class FlavorRepository {
         }
     }
 
-    public Flavor create(SignedFlavor item) {
+    public SignedFlavor create(SignedFlavor item) {
         log.debug("Got request to create a new flavor");
         if (item == null || item.getFlavor().getMeta() == null) {
             throw new RepositoryInvalidInputException("Flavor meta must be specified");
@@ -228,7 +228,7 @@ public class FlavorRepository {
             log.debug("Created the flavor {} successfully", flavorId);
 
             // return back the flavor created
-            return newMwFlavor.getContent();
+            return new SignedFlavor(newMwFlavor.getContent(), newMwFlavor.getSignature());
         } catch (PreexistingEntityException ex) {
             //returning null so that it will not create new flavor flavorgroup link for existing flavor
             return null;
@@ -247,10 +247,10 @@ public class FlavorRepository {
             return;
         }
 
-        Flavor flavor = retrieve(locator);
-        if (flavor != null) {
+        SignedFlavor signedFlavor = retrieve(locator);
+        if (signedFlavor != null) {
             try {
-                My.jpa().mwFlavor().destroy(flavor.getMeta().getId());
+                My.jpa().mwFlavor().destroy(signedFlavor.getFlavor().getMeta().getId());
             } catch (IOException | NonexistentEntityException ex) {
                 log.error("Error during deletion of flavor", ex);
                 throw new RepositoryDeleteException(ex);

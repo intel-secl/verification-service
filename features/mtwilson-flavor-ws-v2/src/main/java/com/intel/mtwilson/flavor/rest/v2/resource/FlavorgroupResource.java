@@ -8,6 +8,7 @@ package com.intel.mtwilson.flavor.rest.v2.resource;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.validation.ValidationUtil;
 import com.intel.mtwilson.core.flavor.model.Flavor;
+import com.intel.mtwilson.core.flavor.model.SignedFlavor;
 import com.intel.mtwilson.flavor.controller.exceptions.NonexistentEntityException;
 import com.intel.mtwilson.flavor.rest.v2.model.*;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorRepository;
@@ -124,8 +125,8 @@ public class FlavorgroupResource {
                     FlavorRepository flavorRepository = new FlavorRepository();
                     FlavorLocator flavorLocator = new FlavorLocator();
                     flavorLocator.id = flavorId;
-                    Flavor flavor = flavorRepository.retrieve(flavorLocator);
-                    flavors.add(flavor);
+                    SignedFlavor signedFlavor = flavorRepository.retrieve(flavorLocator);
+                    flavors.add(signedFlavor.getFlavor());
                 }
             }
             flavorgroup.setFlavorIds(flavorIds);
@@ -203,8 +204,8 @@ public class FlavorgroupResource {
                             FlavorRepository flavorRepository = new FlavorRepository();
                             FlavorLocator locator = new FlavorLocator();
                             locator.id = flavorId;
-                            Flavor flavor = flavorRepository.retrieve(locator);
-                            flavors.add(flavor);
+                            SignedFlavor signedFlavor = flavorRepository.retrieve(locator);
+                            flavors.add(signedFlavor.getFlavor());
                         }
                     }
                     flavorgroup.setFlavorIds(flavorIds);

@@ -4,6 +4,7 @@
  */
 package com.intel.mtwilson.flavor.rest.v2.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -21,7 +22,6 @@ import java.util.List;
 
 public class SignedFlavorCollection extends DocumentCollection<SignedFlavor> {
     private List<SignedFlavor> signedFlavors = new ArrayList<>();
-    private ArrayList<Flavor> flavors = new ArrayList<>();
     private static final String FLAVOR_SIGNER_KEYSTORE_FILE = "flavor.signer.keystore.file";
     private static final String FLAVOR_SIGNER_KEYSTORE_PASSWORD = "flavor.signer.keystore.password";
     private static final String FLAVOR_SIGNING_KEY_ALIAS = "flavor.signing.key.alias";
@@ -35,7 +35,9 @@ public class SignedFlavorCollection extends DocumentCollection<SignedFlavor> {
         this.signedFlavors = signedFlavors;
     }
 
+    @JsonIgnore
     public ArrayList<Flavor> getFlavors() {
+        ArrayList<Flavor> flavors = new ArrayList<>();
         for (SignedFlavor signedFlavor : signedFlavors) {
             Flavor flavor = signedFlavor.getFlavor();
             flavors.add(flavor);

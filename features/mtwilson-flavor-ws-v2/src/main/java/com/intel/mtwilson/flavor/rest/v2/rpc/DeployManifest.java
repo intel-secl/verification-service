@@ -16,6 +16,7 @@ import com.intel.mtwilson.core.common.utils.AASConstants;
 import com.intel.mtwilson.core.common.utils.ManifestUtils;
 import com.intel.mtwilson.core.flavor.common.FlavorToManifestConverter;
 import com.intel.mtwilson.core.flavor.model.Flavor;
+import com.intel.mtwilson.core.flavor.model.SignedFlavor;
 import com.intel.mtwilson.core.host.connector.HostConnector;
 import com.intel.mtwilson.core.host.connector.HostConnectorFactory;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorLocator;
@@ -68,16 +69,16 @@ public class DeployManifest implements Runnable{
             //Search flavor by id
             FlavorLocator flavorLocator = new FlavorLocator();
             flavorLocator.id = flavorId;
-            Flavor flavor = new FlavorRepository().retrieve(flavorLocator);
+            SignedFlavor signedFlavor = new FlavorRepository().retrieve(flavorLocator);
 
-            if (flavor == null) {
+            if (signedFlavor == null) {
                 log.error("The flavor with specified id was not found {}", flavorId);
                 throw new RepositoryInvalidInputException(flavorLocator);
             }
 
             TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(My.configuration().getTruststoreFile(), KEYSTORE_PASSWORD).build();
             //call host connector to deploy flavor to host
-            deployManifestToHost(flavor, tlsPolicy);
+            deployManifestToHost(signedFlavor.getFlavor(), tlsPolicy);
 
         } catch (Exception ex) {
             log.error("RPC: DeployManifest - Error during manifest deployment.", ex);
