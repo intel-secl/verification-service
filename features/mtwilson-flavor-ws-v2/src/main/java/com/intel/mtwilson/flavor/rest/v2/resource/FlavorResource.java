@@ -169,7 +169,7 @@ public class FlavorResource {
      */
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
-    @Produces({DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
+    @Produces({MediaType.APPLICATION_JSON})
     public SignedFlavorCollection createFlavors(FlavorCreateCriteria item) throws IOException, Exception {
         ValidationUtil.validate(item);
 
@@ -198,10 +198,13 @@ public class FlavorResource {
 
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
-    @Produces({MediaType.APPLICATION_JSON})
-    public SignedFlavorCollection createFlavorsJSON(FlavorCreateCriteria item) throws IOException, Exception {
+    @Produces({DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
+    public FlavorCollection createFlavorsYAML(FlavorCreateCriteria item) throws IOException, Exception {
         ValidationUtil.validate(item);
-        return createFlavors(item);
+        SignedFlavorCollection signedFlavorCollection = createFlavors(item);
+        FlavorCollection flavorCollection = new FlavorCollection();
+        flavorCollection.setFlavors(signedFlavorCollection.getFlavors());
+        return flavorCollection;
     }
 
     @POST
