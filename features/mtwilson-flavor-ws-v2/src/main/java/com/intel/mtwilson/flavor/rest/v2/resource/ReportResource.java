@@ -77,6 +77,7 @@ public class ReportResource {
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
     @Produces(CryptoMediaType.APPLICATION_SAML)
+    @RequiresPermissions("reports:create")
     @SuppressWarnings("empty-statement")
     public String createSaml(ReportCreateCriteria item) throws Exception {
         ValidationUtil.validate(item);
