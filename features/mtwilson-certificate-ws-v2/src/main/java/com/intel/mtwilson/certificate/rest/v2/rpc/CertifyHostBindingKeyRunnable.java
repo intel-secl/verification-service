@@ -6,7 +6,6 @@ package com.intel.mtwilson.certificate.rest.v2.rpc;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.intel.dcsg.cpg.crypto.RsaUtil;
-import com.intel.dcsg.cpg.crypto.Sha1Digest;
 import com.intel.dcsg.cpg.x509.X509Builder;
 import com.intel.dcsg.cpg.x509.X509Util;
 import com.intel.mtwilson.My;
@@ -18,18 +17,13 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 import gov.niarl.his.privacyca.TpmUtils;
 import java.io.FileInputStream;
 import java.nio.ByteBuffer;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SignatureException;
+import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
-import static java.util.Arrays.copyOfRange;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -168,12 +162,12 @@ public class CertifyHostBindingKeyRunnable implements Runnable {
                     if (tpmVersion.equals("2.0") && operatingSystem.equals("Linux")) {
                         
                         if (!CertifyKey20.isCertifiedKeySignatureValid(tpmCertifyKey, tpmCertifyKeySignature, decodedAikDerCertificate.getPublicKey())) {
-                            throw new CertificateException("The signature specified for the certifiy key does not match.");
+                            throw new CertificateException("The signature specified for the certify key does not match.");
                         }
                         //In TPM 2.0 we validate TPM name given to each key
-                        validatePublicKeyDigest = validateName(nameDigest, tpmCertifyKey);
+                        validatePublicKeyDigest = CertifyKey20.validatePublicKey(publicKeyModulus, tpmCertifyKey);
                         if (!validatePublicKeyDigest) {
-                            throw new Exception("TPM Key Name specified does not match name digest in the TCG binding certificate");
+                            throw new Exception("Binding Public Key digest does not match digest in the TCG binding certificate");
                         }
                     }else if( tpmVersion.equals("2.0") && operatingSystem.equals("Windows")){
                         if (!CertifyKey20.isCertifiedKeySignatureValidWin(tpmCertifyKey, tpmCertifyKeySignature, decodedAikDerCertificate.getPublicKey())) {
@@ -246,43 +240,6 @@ public class CertifyHostBindingKeyRunnable implements Runnable {
         } catch (Exception ex) {
             log.error("Error during MTW signed binding key certificate.", ex);
             throw new RepositoryCreateException();
-        }
-    }
-    
-    
-    
-    /**
-     * Validates the name digest in the CertifyKey against the name blob
-     * specified.
-     *
-     * @param nameDigest
-     * @param tcgCertificate
-     * @return
-     * @throws Exception
-     */
-    protected static boolean validateName(byte[] nameDigest, byte[] tcgCertificate) throws Exception {
-        try {
-            byte[] padding = Hex.decodeHex("2200000b".toCharArray());
-            byte[] endPadding = Hex.decodeHex("00000000000000000000000000000000000000000000000000000000000000000000".toCharArray());
-            log.debug("Validating the Name.");
-            TpmCertifyKey20 tpmCertifyKey = new TpmCertifyKey20(tcgCertificate);
-            byte[] providedName = tpmCertifyKey.getTpmuAttest().getTpmsCertifyInfoBlob().getTpmtHa().getDigest();
-            byte[] providedNameWithoutPadding = Arrays.copyOfRange(nameDigest, padding.length, nameDigest.length - endPadding.length);
-            log.debug("providedName is {} of size {}\nprovidedNameWithoutPadding is {} of size {}",
-                    TpmUtils.byteArrayToHexString(providedName), providedName.length, TpmUtils.byteArrayToHexString(providedNameWithoutPadding), providedNameWithoutPadding.length);
-    
-            log.debug("Calculated public key digest is {} -- passed in public key digest is {}",
-                    TpmUtils.byteArrayToHexString(providedNameWithoutPadding), TpmUtils.byteArrayToHexString(providedNameWithoutPadding));
-
-            for (int i = 0; i < providedNameWithoutPadding.length; i++) {
-                log.debug("Comparing {} with {}", nameDigest[i], providedNameWithoutPadding[i]);
-                if (providedNameWithoutPadding[i] != providedNameWithoutPadding[i]) {
-                    return false;
-                }
-            }
-            return true;
-        } catch (TpmUtils.TpmBytestreamResouceException | TpmUtils.TpmUnsignedConversionException ex) {
-            throw ex;
         }
     }
     
