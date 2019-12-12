@@ -43,7 +43,7 @@ fi
 # the installer or by including them in mtwilson.env
 export INSTALL_LOG_FILE=${INSTALL_LOG_FILE:-/tmp/mtwilson-install.log}
 export INSTALLED_MARKER_FILE=${INSTALLED_MARKER_FILE:-/var/opt/intel/.mtwilsonInstalled}
-export LOG_ROTATION_PERIOD=${LOG_ROTATION_PERIOD:-monthly}
+export LOG_ROTATION_PERIOD=${LOG_ROTATION_PERIOD:-weekly}
 export LOG_COMPRESS=${LOG_COMPRESS:-compress}
 export LOG_DELAYCOMPRESS=${LOG_DELAYCOMPRESS:-delaycompress}
 export LOG_COPYTRUNCATE=${LOG_COPYTRUNCATE:-copytruncate}
