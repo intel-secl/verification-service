@@ -149,7 +149,7 @@ export CLASSPATH
 if no_java ${JAVA_REQUIRED_VERSION:-$DEFAULT_JAVA_REQUIRED_VERSION}; then echo "Cannot find Java ${JAVA_REQUIRED_VERSION:-$DEFAULT_JAVA_REQUIRED_VERSION} or later"; exit 1; fi
 
 print_help() {
-        echo -e "Usage: mtwilson help|start|stop|restart|status|uninstall|uninstall --purge|version|fingerprint|java-detect|erase-data|erase-users|zeroize"
+        echo -e "Usage: mtwilson help|start|stop|restart|status|uninstall|uninstall --purge|version|java-detect|erase-data|erase-users|zeroize"
         echo -e "Usage: mtwilson setup [--force|--noexec] [task1 task2 ...]" 
         echo -e "Usage: mtwilson export-config [outfile|--in=infile|--out=outfile|--stdout] [--env-password=PASSWORD_VAR]"
         echo -e "Usage: mtwilson config [key] [--delete|newValue]"
@@ -163,18 +163,6 @@ print_help() {
 		echo $MTWILSON_SETUP_TASKS | tr ' ' '\n'
 		echo $MTWILSON_PRESETUP_TASKS | tr ' ' '\n'
 		echo $MTWILSON_SETUP_FIRST_TASKS | tr ' ' '\n'
-}
-
-mtwilson_saml_cert_report() {
-  local keystore=`$MTWILSON_BIN/mtwilson config saml.keystore.file`   #`read_property_from_file saml.keystore.file ${conf_dir}/attestation-service.properties`
-  local keystorePassword=`$MTWILSON_BIN/mtwilson config saml.keystore.password`   #`read_property_from_file saml.keystore.password ${conf_dir}/attestation-service.properties`
-  local keyalias=`$MTWILSON_BIN/mtwilson config saml.key.alias`   #`read_property_from_file saml.key.alias ${conf_dir}/attestation-service.properties`
-  java_keystore_cert_report "${MTWILSON_CONFIGURATION}/$keystore" "$keystorePassword" "$keyalias"
-}
-
-mtwilson_tls_fingerprint() {
-  local sha384=`read_property_from_file tls.cert.sha384 "${MTWILSON_CONFIGURATION}/https.properties"`
-  echo "SHA384: $sha384"
 }
 
 mtwilson_run() {
@@ -424,13 +412,7 @@ case "$1" in
         java_detect $2
         java_env_report
         ;;
-  fingerprint)
-        # show server ssh fingerprint, ssl fingerprint, and saml cert fingerprint
-        echo "TLS Certificate Fingerprint:"
-		mtwilson_tls_fingerprint
-        echo -e "\nSAML Certificate:"
-        mtwilson_saml_cert_report
-        ;;
+
   uninstall)
     shift
     mtwilson_stop
