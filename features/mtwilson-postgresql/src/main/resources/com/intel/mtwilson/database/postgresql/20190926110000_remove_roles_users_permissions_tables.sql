@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2019 Intel Corporation
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 /**
  * Author:  arijitgh
  * Created: Sep 26, 2019

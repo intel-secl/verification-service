@@ -1,5 +1,8 @@
+/*
+ * Copyright (C) 2019 Intel Corporation
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 /**
- * Author:
  * Created: Apr 09, 2019
  */
 ALTER TABLE mw_user_login_certificate ADD COLUMN sha384_hash bytea;
