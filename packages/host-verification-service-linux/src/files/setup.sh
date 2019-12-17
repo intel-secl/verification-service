@@ -41,7 +41,6 @@ fi
 # 2. export default settings
 # can override by exporting them before running
 # the installer or by including them in mtwilson.env
-export INSTALL_LOG_FILE=${INSTALL_LOG_FILE:-/tmp/mtwilson-install.log}
 export INSTALLED_MARKER_FILE=${INSTALLED_MARKER_FILE:-/var/opt/intel/.mtwilsonInstalled}
 export LOG_ROTATION_PERIOD=${LOG_ROTATION_PERIOD:-weekly}
 export LOG_COMPRESS=${LOG_COMPRESS:-compress}
@@ -87,13 +86,6 @@ if [ -d $MTWILSON_ENV ]; then
   done
 fi
 
-# ensure we can write to the log file
-touch $INSTALL_LOG_FILE >/dev/null 2>&1
-if [ -f $INSTALL_LOG_FILE ] && [ ! -w $INSTALL_LOG_FILE ]; then
-  echo "Cannot write to install log file: $INSTALL_LOG_FILE"
-  exit 1
-fi
-
 # 2. source the "functions.sh"
 if [ -f functions ]; then . functions; else echo "Missing file: functions"; exit 1; fi
 
@@ -116,13 +108,10 @@ else
   echo_warning "Installing as $MTWILSON_USERNAME into $MTWILSON_HOME"  
 fi
 
-# 4. Define directory layout
-chown $MTWILSON_USERNAME:$MTWILSON_USERNAME $INSTALL_LOG_FILE
-date > $INSTALL_LOG_FILE
-
 # computed values
 export PATH=$MTWILSON_HOME/bin:$PATH
 
+# 4. Define directory layout
 # define application directory layout
 if [ "$MTWILSON_LAYOUT" == "linux" ]; then
   export MTWILSON_CONFIGURATION=${MTWILSON_CONFIGURATION:-/etc/mtwilson}
@@ -196,13 +185,13 @@ fi
 
 
 # if an existing mtwilson is already running, stop it while we install
-echo "Checking for previously-installed Mt Wilson..." >>$INSTALL_LOG_FILE
+echo "Checking for previously-installed Mt Wilson..."
 prev_mtwilson="$(which mtwilson 2>/dev/null)"
 if [ -n "$prev_mtwilson" ] && [ "$(whoami)" == "root" ]; then
   # stop mtwilson; this sometimes does not work
   $prev_mtwilson stop
-  echo "After '$prev_mtwilson stop', checking status again..." >>$INSTALL_LOG_FILE
-  $prev_mtwilson status >>$INSTALL_LOG_FILE
+  echo "After '$prev_mtwilson stop', checking status again..."
+  $prev_mtwilson status
   # remove previous mtwilson script
   rm -f $prev_mtwilson
 fi
@@ -211,10 +200,10 @@ fi
 if [ -L $MTWILSON_CONFIGURATION ]; then rm -f $MTWILSON_CONFIGURATION; fi
 if [ -L /etc/intel/cloudsecurity ]; then rm -f /etc/intel/cloudsecurity; fi
 if [ -d /etc/intel/cloudsecurity ]; then
-  echo "Prior configuration exists:" >>$INSTALL_LOG_FILE
-  ls -l /etc/intel >>$INSTALL_LOG_FILE
+  echo "Prior configuration exists:"
+  ls -l /etc/intel
   if [ -w /etc/intel/cloudsecurity ]; then
-    echo "Migrating configuration from /etc/intel/cloudsecurity to $MTWILSON_CONFIGURATION" >>$INSTALL_LOG_FILE
+    echo "Migrating configuration from /etc/intel/cloudsecurity to $MTWILSON_CONFIGURATION"
      mkdir -p $MTWILSON_CONFIGURATION
     cp -r /etc/intel/cloudsecurity/* $MTWILSON_CONFIGURATION
     chown -R $MTWILSON_USERNAME:$MTWILSON_USERNAME $MTWILSON_CONFIGURATION
@@ -332,10 +321,10 @@ logrotate_installer=`find_installer log-rotate`
 
 # 5.3 Install logrotate
 if [ ! -z "$opt_logrotate" ]; then
-  echo "Installing Log Rotate..." | tee -a  $INSTALL_LOG_FILE
+  echo "Installing Log Rotate..."
   ./$logrotate_installer
   if [ $? -ne 0 ]; then echo_failure "Failed to install log rotation"; exit -1; fi
-  #echo "Log Rotate installed" | tee -a  $INSTALL_LOG_FILE
+  #echo "Log Rotate installed"
 fi
 
 # 5.4 Setup pg_config
@@ -425,7 +414,7 @@ echo "# $(date)" > $MTWILSON_ENV/mtwilson-setup
 for env_file_var_name in $env_file_exports
 do
   eval env_file_var_value="\$$env_file_var_name"
-  echo "writing $env_file_var_name to mtwilson-setup with value: $env_file_var_value" >> $INSTALL_LOG_FILE
+  echo "writing $env_file_var_name to mtwilson-setup with value: $env_file_var_value"
   echo "export $env_file_var_name=$env_file_var_value" >> $MTWILSON_ENV/mtwilson-setup
 done
 
@@ -435,7 +424,7 @@ if [ "$(whoami)" == "root" ] && [ -n "$MTWILSON_USERNAME" ] && [ "$MTWILSON_USER
 fi
 profile_name=$profile_dir/$(basename $(getUserProfileFile))
 
-echo "Updating profile: $profile_name" >> $INSTALL_LOG_FILE
+echo "Updating profile: $profile_name"
 appendToUserProfileFile "export PATH=$MTWILSON_BIN:\$PATH" $profile_name
 appendToUserProfileFile "export MTWILSON_HOME=$MTWILSON_HOME" $profile_name
 
@@ -448,7 +437,7 @@ if [ -f "$mtwilson_password_file" ]; then
   export MTWILSON_PASSWORD=$(cat $mtwilson_password_file)
 fi
 
-#echo "Loading configuration settings and defaults" >> $INSTALL_LOG_FILE
+#echo "Loading configuration settings and defaults"
 #load_conf
 #load_defaults
 
@@ -487,7 +476,7 @@ fi
 # 7. extract mtwilson
 echo "Extracting application..."
 MTWILSON_ZIPFILE=`ls -1 host-verification-service-zip-*.zip 2>/dev/null | tail -n 1`
-unzip -oq $MTWILSON_ZIPFILE -d $MTWILSON_HOME >>$INSTALL_LOG_FILE 2>&1
+unzip -oq $MTWILSON_ZIPFILE -d $MTWILSON_HOME
 
 # deprecated:  remove when references have been updated to $MTWILSON_HOME/share/scripts/functions.sh
 cp functions "$MTWILSON_BIN/functions.sh"
@@ -497,12 +486,12 @@ chmod 600 logback.xml logback-stderr.xml log4j.properties
 cp logback.xml logback-stderr.xml log4j.properties "${MTWILSON_CONFIGURATION}"
 
 # set permissions
-echo "chown -R $MTWILSON_USERNAME:$MTWILSON_USERNAME $MTWILSON_HOME" >> $INSTALL_LOG_FILE
+echo "chown -R $MTWILSON_USERNAME:$MTWILSON_USERNAME $MTWILSON_HOME"
 chown -R $MTWILSON_USERNAME:$MTWILSON_USERNAME $MTWILSON_HOME
 chmod 755 $MTWILSON_BIN/*
 
 # 8. configure mtwilson TLS policies
-echo "Configuring TLS policies..." >>$INSTALL_LOG_FILE
+echo "Configuring TLS policies..."
 if [ -f "$MTWILSON_CONFIGURATION/mtwilson.properties" ]; then
   #default_mtwilson_tls_policy_id="$MTWILSON_DEFAULT_TLS_POLICY_ID"
   default_mtwilson_tls_policy_id="${MTWILSON_DEFAULT_TLS_POLICY_ID:-$MTW_DEFAULT_TLS_POLICY_ID}"   #`read_property_from_file "mtwilson.default.tls.policy.id" /etc/intel/cloudsecurity/mtwilson.properties`
@@ -657,13 +646,13 @@ export PRIVACYCA_SERVER=$MTWILSON_SERVER
 
 # copy shiro.ini api security file
 if [ ! -f "$MTWILSON_CONFIGURATION/shiro.ini" ]; then
-  echo "Copying shiro.ini to $MTWILSON_CONFIGURATION" >> $INSTALL_LOG_FILE
+  echo "Copying shiro.ini to $MTWILSON_CONFIGURATION"
   chmod 600 shiro.ini shiro-localhost.ini
   cp shiro.ini shiro-localhost.ini "$MTWILSON_CONFIGURATION"
 fi
 chown -R $MTWILSON_USERNAME:$MTWILSON_USERNAME "${MTWILSON_CONFIGURATION}"
 
-echo "Adding $MTWILSON_SERVER to shiro.ini..." >>$INSTALL_LOG_FILE
+echo "Adding $MTWILSON_SERVER to shiro.ini..."
 # add MTWILSON_SERVER to shiro trust file
 # use "hostFilter.allow" when using the access-denying filter (any clients not from that list of ip's will be denied)
 # use "iniHostRealm.allow" when using the access-allowing filter (any clients from that list of ip's will be allowed access but clients from other ip's can still try password or x509 authentication) - this is the current default
@@ -789,7 +778,6 @@ chmod 700 "/var/opt/intel" "/var/opt/intel/aikverifyhome/bin" "/var/opt/intel/ai
 echo "Restarting webservice for all changes to take effect"
 mtwilson restart
 
-echo "Log file for install is located at $INSTALL_LOG_FILE"
 if [ -n "$INSTALLED_MARKER_FILE" ]; then
  touch $INSTALLED_MARKER_FILE
 fi

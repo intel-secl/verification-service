@@ -68,9 +68,6 @@ export MTWILSON_BIN=${MTWILSON_BIN:-$MTWILSON_HOME/bin}
 export MTWILSON_REPOSITORY=${MTWILSON_REPOSITORY:-$MTWILSON_HOME/repository}
 export MTWILSON_LOGS=${MTWILSON_LOGS:-$MTWILSON_HOME/logs}
 
-MTWILSON_INSTALL_LOG_FILE=${MTWILSON_INSTALL_LOG_FILE:-/tmp/mtwilson-install.log}
-export INSTALL_LOG_FILE="$MTWILSON_INSTALL_LOG_FILE"
-
 ####################################################################################################
 
 # load linux utility
@@ -105,6 +102,7 @@ done
 export LD_LIBRARY_PATH=$(echo $libFoldersString$LD_LIBRARY_PATH | sed 's/:$//g')
 
 # all other variables with defaults
+MTWILSON_PID_FILE=$MTWILSON_HOME/mtwilson.pid
 MTWILSON_APPLICATION_LOG_FILE=${MTWILSON_APPLICATION_LOG_FILE:-$MTWILSON_LOGS/mtwilson.log}
 chown "$MTWILSON_USERNAME":"$MTWILSON_USERNAME" "$MTWILSON_APPLICATION_LOG_FILE"
 chmod 600 "$MTWILSON_APPLICATION_LOG_FILE"
@@ -119,14 +117,6 @@ MTWILSON_SETUP_MANAGER_TASKS="update-ssl-port jetty-ports jetty-tls-keystore pas
 MTWILSON_PRESETUP_TASKS="create-data-encryption-key"
 MTWILSON_SETUP_TASKS=${MTWILSON_SETUP_TASKS:-"create-certificate-authority-key create-flavor-signing-certificate create-default-flavorgroups sign-existing-unsigned-flavors create-saml-certificate"}
 
-# RHEL 7.6 needs PID file for systemd startup service
-# The location is identified as below in mtwilson.sh
-MTWILSON_PID_FILE=$MTWILSON_HOME/mtwilson.pid
-
-
-# RHEL 7.6 needs PID file for systemd startup service
-# The location is identified as below in mtwilson.sh
-MTWILSON_PID_FILE=$MTWILSON_HOME/mtwilson.pid
 
 ####################################################################################################
 # java command
