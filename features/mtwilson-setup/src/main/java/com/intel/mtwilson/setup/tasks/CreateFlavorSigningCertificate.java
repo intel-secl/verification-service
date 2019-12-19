@@ -35,7 +35,7 @@ public class CreateFlavorSigningCertificate extends LocalSetupTask {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CreateFlavorSigningCertificate.class);
     private static final String KEYSTORE_PASSWORD = "changeit";
-    private String flavorSigningCSRDistinguishedName = "CN=VS Flavor Signing Certificate,OU=Verification Service";
+    private String flavorSigningCSRDistinguishedName = "CN=VS Flavor Signing Certificate";
     private static final String FLAVOR_SIGNING_KEY_ALIAS = "flavor.signing.key.alias";
     private static final String FLAVOR_SIGNER_CERTIFICATE_DN = "mtwilson.flavor.signing.dn";
     private static final String FLAVOR_SIGNER_KEYSTORE_FILE = "flavor.signer.keystore.file";
