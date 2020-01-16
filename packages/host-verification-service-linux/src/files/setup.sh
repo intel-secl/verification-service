@@ -51,10 +51,12 @@ export LOG_OLD=${LOG_OLD:-12}
 export DATABASE_HOSTNAME=${DATABASE_HOSTNAME:-127.0.0.1}
 export DATABASE_PORTNUM=${DATABASE_PORTNUM:-5432}
 export DATABASE_SCHEMA=${DATABASE_SCHEMA:-mw_as}
+export DATABASE_SSLMODE=${DATABASE_SSLMODE:-require}
 export DATABASE_VENDOR=postgres
 export POSTGRES_HOSTNAME=${DATABASE_HOSTNAME}
 export POSTGRES_PORTNUM=${DATABASE_PORTNUM}
 export POSTGRES_DATABASE=${DATABASE_SCHEMA}
+export POSTGRES_SSLMODE=${DATABASE_SSLMODE}
 export POSTGRES_USERNAME=${DATABASE_USERNAME}
 export POSTGRES_PASSWORD=${DATABASE_PASSWORD}
 export MTWILSON_NOSETUP=${MTWILSON_NOSETUP:-false}
@@ -126,6 +128,17 @@ export MTWILSON_BIN=${MTWILSON_BIN:-$MTWILSON_HOME/bin}
 export MTWILSON_JAVA=${MTWILSON_JAVA:-$MTWILSON_HOME/java}
 export MTWILSON_BACKUP=${MTWILSON_BACKUP:-$MTWILSON_REPOSITORY/backup}
 
+if [ "$DATABASE_SSLMODE" == "verify-ca" ] || [ "$DATABASE_SSLMODE" == "verify-full" ]; then
+    if [ -z "$DATABASE_SSLROOTCERT" ]; then
+        echo_failure "Database server certificate file not specified"
+        exit 1
+    else
+        if [ ! -f "$DATABASE_SSLROOTCERT" ]; then
+            echo_failure "Database server certificate file does not exist"
+            exit 1
+        fi
+    fi
+fi
 
 #If user is non root make sure all prereq directories are created and owned by nonroot user
 if [ "$(whoami)" != "root" ]; then
@@ -226,6 +239,10 @@ else
     exit 1
   fi
 fi
+
+DATABASE_SERVERCERT=$MTWILSON_CONFIGURATION/vsdbcert.crt
+cp "$DATABASE_SSLROOTCERT" "$DATABASE_SERVERCERT"
+export POSTGRES_SSLROOTCERT=${DATABASE_SERVERCERT}
 
 export MTWILSON_SERVICE_PROPERTY_FILES=/etc/intel/cloudsecurity
 export MTWILSON_OPT_INTEL=/opt/intel
@@ -559,6 +576,10 @@ mtwilson config "mtwilson.db.port" "${DATABASE_PORTNUM}" >/dev/null
 mtwilson config "mtwilson.db.schema" "${DATABASE_SCHEMA}" >/dev/null
 mtwilson config "mtwilson.db.user" "${DATABASE_USERNAME}" >/dev/null
 mtwilson config "mtwilson.db.password" "${DATABASE_PASSWORD}" >/dev/null
+mtwilson config "mtwilson.db.sslmode" "${DATABASE_SSLMODE}" >/dev/null
+if [ -f "$DATABASE_SERVERCERT" ]; then
+    mtwilson config "mtwilson.db.sslrootcert" "${DATABASE_SERVERCERT}" >/dev/null
+fi
 
 #export AUTO_UPDATE_ON_UNTRUST=${AUTO_UPDATE_ON_UNTRUST:-false}
 #mtwilson config "mtwilson.as.autoUpdateHost" "$AUTO_UPDATE_ON_UNTRUST" >/dev/null
