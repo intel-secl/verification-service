@@ -242,7 +242,6 @@ fi
 
 DATABASE_SERVERCERT=$MTWILSON_CONFIGURATION/vsdbcert.crt
 cp "$DATABASE_SSLROOTCERT" "$DATABASE_SERVERCERT"
-export POSTGRES_SSLROOTCERT=${DATABASE_SERVERCERT}
 
 export MTWILSON_SERVICE_PROPERTY_FILES=/etc/intel/cloudsecurity
 export MTWILSON_OPT_INTEL=/opt/intel
@@ -578,6 +577,7 @@ mtwilson config "mtwilson.db.user" "${DATABASE_USERNAME}" >/dev/null
 mtwilson config "mtwilson.db.password" "${DATABASE_PASSWORD}" >/dev/null
 mtwilson config "mtwilson.db.sslmode" "${DATABASE_SSLMODE}" >/dev/null
 if [ -f "$DATABASE_SERVERCERT" ]; then
+    export POSTGRES_SSLROOTCERT=${DATABASE_SERVERCERT}
     mtwilson config "mtwilson.db.sslrootcert" "${DATABASE_SERVERCERT}" >/dev/null
 fi
 

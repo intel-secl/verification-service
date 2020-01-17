@@ -73,6 +73,7 @@ if [ ! -f $MTWILSON_CONFIGURATION/.setup_done ]; then
     mtwilson config "mtwilson.db.password" "${POSTGRES_PASSWORD}" >/dev/null
     mtwilson config "mtwilson.db.sslmode" "${DATABASE_SSLMODE}" >/dev/null
     if [ -f "$DATABASE_SERVERCERT" ]; then
+        export POSTGRES_SSLROOTCERT=${DATABASE_SERVERCERT}
         mtwilson config "mtwilson.db.sslrootcert" "${DATABASE_SERVERCERT}" >/dev/null
     fi
 
@@ -87,7 +88,6 @@ if [ ! -f $MTWILSON_CONFIGURATION/.setup_done ]; then
     export POSTGRES_USERNAME=$POSTGRES_USER
     export POSTGRES_PASSWORD
     export POSTGRES_SSLMODE=${DATABASE_SSLMODE}
-    export POSTGRES_SSLROOTCERT=${DATABASE_SERVERCERT}
 
     # load linux utility
     . $MTWILSON_HOME/bin/functions.sh
