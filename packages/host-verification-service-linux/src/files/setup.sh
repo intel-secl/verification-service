@@ -690,7 +690,7 @@ fi
 sed -i '/'"$hostAllowPropertyName"'/ s/^\([^#]\)/#\1/g' "$MTWILSON_CONFIGURATION/shiro.ini"
 
 # This property is needed by the UpdateSslPort command to determine the port # that should be used in the shiro.ini file
-MTWILSON_API_BASEURL="https://${MTWILSON_SERVER}:${MTWILSON_PORT_HTTPS}/mtwilson/v1"
+MTWILSON_API_BASEURL="https://${MTWILSON_SERVER}:${MTWILSON_PORT_HTTPS}/mtwilson/v2"
 mtwilson config "mtwilson.api.url" "$MTWILSON_API_BASEURL" >/dev/null
 mtwilson config "mtwilson.admin.username" "$VS_SERVICE_USERNAME" >/dev/null
 mtwilson config "mtwilson.admin.password" "$VS_SERVICE_PASSWORD" >/dev/null
