@@ -295,7 +295,7 @@ fi
 # 5.2 Install prerequisites
 if [ "$(whoami)" == "root" ]; then
   if [ "$IS_RPM" != "true" ]; then
-    MTWILSON_YUM_PACKAGES="zip unzip openssl wget net-tools policycoreutils-python"
+    MTWILSON_YUM_PACKAGES="zip unzip openssl wget net-tools python3-policycoreutils"
   fi
   MTWILSON_APT_PACKAGES="zip unzip openssl policycoreutils "
   MTWILSON_YAST_PACKAGES="zip unzip openssl"
