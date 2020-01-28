@@ -19,6 +19,10 @@ NAME=mtwilson
 # the home directory must be defined before we load any environment or
 # configuration files; it is explicitly passed through the sudo command
 export MTWILSON_HOME=${MTWILSON_HOME:-/opt/mtwilson}
+export MTWILSON_BIN=${MTWILSON_BIN:-$MTWILSON_HOME/bin}
+
+# ensure that our commands can be found
+export PATH=$MTWILSON_BIN:$PATH
 
 # the env directory is not configurable; it is defined as MTWILSON_HOME/env and the
 # administrator may use a symlink if necessary to place it anywhere else
@@ -64,7 +68,6 @@ fi
 # default directory layout follows the 'home' style
 export MTWILSON_CONFIGURATION=${MTWILSON_CONFIGURATION:-${MTWILSON_CONF:-$MTWILSON_HOME/configuration}}
 export MTWILSON_JAVA=${MTWILSON_JAVA:-$MTWILSON_HOME/java}
-export MTWILSON_BIN=${MTWILSON_BIN:-$MTWILSON_HOME/bin}
 export MTWILSON_REPOSITORY=${MTWILSON_REPOSITORY:-$MTWILSON_HOME/repository}
 export MTWILSON_LOGS=${MTWILSON_LOGS:-$MTWILSON_HOME/logs}
 
@@ -85,8 +88,8 @@ fi
 if [ -f /opt/mtwilson/configuration/version ]; then  . /opt/mtwilson/configuration/version; else  echo_warning "Missing file: /opt/mtwilson/configuration/version"; fi
 shell_include_files ${MTWILSON_ENV}/*
 
-if [[ "$@" != *"ExportConfig"* ]]; then   # NEED TO DEBUG FURTHER. load_conf runs ExportConfig and if that same command is passed in from 'mtwilson setup', it won't work
-  load_conf 2>&1 >/dev/null
+if [[ "$@" != *"export-config"* ]]; then
+  load_conf "$MTWILSON_CONFIGURATION/mtwilson.properties" mtwilson 2>&1 >/dev/null
   if [ $? -ne 0 ]; then
     if [ $? -eq 2 ]; then echo_failure -e "Incorrect encryption password. Please verify \"MTWILSON_PASSWORD\" variable is set correctly."; fi
     exit -1
@@ -387,8 +390,9 @@ case "$1" in
     fi
     ;;
   erase-data)
-        erase_data
-		$MTWILSON_BIN/mtwilson setup create-default-flavorgroups >/dev/null 2>&1
+        db_tables=(mw_link_flavor_host mw_link_flavor_flavorgroup mw_link_flavorgroup_host mw_queue mw_report mw_host_status mw_flavorgroup mw_host mw_flavor mw_host_credential mw_tag_certificate mw_tag_certificate_request mw_host_tpm_password mw_audit_log_entry mw_tls_policy)
+        erase_data ${db_tables[*]}
+        $MTWILSON_BIN/mtwilson setup create-default-flavorgroups >/dev/null 2>&1
         if [ $? -ne 0 ]; then exit 1; fi
         ;;
   erase-users)
