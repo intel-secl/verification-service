@@ -725,8 +725,20 @@ public class HostResource {
     }
 
     public boolean validateIseclSoftwareFlavor(HostInfo hostInfo) {
+        boolean validateIseclSoftwareFlavor = false;
         String formattedOsName = hostInfo.getOsName().trim().toUpperCase();
-        return (formattedOsName.equals("RHEL") || formattedOsName.equals("REDHATENTERPRISESERVER")) && !Boolean.valueOf(hostInfo.getIsDockerEnv());
+        
+        // true when running on a linux host that is not a docker container
+        if (!formattedOsName.equals("WINDOWS") &&
+            !formattedOsName.equals("MICROSOFT WINDOWS SERVER 2016 DATACENTER") &&
+            !formattedOsName.equals("MICROSOFT WINDOWS SERVER 2016 STANDARD") && 
+            !formattedOsName.equals("VMWARE ESXI") &&
+            !Boolean.valueOf(hostInfo.getIsDockerEnv()))
+        {
+            validateIseclSoftwareFlavor = true;
+        }
+
+        return validateIseclSoftwareFlavor;
     }
 
     private Flavorgroup createNewFlavorGroup(String flavorgroupName) {
