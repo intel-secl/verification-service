@@ -18,7 +18,7 @@
 # 8. configure mtwilson TLS policies
 # 9. Update configurations
 # 10. ASCTL SETUP
-# 11. setup the director, unless the NOSETUP variable is defined
+# 11. setup the mtwilson, unless the NOSETUP variable is defined
 # 12. tag service installation
 # 13. config logrotate
 # 14. Register mtwilson as a startup script
@@ -731,13 +731,21 @@ set_owner_for_mtwilson_directories
 
 # 10. ASCTL SETUP
 
-# 11. setup the director, unless the NOSETUP variable is set to true
+# 11. setup the mtwilson, unless the NOSETUP variable is set to true
 if [ "$MTWILSON_NOSETUP" = "false" ]; then
   mtwilson setup
+else
+  echo_warning "MTWILSON_NOSETUP variable is set. Skipping setup..."
 fi
 
 set_owner_for_mtwilson_directories
-mtwilson start
+
+# start the server, unless the NOSETUP variable is set to true
+if [ "$MTWILSON_NOSETUP" = "false" ]; then
+  mtwilson start
+else
+  echo_info "Run mtwilson setup and start server."
+fi
 
 ########################################################################################################################
 # 12. tag service installation
