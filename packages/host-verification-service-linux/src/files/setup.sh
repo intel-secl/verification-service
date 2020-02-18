@@ -423,17 +423,6 @@ if [ -n "$MTWILSON_LOG_LEVEL" ]; then
   echo "export MTWILSON_LOG_LEVEL=$MTWILSON_LOG_LEVEL" >> $MTWILSON_ENV/mtwilson-logging
 fi
 
-# store the auto-exported environment variables in env file
-# to make them available after the script uses sudo to switch users;
-# we delete that file later
-echo "# $(date)" > $MTWILSON_ENV/mtwilson-setup
-for env_file_var_name in $env_file_exports
-do
-  eval env_file_var_value="\$$env_file_var_name"
-  echo "writing $env_file_var_name to mtwilson-setup with value: $env_file_var_value"
-  echo "export $env_file_var_name=$env_file_var_value" >> $MTWILSON_ENV/mtwilson-setup
-done
-
 profile_dir=$HOME
 if [ "$(whoami)" == "root" ] && [ -n "$MTWILSON_USERNAME" ] && [ "$MTWILSON_USERNAME" != "root" ]; then
   profile_dir=$MTWILSON_HOME
@@ -789,7 +778,6 @@ set_owner_for_mtwilson_directories
 mtwilson config mtwilson.host "$MTWILSON_SERVER" >/dev/null
 
 # delete the temporary setup environment variables file
-rm -f $MTWILSON_ENV/mtwilson-setup
 rm -f ~/.pgpass
 
 # 14. Register mtwilson as a startup script
