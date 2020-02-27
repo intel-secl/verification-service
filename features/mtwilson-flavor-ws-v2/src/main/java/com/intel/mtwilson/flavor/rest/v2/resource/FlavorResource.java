@@ -136,6 +136,10 @@ public class FlavorResource {
     @RequiresPermissions("flavors:retrieve")
     public Flavor retrieveFlavor(@BeanParam FlavorLocator locator, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse) {
         ValidationUtil.validate(locator);
+        SignedFlavor signedFlavor = repository.retrieve(locator);
+        if (signedFlavor == null) {
+            throw new WebApplicationException("Signed Flavor not found for flavor id:" + locator.id.toString(), 404);
+        }
         return repository.retrieve(locator).getFlavor();
     }
 
@@ -202,6 +206,9 @@ public class FlavorResource {
     public FlavorCollection createFlavorsYAML(FlavorCreateCriteria item) throws IOException, Exception {
         ValidationUtil.validate(item);
         SignedFlavorCollection signedFlavorCollection = createFlavors(item);
+        if (signedFlavorCollection == null) {
+            throw new WebApplicationException("Failed to create flavor for given criteria", 500);
+        }
         FlavorCollection flavorCollection = new FlavorCollection();
         flavorCollection.setFlavors(signedFlavorCollection.getFlavors());
         return flavorCollection;

@@ -131,6 +131,7 @@ public class CreateSamlCertificate extends LocalSetupTask {
         File certificateChainPemFile = new File(My.configuration().getDirectoryPath() + File.separator + SAML_CERTIFICATE_CERT_PEM);
         FileOutputStream certificateChainPemFileOut = new FileOutputStream(certificateChainPemFile);
         IOUtils.write(certificateChainPem, certificateChainPemFileOut);
+        certificateChainPemFileOut.close();
     }
 
 }
