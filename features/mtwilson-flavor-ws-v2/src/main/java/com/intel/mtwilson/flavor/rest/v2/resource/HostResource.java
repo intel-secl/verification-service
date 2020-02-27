@@ -318,23 +318,24 @@ public class HostResource {
 
         locator.copyTo(item);
 
-        item = getRepository().store(item);
+        Host updatedHost = getRepository().store(item);
 
         if (item != null && item.getFlavorgroupName() != null && !item.getFlavorgroupName().isEmpty()) {
-            createFlavorgroupHostLink(item, item.getFlavorgroupName());
+            createFlavorgroupHostLink(updatedHost, item.getFlavorgroupName());
+            updatedHost.setFlavorgroupName(item.getFlavorgroupName());
         } else if (item != null && item.getFlavorgroupNames() != null && !item.getFlavorgroupNames().isEmpty()) {
             for (String flavorGroupName : item.getFlavorgroupNames()) {
-                createFlavorgroupHostLink(item, flavorGroupName);
+                createFlavorgroupHostLink(updatedHost, flavorGroupName);
             }
+            updatedHost.setFlavorgroupNames(item.getFlavorgroupNames());
         }
 
-        if (item != null) {
+        if (updatedHost != null) {
             // Since the host has been updated, add it to the verify queue
-            addHostToFlavorVerifyQueue(item.getId(), true);
-            item.setConnectionString(HostRepository.getConnectionStringWithoutCredentials(item.getConnectionString()));
+            addHostToFlavorVerifyQueue(updatedHost.getId(), true);
         }
 
-        return item;
+        return updatedHost;
     }
 
     private void createFlavorgroupHostLink(Host item, String flavorGroupName) {
