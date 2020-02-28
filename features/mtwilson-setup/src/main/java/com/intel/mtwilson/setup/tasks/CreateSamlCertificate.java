@@ -129,9 +129,11 @@ public class CreateSamlCertificate extends LocalSetupTask {
             certificateChainPem = certificateChainPem + String.format("%s\n", certEncoded.toString());
         }
         File certificateChainPemFile = new File(My.configuration().getDirectoryPath() + File.separator + SAML_CERTIFICATE_CERT_PEM);
-        FileOutputStream certificateChainPemFileOut = new FileOutputStream(certificateChainPemFile);
-        IOUtils.write(certificateChainPem, certificateChainPemFileOut);
-        certificateChainPemFileOut.close();
+        try (FileOutputStream certificateChainPemFileOut = new FileOutputStream(certificateChainPemFile)) {
+            IOUtils.write(certificateChainPem, certificateChainPemFileOut);
+        } catch (IOException e) {
+            validation(e, "Cannot write to saml.crt.pem");
+        }
     }
 
 }

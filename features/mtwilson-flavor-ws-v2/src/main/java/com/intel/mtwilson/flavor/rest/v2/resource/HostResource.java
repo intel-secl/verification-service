@@ -320,17 +320,17 @@ public class HostResource {
 
         Host updatedHost = getRepository().store(item);
 
-        if (item != null && item.getFlavorgroupName() != null && !item.getFlavorgroupName().isEmpty()) {
-            createFlavorgroupHostLink(updatedHost, item.getFlavorgroupName());
-            updatedHost.setFlavorgroupName(item.getFlavorgroupName());
-        } else if (item != null && item.getFlavorgroupNames() != null && !item.getFlavorgroupNames().isEmpty()) {
-            for (String flavorGroupName : item.getFlavorgroupNames()) {
-                createFlavorgroupHostLink(updatedHost, flavorGroupName);
-            }
-            updatedHost.setFlavorgroupNames(item.getFlavorgroupNames());
-        }
-
         if (updatedHost != null) {
+            if (item != null && item.getFlavorgroupName() != null && !item.getFlavorgroupName().isEmpty()) {
+                createFlavorgroupHostLink(updatedHost, item.getFlavorgroupName());
+                updatedHost.setFlavorgroupName(item.getFlavorgroupName());
+            } else if (item != null && item.getFlavorgroupNames() != null && !item.getFlavorgroupNames().isEmpty()) {
+                for (String flavorGroupName : item.getFlavorgroupNames()) {
+                    createFlavorgroupHostLink(updatedHost, flavorGroupName);
+                }
+                updatedHost.setFlavorgroupNames(item.getFlavorgroupNames());
+            }
+
             // Since the host has been updated, add it to the verify queue
             addHostToFlavorVerifyQueue(updatedHost.getId(), true);
         }

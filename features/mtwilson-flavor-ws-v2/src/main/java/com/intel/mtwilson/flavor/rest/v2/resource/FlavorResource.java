@@ -140,7 +140,7 @@ public class FlavorResource {
         if (signedFlavor == null) {
             throw new WebApplicationException("Signed Flavor not found for flavor id:" + locator.id.toString(), 404);
         }
-        return repository.retrieve(locator).getFlavor();
+        return signedFlavor.getFlavor();
     }
 
     @GET
