@@ -153,7 +153,7 @@ public class Flavors extends MtWilsonClient {
      *                     "id": "f171eca1-fd75-475f-8117-bea28dd61f3f",
      *                     "description": {
      *                         "flavor_part": "HOST_UNIQUE",
-     *                         "source": "10.105.167.111",
+     *                         "source": "source1",
      *                         "label": "VMWARE_0019204C-C4B7-E811-906E-00163566263E_11-27-2019_00-59-36",
      *                         "bios_name": "Intel Corporation",
      *                         "bios_version": "SE5C620.86B.00.01.0014.070920180847",
@@ -249,7 +249,7 @@ public class Flavors extends MtWilsonClient {
      *             "id": "f171eca1-fd75-475f-8117-bea28dd61f3f",
      *             "description": {
      *                 "flavor_part": "HOST_UNIQUE",
-     *                 "source": "10.105.167.111",
+     *                 "source": "source1",
      *                 "label": "VMWARE_0019204C-C4B7-E811-906E-00163566263E_11-27-2019_00-59-36",
      *                 "bios_name": "Intel Corporation",
      *                 "bios_version": "SE5C620.86B.00.01.0014.070920180847",
@@ -359,7 +359,7 @@ public class Flavors extends MtWilsonClient {
      *                     "id": "8c397fca-552e-4e60-a706-9eeedd68cbb4",
      *                     "description": {
      *                         "flavor_part": "HOST_UNIQUE",
-     *                         "source": "10.105.167.111",
+     *                         "source": "source1",
      *                         "label": "VMWARE_0019204C-C4B7-E811-906E-00163566263E_11-26-2019_23-01-35",
      *                         "bios_name": "Intel Corporation",
      *                         "bios_version": "SE5C620.86B.00.01.0014.070920180847",
@@ -412,7 +412,7 @@ public class Flavors extends MtWilsonClient {
      *                     "id": "13453bc6-3e83-4a6a-9cad-d726f57ee189",
      *                     "description": {
      *                         "flavor_part": "HOST_UNIQUE",
-     *                         "source": "10.105.167.111",
+     *                         "source": "source1",
      *                         "label": "VMWARE_0019204C-C4B7-E811-906E-00163566263E_11-26-2019_23-02-02",
      *                         "bios_name": "Intel Corporation",
      *                         "bios_version": "SE5C620.86B.00.01.0014.070920180847",
