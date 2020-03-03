@@ -126,6 +126,9 @@ public class FlavorgroupResource {
                     FlavorLocator flavorLocator = new FlavorLocator();
                     flavorLocator.id = flavorId;
                     SignedFlavor signedFlavor = flavorRepository.retrieve(flavorLocator);
+                    if (signedFlavor == null) {
+                        throw new WebApplicationException("Could not find signed flavor for id:" + flavorId.toString(), 404);
+                    }
                     flavors.add(signedFlavor.getFlavor());
                 }
             }
@@ -205,6 +208,9 @@ public class FlavorgroupResource {
                             FlavorLocator locator = new FlavorLocator();
                             locator.id = flavorId;
                             SignedFlavor signedFlavor = flavorRepository.retrieve(locator);
+                            if (signedFlavor == null) {
+                                throw new WebApplicationException("Could not find signed flavor for id:" + flavorId.toString(), 404);
+                            }
                             flavors.add(signedFlavor.getFlavor());
                         }
                     }

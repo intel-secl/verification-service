@@ -226,12 +226,8 @@ public class QueueExecution implements Runnable {
                                 log.debug("Thread timed out");
                                 break;
                             case CONNECTION_FAILURE:
-                                log.debug("Failed to connect to host. Removing queue entry from repository");
-                                Queue queueEntry = new Queue();
-                                QueueLocator queueLocator = new QueueLocator();
-                                queueEntry.setId(queueEntryId);
-                                queueLocator.copyTo(queueEntry);
-                                queueRepositoryObject.delete(queueLocator);
+                                log.debug("Failed to connect to host.");
+                                break;
                             case ERROR:
                                 runningCommand.cancel(true);
                                 log.error("Exception while retrieving queue operation.");
@@ -240,7 +236,7 @@ public class QueueExecution implements Runnable {
                                 continue;
                             case COMPLETED:
                         }
-                        // delete queue entry after successful exectuion
+                        // delete queue entry after successful execution
                         QueueLocator locator = new QueueLocator();
                         locator.id = queueEntryId;
                         new QueueRepository().delete(locator);

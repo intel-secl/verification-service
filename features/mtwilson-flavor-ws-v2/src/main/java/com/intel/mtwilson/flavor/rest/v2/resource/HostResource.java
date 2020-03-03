@@ -318,23 +318,24 @@ public class HostResource {
 
         locator.copyTo(item);
 
-        item = getRepository().store(item);
+        Host updatedHost = getRepository().store(item);
 
-        if (item != null && item.getFlavorgroupName() != null && !item.getFlavorgroupName().isEmpty()) {
-            createFlavorgroupHostLink(item, item.getFlavorgroupName());
-        } else if (item != null && item.getFlavorgroupNames() != null && !item.getFlavorgroupNames().isEmpty()) {
-            for (String flavorGroupName : item.getFlavorgroupNames()) {
-                createFlavorgroupHostLink(item, flavorGroupName);
+        if (updatedHost != null) {
+            if (item != null && item.getFlavorgroupName() != null && !item.getFlavorgroupName().isEmpty()) {
+                createFlavorgroupHostLink(updatedHost, item.getFlavorgroupName());
+                updatedHost.setFlavorgroupName(item.getFlavorgroupName());
+            } else if (item != null && item.getFlavorgroupNames() != null && !item.getFlavorgroupNames().isEmpty()) {
+                for (String flavorGroupName : item.getFlavorgroupNames()) {
+                    createFlavorgroupHostLink(updatedHost, flavorGroupName);
+                }
+                updatedHost.setFlavorgroupNames(item.getFlavorgroupNames());
             }
-        }
 
-        if (item != null) {
             // Since the host has been updated, add it to the verify queue
-            addHostToFlavorVerifyQueue(item.getId(), true);
-            item.setConnectionString(HostRepository.getConnectionStringWithoutCredentials(item.getConnectionString()));
+            addHostToFlavorVerifyQueue(updatedHost.getId(), true);
         }
 
-        return item;
+        return updatedHost;
     }
 
     private void createFlavorgroupHostLink(Host item, String flavorGroupName) {
@@ -725,8 +726,20 @@ public class HostResource {
     }
 
     public boolean validateIseclSoftwareFlavor(HostInfo hostInfo) {
+        boolean validateIseclSoftwareFlavor = false;
         String formattedOsName = hostInfo.getOsName().trim().toUpperCase();
-        return (formattedOsName.equals("RHEL") || formattedOsName.equals("REDHATENTERPRISESERVER")) && !Boolean.valueOf(hostInfo.getIsDockerEnv());
+        
+        // true when running on a linux host that is not a docker container
+        if (!formattedOsName.equals("WINDOWS") &&
+            !formattedOsName.equals("MICROSOFT WINDOWS SERVER 2016 DATACENTER") &&
+            !formattedOsName.equals("MICROSOFT WINDOWS SERVER 2016 STANDARD") && 
+            !formattedOsName.equals("VMWARE ESXI") &&
+            !Boolean.valueOf(hostInfo.getIsDockerEnv()))
+        {
+            validateIseclSoftwareFlavor = true;
+        }
+
+        return validateIseclSoftwareFlavor;
     }
 
     private Flavorgroup createNewFlavorGroup(String flavorgroupName) {

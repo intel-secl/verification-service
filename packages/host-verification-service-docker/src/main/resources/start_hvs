@@ -25,6 +25,18 @@ export JAVA_HOME=$(dirname $JAVA_CMD | xargs dirname | xargs dirname)
 # So, sleep 5 seconds (workaround)
 # mtwilson start && sleep 5
 
+if [ "$DATABASE_SSLMODE" == "verify-ca" ] || [ "$DATABASE_SSLMODE" == "verify-full" ]; then
+    if [ -z "$DATABASE_SSLROOTCERT" ]; then
+        echo_failure "Database server certificate file not specified"
+        exit 1
+    else
+        if [ ! -f "$DATABASE_SSLROOTCERT" ]; then
+            echo_failure "Database server certificate file does not exist"
+            exit 1
+        fi
+    fi
+fi
+
 export MTWILSON_HOME=/opt/mtwilson
 export MTWILSON_CONFIGURATION=$MTWILSON_HOME/configuration
 export MTWILSON_SERVER="127.0.0.1"
@@ -37,6 +49,9 @@ export POSTGRES_PASSWORD=$(cat /run/secrets/db.password)
 rm -f /run/secrets/mtwilson.env &> /dev/null
 rm -f /run/secrets/db.password &> /dev/null
 #tail -f /opt/mtwilson/logs/mtwilson.log
+
+DATABASE_SERVERCERT=$MTWILSON_CONFIGURATION/vsdbcert.crt
+cp "$DATABASE_SSLROOTCERT" "$DATABASE_SERVERCERT"
 
 if [ ! -f $MTWILSON_CONFIGURATION/.setup_done ]; then
 
@@ -56,6 +71,12 @@ if [ ! -f $MTWILSON_CONFIGURATION/.setup_done ]; then
     mtwilson config "mtwilson.db.schema" "${POSTGRES_DB}" >/dev/null
     mtwilson config "mtwilson.db.user" "${POSTGRES_USER}" >/dev/null
     mtwilson config "mtwilson.db.password" "${POSTGRES_PASSWORD}" >/dev/null
+    mtwilson config "mtwilson.db.sslmode" "${DATABASE_SSLMODE}" >/dev/null
+    if [ -f "$DATABASE_SERVERCERT" ]; then
+        export POSTGRES_SSLROOTCERT=${DATABASE_SERVERCERT}
+        mtwilson config "mtwilson.db.sslrootcert" "${DATABASE_SERVERCERT}" >/dev/null
+    fi
+
 
     # API params
     mtwilson config "mtwilson.api.url" $MTWILSON_API_BASEURL >/dev/null
@@ -66,6 +87,7 @@ if [ ! -f $MTWILSON_CONFIGURATION/.setup_done ]; then
     export POSTGRES_DATABASE=$POSTGRES_DB
     export POSTGRES_USERNAME=$POSTGRES_USER
     export POSTGRES_PASSWORD
+    export POSTGRES_SSLMODE=${DATABASE_SSLMODE}
 
     # load linux utility
     . $MTWILSON_HOME/bin/functions.sh

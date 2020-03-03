@@ -18,7 +18,7 @@
 # 8. configure mtwilson TLS policies
 # 9. Update configurations
 # 10. ASCTL SETUP
-# 11. setup the director, unless the NOSETUP variable is defined
+# 11. setup the mtwilson, unless the NOSETUP variable is defined
 # 12. tag service installation
 # 13. config logrotate
 # 14. Register mtwilson as a startup script
@@ -51,10 +51,12 @@ export LOG_OLD=${LOG_OLD:-12}
 export DATABASE_HOSTNAME=${DATABASE_HOSTNAME:-127.0.0.1}
 export DATABASE_PORTNUM=${DATABASE_PORTNUM:-5432}
 export DATABASE_SCHEMA=${DATABASE_SCHEMA:-mw_as}
+export DATABASE_SSLMODE=${DATABASE_SSLMODE:-require}
 export DATABASE_VENDOR=postgres
 export POSTGRES_HOSTNAME=${DATABASE_HOSTNAME}
 export POSTGRES_PORTNUM=${DATABASE_PORTNUM}
 export POSTGRES_DATABASE=${DATABASE_SCHEMA}
+export POSTGRES_SSLMODE=${DATABASE_SSLMODE}
 export POSTGRES_USERNAME=${DATABASE_USERNAME}
 export POSTGRES_PASSWORD=${DATABASE_PASSWORD}
 export MTWILSON_NOSETUP=${MTWILSON_NOSETUP:-false}
@@ -126,6 +128,17 @@ export MTWILSON_BIN=${MTWILSON_BIN:-$MTWILSON_HOME/bin}
 export MTWILSON_JAVA=${MTWILSON_JAVA:-$MTWILSON_HOME/java}
 export MTWILSON_BACKUP=${MTWILSON_BACKUP:-$MTWILSON_REPOSITORY/backup}
 
+if [ "$DATABASE_SSLMODE" == "verify-ca" ] || [ "$DATABASE_SSLMODE" == "verify-full" ]; then
+    if [ -z "$DATABASE_SSLROOTCERT" ]; then
+        echo_failure "Database server certificate file not specified"
+        exit 1
+    else
+        if [ ! -f "$DATABASE_SSLROOTCERT" ]; then
+            echo_failure "Database server certificate file does not exist"
+            exit 1
+        fi
+    fi
+fi
 
 #If user is non root make sure all prereq directories are created and owned by nonroot user
 if [ "$(whoami)" != "root" ]; then
@@ -227,6 +240,9 @@ else
   fi
 fi
 
+DATABASE_SERVERCERT=$MTWILSON_CONFIGURATION/vsdbcert.crt
+cp "$DATABASE_SSLROOTCERT" "$DATABASE_SERVERCERT"
+
 export MTWILSON_SERVICE_PROPERTY_FILES=/etc/intel/cloudsecurity
 export MTWILSON_OPT_INTEL=/opt/intel
 export MTWILSON_ETC_INTEL=/etc/intel
@@ -279,7 +295,7 @@ fi
 # 5.2 Install prerequisites
 if [ "$(whoami)" == "root" ]; then
   if [ "$IS_RPM" != "true" ]; then
-    MTWILSON_YUM_PACKAGES="zip unzip openssl wget net-tools policycoreutils-python"
+    MTWILSON_YUM_PACKAGES="zip unzip openssl wget net-tools python3-policycoreutils"
   fi
   MTWILSON_APT_PACKAGES="zip unzip openssl policycoreutils "
   MTWILSON_YAST_PACKAGES="zip unzip openssl"
@@ -406,17 +422,6 @@ if [ -n "$MTWILSON_LOG_LEVEL" ]; then
   echo "# $(date)" > $MTWILSON_ENV/mtwilson-logging
   echo "export MTWILSON_LOG_LEVEL=$MTWILSON_LOG_LEVEL" >> $MTWILSON_ENV/mtwilson-logging
 fi
-
-# store the auto-exported environment variables in env file
-# to make them available after the script uses sudo to switch users;
-# we delete that file later
-echo "# $(date)" > $MTWILSON_ENV/mtwilson-setup
-for env_file_var_name in $env_file_exports
-do
-  eval env_file_var_value="\$$env_file_var_name"
-  echo "writing $env_file_var_name to mtwilson-setup with value: $env_file_var_value"
-  echo "export $env_file_var_name=$env_file_var_value" >> $MTWILSON_ENV/mtwilson-setup
-done
 
 profile_dir=$HOME
 if [ "$(whoami)" == "root" ] && [ -n "$MTWILSON_USERNAME" ] && [ "$MTWILSON_USERNAME" != "root" ]; then
@@ -559,6 +564,11 @@ mtwilson config "mtwilson.db.port" "${DATABASE_PORTNUM}" >/dev/null
 mtwilson config "mtwilson.db.schema" "${DATABASE_SCHEMA}" >/dev/null
 mtwilson config "mtwilson.db.user" "${DATABASE_USERNAME}" >/dev/null
 mtwilson config "mtwilson.db.password" "${DATABASE_PASSWORD}" >/dev/null
+mtwilson config "mtwilson.db.sslmode" "${DATABASE_SSLMODE}" >/dev/null
+if [ -f "$DATABASE_SERVERCERT" ]; then
+    export POSTGRES_SSLROOTCERT=${DATABASE_SERVERCERT}
+    mtwilson config "mtwilson.db.sslrootcert" "${DATABASE_SERVERCERT}" >/dev/null
+fi
 
 #export AUTO_UPDATE_ON_UNTRUST=${AUTO_UPDATE_ON_UNTRUST:-false}
 #mtwilson config "mtwilson.as.autoUpdateHost" "$AUTO_UPDATE_ON_UNTRUST" >/dev/null
@@ -669,7 +679,7 @@ fi
 sed -i '/'"$hostAllowPropertyName"'/ s/^\([^#]\)/#\1/g' "$MTWILSON_CONFIGURATION/shiro.ini"
 
 # This property is needed by the UpdateSslPort command to determine the port # that should be used in the shiro.ini file
-MTWILSON_API_BASEURL="https://${MTWILSON_SERVER}:${MTWILSON_PORT_HTTPS}/mtwilson/v1"
+MTWILSON_API_BASEURL="https://${MTWILSON_SERVER}:${MTWILSON_PORT_HTTPS}/mtwilson/v2"
 mtwilson config "mtwilson.api.url" "$MTWILSON_API_BASEURL" >/dev/null
 mtwilson config "mtwilson.admin.username" "$VS_SERVICE_USERNAME" >/dev/null
 mtwilson config "mtwilson.admin.password" "$VS_SERVICE_PASSWORD" >/dev/null
@@ -710,13 +720,21 @@ set_owner_for_mtwilson_directories
 
 # 10. ASCTL SETUP
 
-# 11. setup the director, unless the NOSETUP variable is set to true
+# 11. setup the mtwilson, unless the NOSETUP variable is set to true
 if [ "$MTWILSON_NOSETUP" = "false" ]; then
   mtwilson setup
+else
+  echo_warning "MTWILSON_NOSETUP variable is set. Skipping setup..."
 fi
 
 set_owner_for_mtwilson_directories
-mtwilson start
+
+# start the server, unless the NOSETUP variable is set to true
+if [ "$MTWILSON_NOSETUP" = "false" ]; then
+  mtwilson start
+else
+  echo_info "Run mtwilson setup and start server."
+fi
 
 ########################################################################################################################
 # 12. tag service installation
@@ -760,7 +778,6 @@ set_owner_for_mtwilson_directories
 mtwilson config mtwilson.host "$MTWILSON_SERVER" >/dev/null
 
 # delete the temporary setup environment variables file
-rm -f $MTWILSON_ENV/mtwilson-setup
 rm -f ~/.pgpass
 
 # 14. Register mtwilson as a startup script

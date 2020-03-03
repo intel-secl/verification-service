@@ -67,7 +67,6 @@ public class DeployTagCertificate implements Runnable{
     private static final String FLAVOR_SIGNING_KEY_ALIAS = "flavor.signing.key.alias";
        
     private UUID certificateId;
-    private String host;
     
     public UUID getCertificateId() {
         return certificateId;
@@ -77,14 +76,6 @@ public class DeployTagCertificate implements Runnable{
         this.certificateId = certificateId;
     }
 
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-    
     
     @Override
     @RequiresPermissions("tag_certificates:deploy")         
@@ -115,7 +106,7 @@ public class DeployTagCertificate implements Runnable{
                 Host hostObj = new HostRepository().retrieve(hostLocator);
                 
                 if (hostObj == null) {  
-                    log.error("The host with specified hardware UUID was not found {}", host);
+                    log.error("The host with specified hardware UUID {} was not found", obj.getHardwareUuid());
                     throw new RepositoryInvalidInputException(locator);
                 }
 

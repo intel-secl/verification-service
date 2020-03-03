@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
         jdbc.setProperty("mtwilson.db.user", "root");
         jdbc.setProperty("mtwilson.db.password", "password");
         jdbc.setProperty("mtwilson.db.port", "3306");
+        jdbc.setProperty("mtwilson.db.sslmode", "require")
         jdbc.setProperty("mtwilson.as.dek", "hPKk/2uvMFRAkpJNJgoBwA=="); // optional;  if you don't set this ,the value you see here is the default
         CustomPersistenceManager pm = new CustomPersistenceManager(jdbc);
 
@@ -61,6 +62,8 @@ public class MyPersistenceManager extends PersistenceManager {
         prop.put("javax.persistence.jdbc.url", url);
         prop.put("javax.persistence.jdbc.user", config.getDatabaseUsername());
         prop.put("javax.persistence.jdbc.password", config.getDatabasePassword());
+        prop.put("javax.persistence.jdbc.sslmode",config.getDatabaseSSLMode());
+        prop.put("javax.persistence.jdbc.sslrootcert",config.getDatabaseSSLCert());
         prop.put("eclipselink.jdbc.batch-writing", "JDBC");
         log.debug("javax.persistence.jdbc.url={}", url);
         //System.err.println("getJpaProps Default url == " + prop.getProperty("javax.persistence.jdbc.url"));
@@ -106,10 +109,10 @@ public class MyPersistenceManager extends PersistenceManager {
                         prop.get("javax.persistence.jdbc.host"),
                         prop.get("javax.persistence.jdbc.port"),
                         prop.get("javax.persistence.jdbc.schema")))));
-        prop.put("javax.persistence.jdbc.user", myConfig.getString("mountwilson.as.db.user",
-                myConfig.getString("mtwilson.db.user", "root")));
-        prop.put("javax.persistence.jdbc.password", myConfig.getString("mountwilson.as.db.password",
-                myConfig.getString("mtwilson.db.password", "password")));
+        prop.put("javax.persistence.jdbc.user", config.getDatabaseUsername());
+        prop.put("javax.persistence.jdbc.password", config.getDatabasePassword());
+        prop.put("javax.persistence.jdbc.sslmode", config.getDatabaseSSLMode());
+        prop.put("javax.persistence.jdbc.sslrootcert", config.getDatabaseSSLCert());
         prop.put("eclipselink.jdbc.batch-writing", "JDBC");
         log.debug("FlavorData javax.persistence.jdbc.url={}", prop.getProperty("javax.persistence.jdbc.url"));
         copyDbcpProperties(myConfig, prop);
@@ -198,14 +201,10 @@ public class MyPersistenceManager extends PersistenceManager {
                     myConfig.getString("mountwilson.audit.db.host", config.getDatabaseHost()),
                     myConfig.getString("mountwilson.audit.db.port", config.getDatabasePort()),
                     myConfig.getString("mountwilson.audit.db.schema", config.getDatabaseSchema())))));
-        prop.put("javax.persistence.jdbc.user",
-                myConfig.getString("mountwilson.audit.db.user",
-                myConfig.getString("mtwilson.db.user",
-                "root")));
-        prop.put("javax.persistence.jdbc.password", 
-                myConfig.getString("mountwilson.audit.db.password", 
-                myConfig.getString("mtwilson.db.password", 
-                "password")));
+        prop.put("javax.persistence.jdbc.user", config.getDatabaseUsername());
+        prop.put("javax.persistence.jdbc.password", config.getDatabasePassword());
+        prop.put("javax.persistence.jdbc.sslmode", config.getDatabaseSSLMode());
+        prop.put("javax.persistence.jdbc.sslrootcert", config.getDatabaseSSLCert());
         log.debug("AuditData javax.persistence.jdbc.url={}", prop.getProperty("javax.persistence.jdbc.url"));
         copyDbcpProperties(myConfig, prop);
         return prop;

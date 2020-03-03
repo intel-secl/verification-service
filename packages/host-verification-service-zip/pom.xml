@@ -3,7 +3,7 @@
     
     <groupId>com.intel.mtwilson.packages</groupId>
     <artifactId>host-verification-service-zip</artifactId>
-    <version>4.6.1-SNAPSHOT</version>
+    <version>5.0-SNAPSHOT</version>
     
     <packaging>jar</packaging>
     <description>Host Verification Service Zip Package</description>
@@ -11,7 +11,7 @@
     <parent>
         <groupId>com.intel.mtwilson.maven</groupId>
         <artifactId>mtwilson-core-application-zip</artifactId>
-        <version>4.6.1-SNAPSHOT</version>
+        <version>5.0-SNAPSHOT</version>
         <relativePath/>
     </parent>
     

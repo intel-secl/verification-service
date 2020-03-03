@@ -97,7 +97,7 @@ public class MyJdbc {
         String driver = driver();
         log.debug("JDBC Driver: {}", driver);
         Class.forName(driver);
-        Connection c = DriverManager.getConnection(url(), config.getDatabaseUsername(), config.getDatabasePassword());
+        Connection c = DriverManager.getConnection(url(), config.getDatabaseConnectionProperties());
         return c;
     }
 }
