@@ -131,14 +131,10 @@ public class FlavorFromAppManifestResource {
             HostConnectorFactory factory = new HostConnectorFactory();
             ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
             Configuration configuration = configurationProvider.load();
-            UUID hostId = getHostId(manifestRequest);
-            if (hostId == null){
-                throw new WebApplicationException("Could not get hostId from manifest request", 500);
-            }
 
             HostConnector hostConnector = factory.getHostConnector(
                     HostConnectorUtils.getHostConnectionString(manifestRequest.getConnectionString(),
-                            hostId), configuration.get(AASConstants.AAS_API_URL), tlsPolicy);
+                            getHostId(manifestRequest)), configuration.get(AASConstants.AAS_API_URL), tlsPolicy);
             return hostConnector.getMeasurementFromManifest(manifest);
         } catch (IOException ex) {
             log.error("Unable to get measurement from manifest.");

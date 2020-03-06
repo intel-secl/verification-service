@@ -22,6 +22,7 @@ import com.intel.mtwilson.tls.policy.TlsPolicyDescriptor;
 import com.intel.mtwilson.tls.policy.exception.TlsPolicyAllowedException;
 import com.intel.mtwilson.tls.policy.filter.HostTlsPolicyFilter;
 
+import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 
 
@@ -47,6 +48,9 @@ public class HostConnectorUtils {
 
     public static String getHostConnectionString(String connectionString, UUID hostId) throws IOException {
         if(connectionString == null) {
+            if (hostId == null){
+                throw new WebApplicationException("Both hostId and connectionString are null, either hostId or connectionString must be specified", 400);
+            }
             connectionString = getHostByIdentifier(hostId).getConnectionString();
         }
 
