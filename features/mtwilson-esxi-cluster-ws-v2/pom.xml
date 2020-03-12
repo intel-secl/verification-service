@@ -67,7 +67,7 @@
         <dependency>
             <groupId>com.intel.mtwilson.core</groupId>
             <artifactId>lib-host-connector</artifactId>
-            <version>1.4</version>
+            <version>1.4.1</version>
         </dependency>
         
         <!-- mtwilson -->
