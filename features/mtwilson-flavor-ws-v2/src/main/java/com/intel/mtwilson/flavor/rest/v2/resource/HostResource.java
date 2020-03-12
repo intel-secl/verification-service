@@ -42,7 +42,7 @@ import com.intel.mtwilson.jaxrs2.mediatype.DataMediaType;
 import com.intel.mtwilson.launcher.ws.ext.V2;
 import com.intel.mtwilson.core.common.model.HostManifest;
 import com.intel.mtwilson.repository.RepositoryInvalidInputException;
-
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkCollection;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.util.*;
@@ -287,6 +287,31 @@ public class HostResource {
         //delete the flavorgroup-host link
         log.debug("HostFlavorgroupLink : delete - deleting the host flavorgroup link with flavorgroupid {} and hostId {}", flavorgroupHostLocator.flavorgroupId, flavorgroupHostLocator.hostId);
         flavorgroupHostLinkRepository.delete(flavorgroupHostLocator);
+    }
+    
+    @GET
+    @Path("/{hostId}/flavorgroups/{id}")
+    public FlavorgroupHostLink retrieveFlavorgroupHostAssociation(@PathParam("hostId") UUID hostId, @PathParam("id") UUID id) {
+
+        ValidationUtil.validate(hostId);
+        FlavorgroupHostLinkLocator flavorgroupHostLocator = new FlavorgroupHostLinkLocator(id);
+        ValidationUtil.validate(flavorgroupHostLocator);
+
+        FlavorgroupHostLinkRepository flavorgroupHostLinkRepository = new FlavorgroupHostLinkRepository();
+        //delete the flavorgroup-host link
+        log.debug("HostFlavorgroupLink : delete - deleting the host flavorgroup link with flavorgroupid {} and hostId {}", flavorgroupHostLocator.flavorgroupId, flavorgroupHostLocator.hostId);
+        return flavorgroupHostLinkRepository.retrieve(flavorgroupHostLocator);
+    }
+    
+    @GET
+    @Path("/{hostId}/flavorgroups/")
+    public FlavorgroupHostLinkCollection searchFlavorgroupHostAssociation(@PathParam("hostId") UUID hostId, @BeanParam FlavorgroupHostLinkFilterCriteria criteria, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse) {
+
+        ValidationUtil.validate(hostId);
+        ValidationUtil.validate(criteria);
+        log.debug("target: {} - {}", httpServletRequest.getRequestURI(), httpServletRequest.getQueryString());
+        FlavorgroupHostLinkRepository flavorgroupHostLinkRepository = new FlavorgroupHostLinkRepository();
+        return flavorgroupHostLinkRepository.search(criteria);
     }
 
     @GET

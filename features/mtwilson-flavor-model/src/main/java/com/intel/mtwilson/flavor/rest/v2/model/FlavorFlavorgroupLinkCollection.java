@@ -8,6 +8,7 @@ package com.intel.mtwilson.flavor.rest.v2.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.intel.mtwilson.jaxrs2.DocumentCollection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +16,7 @@ import java.util.List;
  *
  * @author hmgowda
  */
-public class FlavorFlavorgroupLinkCollection {
+public class FlavorFlavorgroupLinkCollection extends DocumentCollection<FlavorFlavorgroupLink> {
     private final ArrayList<FlavorFlavorgroupLink> flavorFlavorgroupLinks = new ArrayList<>();
     
     @JsonInclude(JsonInclude.Include.ALWAYS)
@@ -23,6 +24,7 @@ public class FlavorFlavorgroupLinkCollection {
     @JacksonXmlProperty(localName="flavor_flavorgroup_link")
     public List<FlavorFlavorgroupLink> getFlavorFlavorgroupLinks() { return flavorFlavorgroupLinks; }
     
+    @Override
     public List<FlavorFlavorgroupLink> getDocuments() {
         return getFlavorFlavorgroupLinks();
     }

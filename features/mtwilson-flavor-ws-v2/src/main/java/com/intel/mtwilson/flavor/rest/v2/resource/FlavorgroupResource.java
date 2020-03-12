@@ -15,6 +15,9 @@ import com.intel.mtwilson.flavor.rest.v2.repository.FlavorRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorFlavorgroupLinkRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorgroupHostLinkRepository;
 import com.intel.mtwilson.flavor.rest.v2.repository.FlavorgroupRepository;
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorFlavorgroupLinkCollection;
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorFlavorgroupLink;
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorFlavorgroupLinkFilterCriteria;
 import com.intel.mtwilson.jaxrs2.mediatype.DataMediaType;
 import com.intel.mtwilson.launcher.ws.ext.V2;
 import com.intel.mtwilson.repository.RepositoryInvalidInputException;
@@ -24,6 +27,9 @@ import java.util.List;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Context;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 /**
@@ -80,7 +86,8 @@ public class FlavorgroupResource {
 
         FlavorgroupHostLinkCollection objHostLinkList = flavorGroupHostRepository.search(criteria);
         if (objHostLinkList != null && !objHostLinkList.getFlavorgroupHostLinks().isEmpty()) {
-            throw new WebApplicationException("The Flavorgroup has active assocations with host(s).");
+            log.error("The Flavorgroup has active assocations with host(s)");
+            throw new RepositoryInvalidInputException("The Flavorgroup has active assocations with host(s)");
         }
         repository.delete(locator);
 
@@ -176,6 +183,27 @@ public class FlavorgroupResource {
             throw new RepositoryInvalidInputException("Specified flavor-flavorgroup link does not exists");
         }
         repo.delete(flavorgroupLinkLocator);
+    }
+
+    @GET
+    @Path("/{flavorgroupId}/flavors/{id}")
+    public FlavorFlavorgroupLink retrieveFlavorgroupFlavorLink(@PathParam("flavorgroupId") UUID flavorgroupId, @PathParam("id") UUID id) {
+
+        FlavorFlavorgroupLinkRepository repo = new FlavorFlavorgroupLinkRepository();
+        FlavorFlavorgroupLinkLocator flavorgroupLinkLocator = new FlavorFlavorgroupLinkLocator();
+        flavorgroupLinkLocator.flavorgroupId = flavorgroupId;
+        flavorgroupLinkLocator.id = id;
+        return repo.retrieve(flavorgroupLinkLocator);
+    }
+    
+    @GET
+    @Path("/{flavorgroupId}/flavors/")
+    public FlavorFlavorgroupLinkCollection seachFlavorgroupFlavorLink(@PathParam("flavorgroupId") UUID flavorgroupId, @BeanParam FlavorFlavorgroupLinkFilterCriteria criteria, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse) {
+        ValidationUtil.validate(flavorgroupId);
+        ValidationUtil.validate(criteria);
+        log.debug("target: {} - {}", httpServletRequest.getRequestURI(), httpServletRequest.getQueryString());
+        FlavorFlavorgroupLinkRepository flavorFlavorgroupLinkRepository = new FlavorFlavorgroupLinkRepository();
+        return flavorFlavorgroupLinkRepository.search(criteria);
     }
 
     @GET
