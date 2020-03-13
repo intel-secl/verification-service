@@ -172,12 +172,13 @@ public class HostResource {
 
             List<String> flavorgroupNames = new ArrayList<>();
 
-            if ((hostCreateCriteria.getFlavorgroupName() == null || hostCreateCriteria.getFlavorgroupName().isEmpty())) {
-                flavorgroupNames.add(Flavorgroup.AUTOMATIC_FLAVORGROUP);
+            if (hostCreateCriteria.getFlavorgroupName() != null && !hostCreateCriteria.getFlavorgroupName().isEmpty()) {
+                flavorgroupNames.add(hostCreateCriteria.getFlavorgroupName());
+            } else if (hostCreateCriteria.getFlavorgroupNames() != null && !hostCreateCriteria.getFlavorgroupNames().isEmpty()) {
+                for (String fgName : hostCreateCriteria.getFlavorgroupNames())
+                    flavorgroupNames.add(fgName);
             } else {
-                if(hostCreateCriteria.getFlavorgroupName() != null && !hostCreateCriteria.getFlavorgroupName().isEmpty()) {
-                    flavorgroupNames.add(hostCreateCriteria.getFlavorgroupName());
-                }
+                flavorgroupNames.add(Flavorgroup.AUTOMATIC_FLAVORGROUP);
             }
 
             // Link to default software and workload groups if host is linux
