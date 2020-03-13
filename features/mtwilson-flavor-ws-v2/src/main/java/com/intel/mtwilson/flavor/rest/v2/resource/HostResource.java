@@ -675,6 +675,9 @@ public class HostResource {
 
             tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(tlsPolicyDescriptor);
         }
+        if(Vendor.VMWARE.equals(connectionString.getVendor())){
+            connectionString = HostRepository.generateConnectionString(connectionString.getConnectionString());
+        }
         ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
         Configuration configuration = configurationProvider.load();
         HostConnector hostConnector = new HostConnectorFactory().getHostConnector(connectionString, configuration.get(AASConstants.AAS_API_URL), tlsPolicy);

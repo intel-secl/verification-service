@@ -255,7 +255,7 @@ public class HostRepository {
             // remove credentials from connection string for host table storage
             ConnectionString connectionString = generateConnectionString(item.getConnectionString());
             String csWithoutCredentials = getConnectionStringWithoutCredentials(connectionString.getConnectionString());
-        
+            
             mwHost = new MwHost();
             log.debug("host:create - the host name {} does not exist in mw_host. Creating a new host table entry in the database", item.getHostName());
             mwHost.setId(hostId.toString());
@@ -427,7 +427,7 @@ public class HostRepository {
             } else {
                 username = cs.getUserName();
                 password = cs.getPassword();
-                credential = String.format("%s;%s", username, password);
+		credential = String.format("u=%s;p=%s", username, password);
             }
         }
         connectionString = String.format("%s;%s", connectionString, credential);
