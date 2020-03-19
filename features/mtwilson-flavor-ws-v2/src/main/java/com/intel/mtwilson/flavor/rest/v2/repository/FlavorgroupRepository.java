@@ -201,8 +201,9 @@ public class FlavorgroupRepository {
         try {
             Flavorgroup obj = retrieve(locator);
             if (obj != null) {
-                if (obj.getName().equalsIgnoreCase(Flavorgroup.AUTOMATIC_FLAVORGROUP) || obj.getName().equalsIgnoreCase(Flavorgroup.HOST_UNIQUE_FLAVORGROUP)) {
-                    log.error("The flavorgroup is either automatic or host_unique, which cannot be deleted");
+                if (obj.getName().equalsIgnoreCase(Flavorgroup.AUTOMATIC_FLAVORGROUP) || obj.getName().equalsIgnoreCase(Flavorgroup.HOST_UNIQUE_FLAVORGROUP)
+                        || obj.getName().equalsIgnoreCase(Flavorgroup.WORKLOAD_SOFTWARE_FLAVORGROUP) || obj.getName().equalsIgnoreCase(Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP)) {
+                    log.error("The flavorgroup is either automatic, host_unique, platform_software or workload_software which cannot be deleted");
                     throw new RepositoryDeleteException();
                 }
 

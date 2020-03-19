@@ -87,7 +87,7 @@ public class FlavorgroupResource {
         FlavorgroupHostLinkCollection objHostLinkList = flavorGroupHostRepository.search(criteria);
         if (objHostLinkList != null && !objHostLinkList.getFlavorgroupHostLinks().isEmpty()) {
             log.error("The Flavorgroup has active assocations with host(s)");
-            throw new RepositoryInvalidInputException("The Flavorgroup has active assocations with host(s)");
+            throw new WebApplicationException("The Flavorgroup has active assocations with host(s)", Response.Status.BAD_REQUEST);
         }
         repository.delete(locator);
 
