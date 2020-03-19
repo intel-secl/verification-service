@@ -291,17 +291,13 @@ public class HostResource {
     }
     
     @GET
-    @Path("/{hostId}/flavorgroups/{id}")
-    public FlavorgroupHostLink retrieveFlavorgroupHostAssociation(@PathParam("hostId") UUID hostId, @PathParam("id") UUID id) {
-
-        ValidationUtil.validate(hostId);
-        FlavorgroupHostLinkLocator flavorgroupHostLocator = new FlavorgroupHostLinkLocator(id);
-        ValidationUtil.validate(flavorgroupHostLocator);
-
-        FlavorgroupHostLinkRepository flavorgroupHostLinkRepository = new FlavorgroupHostLinkRepository();
-        //delete the flavorgroup-host link
-        log.debug("HostFlavorgroupLink : delete - deleting the host flavorgroup link with flavorgroupid {} and hostId {}", flavorgroupHostLocator.flavorgroupId, flavorgroupHostLocator.hostId);
-        return flavorgroupHostLinkRepository.retrieve(flavorgroupHostLocator);
+    @Path("/{hostId}/flavorgroups/{flavorgroupId}")
+    public FlavorgroupHostLink retrieveFlavorgroupHostAssociation(@PathParam("hostId") UUID hostId, @PathParam("flavorgroupId") UUID flavorgroupId) {
+        FlavorgroupHostLinkRepository repo = new FlavorgroupHostLinkRepository();
+        FlavorgroupHostLinkLocator flavorgroupHostLocator = new FlavorgroupHostLinkLocator();
+        flavorgroupHostLocator.flavorgroupId = flavorgroupId;
+        flavorgroupHostLocator.hostId = hostId;
+        return repo.retrieve(flavorgroupHostLocator);
     }
     
     @GET

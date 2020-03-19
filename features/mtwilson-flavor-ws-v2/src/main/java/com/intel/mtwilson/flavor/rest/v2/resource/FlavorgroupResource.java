@@ -186,13 +186,13 @@ public class FlavorgroupResource {
     }
 
     @GET
-    @Path("/{flavorgroupId}/flavors/{id}")
-    public FlavorFlavorgroupLink retrieveFlavorgroupFlavorLink(@PathParam("flavorgroupId") UUID flavorgroupId, @PathParam("id") UUID id) {
+    @Path("/{flavorgroupId}/flavors/{flavorId}")
+    public FlavorFlavorgroupLink retrieveFlavorgroupFlavorLink(@PathParam("flavorgroupId") UUID flavorgroupId, @PathParam("flavorId") UUID flavorId) {
 
         FlavorFlavorgroupLinkRepository repo = new FlavorFlavorgroupLinkRepository();
         FlavorFlavorgroupLinkLocator flavorgroupLinkLocator = new FlavorFlavorgroupLinkLocator();
         flavorgroupLinkLocator.flavorgroupId = flavorgroupId;
-        flavorgroupLinkLocator.id = id;
+        flavorgroupLinkLocator.flavorId = flavorId;
         return repo.retrieve(flavorgroupLinkLocator);
     }
     
