@@ -21,7 +21,9 @@ import com.intel.mtwilson.core.flavor.model.Flavor;
 import com.intel.mtwilson.core.flavor.model.SignedFlavor;
 import com.intel.mtwilson.core.host.connector.HostConnector;
 import com.intel.mtwilson.core.host.connector.HostConnectorFactory;
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorLocator;
 import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
+import com.intel.mtwilson.flavor.rest.v2.repository.FlavorRepository;
 import com.intel.mtwilson.flavor.rest.v2.utils.FlavorGroupUtils;
 import com.intel.mtwilson.flavor.rest.v2.utils.FlavorUtils;
 import com.intel.mtwilson.flavor.rest.v2.utils.HostConnectorUtils;
@@ -36,6 +38,8 @@ import com.intel.wml.measurement.xml.Measurement;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import java.io.File;
 import java.io.IOException;
 import java.security.PrivateKey;
@@ -80,6 +84,17 @@ public class FlavorFromAppManifestResource {
             PrivateKey privateKey = privateKeyStore.getPrivateKey(MSConfig.getConfiguration().getString(FLAVOR_SIGNING_KEY_ALIAS, "flavor-signing-key"));
             SignedFlavor signedFlavor = PlatformFlavorUtil.getSignedFlavor(softwareFlavor.getSoftwareFlavor(), privateKey);
 
+            // ISECL-8927: Check if the flavor exists in DB before adding to the flavorgroup
+            String newFlavorLabel = signedFlavor.getFlavor().getMeta().getDescription().getLabel();
+            FlavorLocator findFlavorLocator = new FlavorLocator();
+            findFlavorLocator.label = newFlavorLabel;
+            SignedFlavor inDBFlavor = null;
+            FlavorRepository flavorRep = new FlavorRepository();
+            inDBFlavor = flavorRep.retrieve(findFlavorLocator);
+            if (inDBFlavor != null) {
+                throw new WebApplicationException("Flavor with this label " + newFlavorLabel + " already exists.", Status.BAD_REQUEST);
+            }
+
             // Add Flavor to the Flavorgroup
             Map<String, List<SignedFlavor>> flavorPartFlavorMap = new HashMap<>();
             List<SignedFlavor> flavors = new ArrayList();
@@ -113,7 +128,7 @@ public class FlavorFromAppManifestResource {
         if (manifest.getLabel().contains(SoftwareFlavorPrefix.DEFAULT_APPLICATION_FLAVOR_PREFIX.getValue())
                 || manifest.getLabel().contains(SoftwareFlavorPrefix.DEFAULT_WORKLOAD_FLAVOR_PREFIX.getValue())){
             log.error("Default manifest cannot be provided for flavor creation");
-            throw new WebApplicationException("Default manifest cannot be provided for flavor creation", 400);
+            throw new WebApplicationException("Default manifest cannot be provided for flavor creation", Response.Status.BAD_REQUEST);
         }
     }
 

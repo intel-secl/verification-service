@@ -354,7 +354,7 @@ public class FlavorVerify extends QueueOperation {
             // retrieve the trusted flavor
             FlavorLocator flavorLocator = new FlavorLocator();
             flavorLocator.id = flavorHostLink.getFlavorId();
-            SignedFlavor cachedFlavor = new FlavorRepository().retrieveSignedFlavor(flavorLocator);
+            SignedFlavor cachedFlavor = new FlavorRepository().retrieve(flavorLocator);
             if (cachedFlavor !=  null) {
                 flavorsToMatch.add(new SignedFlavor(cachedFlavor.getFlavor(), cachedFlavor.getSignature()));
             }
