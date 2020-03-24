@@ -219,7 +219,14 @@ public class MwFlavorJpaController implements Serializable {
     }
     
     private String buildFlavorPartQueryStringWithFlavorParts(String flavorType, String flavorgroupId) {
-        return String.format("%s AND f.content -> 'meta' -> 'description' ->> 'flavor_part'='%s'", buildFlavorPartQueryStringWithFlavorgroup(flavorgroupId), flavorType);
+        if (flavorgroupId != null) {
+            return String.format("%s AND f.content -> 'meta' -> 'description' ->> 'flavor_part'='%s'", buildFlavorPartQueryStringWithFlavorgroup(flavorgroupId), flavorType);
+        } else {
+            return String.format("SELECT f.id FROM mw_flavor AS f\n"
+                    + "INNER JOIN mw_link_flavor_flavorgroup AS l ON f.id = l.flavor_id \n"
+                    + "INNER JOIN mw_flavorgroup AS fg ON l.flavorgroup_id = fg.id \n"
+                    + "WHERE f.content -> 'meta' -> 'description' ->> 'flavor_part'='%s'", flavorType);
+        }
     }
 
     private String buildFlavorPartQueryStringWithFlavorgroup(String flavorgroupId) {
