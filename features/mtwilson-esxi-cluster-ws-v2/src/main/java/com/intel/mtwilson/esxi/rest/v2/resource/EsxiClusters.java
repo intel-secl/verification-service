@@ -12,6 +12,7 @@ import com.intel.mtwilson.esxi.rest.v2.model.EsxiClusterCollection;
 import com.intel.mtwilson.esxi.rest.v2.model.EsxiClusterFilterCriteria;
 import com.intel.mtwilson.esxi.rest.v2.model.EsxiClusterLocator;
 import com.intel.mtwilson.esxi.rest.v2.repository.EsxiClusterRepository;
+import com.intel.mtwilson.flavor.rest.v2.repository.HostRepository;
 import com.intel.mtwilson.jaxrs2.NoLinks;
 import com.intel.mtwilson.jaxrs2.server.resource.AbstractJsonapiResource;
 import com.intel.mtwilson.launcher.ws.ext.V2;
@@ -59,6 +60,7 @@ public class EsxiClusters extends AbstractJsonapiResource<EsxiCluster, EsxiClust
     public EsxiClusterCollection createJsonapiCollection(EsxiClusterCollection collection) {
         log.debug("createCollection - modified");
         ValidationUtil.validate(collection);
+        EsxiClusterCollection newCollection = new EsxiClusterCollection();
         // this behavior of autmoatically generating uuids if client didn't provide could be implemented in one place and reused in all create() methods...  the utility could accept a DocumentCollection and set the ids... 
         for (EsxiCluster item : collection.getDocuments()) {
             if (item.getClusterName() == null) {
@@ -80,8 +82,12 @@ public class EsxiClusters extends AbstractJsonapiResource<EsxiCluster, EsxiClust
             }            
             log.debug("Creating repository for cluster {}", item.getClusterName());
             getRepository().create(item);
+
+            item.setConnectionString(HostRepository.getConnectionStringWithoutCredentials(item.getConnectionString()));
+            newCollection.getDocuments().add(item);
         }
-        return collection;
+
+        return newCollection;
     }
     
     
