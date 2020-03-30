@@ -138,7 +138,7 @@ public class FlavorResource {
         ValidationUtil.validate(locator);
         SignedFlavor signedFlavor = repository.retrieve(locator);
         if (signedFlavor == null) {
-            throw new WebApplicationException("Signed Flavor not found for flavor id:" + locator.id.toString(), Response.Status.BAD_REQUEST);
+            throw new WebApplicationException("Signed Flavor not found for flavor id:" + locator.id.toString(), Response.Status.NOT_FOUND);
         }
         return signedFlavor.getFlavor();
     }

@@ -112,7 +112,7 @@ public class FlavorRepository {
             } else if (locator.id != null) {
                 mwFlavor = mwFlavorJpaController.findMwFlavor(locator.id.toString());
             } else if (locator.label != null && !(locator.label.trim().equals(""))) {
-                mwFlavor = mwFlavorJpaController.findMwFlavor(locator.label);
+                mwFlavor = mwFlavorJpaController.findMwFlavorByName(locator.label);
             }
 
             if (mwFlavor != null) {
