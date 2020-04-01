@@ -4,15 +4,16 @@
  */
 package com.intel.mtwilson.flavor.client.jaxrs;
 
-import com.intel.dcsg.cpg.tls.policy.TlsConnection;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkCreateCriteria;
-import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkLocator;
 import com.intel.mtwilson.flavor.rest.v2.model.Host;
 import com.intel.mtwilson.flavor.rest.v2.model.HostCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.HostCreateCriteria;
 import com.intel.mtwilson.flavor.rest.v2.model.HostFilterCriteria;
 import com.intel.mtwilson.flavor.rest.v2.model.HostLocator;
 import com.intel.mtwilson.jaxrs2.client.MtWilsonClient;
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLink;
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkCollection;
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkFilterCriteria;
 import java.util.HashMap;
 import java.util.Properties;
 import javax.ws.rs.client.Entity;
@@ -101,6 +102,8 @@ public class Hosts extends MtWilsonClient {
      * 
      *          flavorgroup_name              Flavor group name that the created host will be associated.
      * 
+     *          flavorgroup_names             List of flavor group names that the created host will be associated.
+     * 
      *          description                   Host description.
      *</pre>
      * @return <pre>The serialized Host java model object that was created:
@@ -110,7 +113,7 @@ public class Hosts extends MtWilsonClient {
      *          connection_string
      *          hardware_uuid
      *          tls_policy_id
-     *          flavorgroup_name</pre>
+     *          flavorgroup_name or flavorgroup_names</pre>
      * @since ISecL 1.0
      * @mtwRequiresPermissions hosts:create
      * @mtwContentTypeReturned JSON/XML/YAML
@@ -416,10 +419,11 @@ public class Hosts extends MtWilsonClient {
      * // Create the flavor group host link create criteria model and set the create criteria
      * FlavorgroupHostLinkCreateCriteria createCriteria = new FlavorgroupHostLinkCreateCriteria();
      * createCriteria.setFlavorgroupName("samplegroup123");
+     * String hostId = "01b9f1bc-a17d-465d-83fc-3df5986a656c";
      * 
      * // Create the client and call the create API
      * Hosts client = new Hosts(properties);
-     * client.createFlavorgroupHostLink(createCriteria);
+     * client.createFlavorgroupHostLink(hostId, createCriteria);
      * </pre></div>
      */
     public void createFlavorgroupHostLink(String hostId, FlavorgroupHostLinkCreateCriteria createCriteria) {
@@ -435,7 +439,7 @@ public class Hosts extends MtWilsonClient {
      * @param flavorgroupId Flavor group ID that need to be dissociated from host 
      * @since ISecL 1.0
      * @mtwMethodType DELETE
-     * @mtwPreRequisite Hosts create API, Flavorgroup-Host link create API
+     * @mtwPreRequisite Hosts create API, flavorgroup-host link create API, flavorgroup create API 
      * @mtwSampleRestCall
      * <div style="word-wrap: break-word; width: 1024px"><pre>
      * https://server.com:8443/mtwilson/v2/hosts/01b9f1bc-a17d-465d-83fc-3df5986a656c/flavorgroups/01b9f1bc-a17d-465d-83fc-1537947354963320
@@ -443,13 +447,13 @@ public class Hosts extends MtWilsonClient {
      * </pre></div>
      * @mtwSampleApiCall
      * <div style="word-wrap: break-word; width: 1024px"><pre>
-     * // Create the flavor group host link locator model and set the locator id
-     * FlavorgroupHostLinkLocator locator = new FlavorgroupHostLinkLocator();
-     * locator.pathId(UUID.valueOf("01b9f1bc-a17d-465d-83fc-1537947354963320"));
+     * // Set the hostId and the flavorgroupId
+     * String hostId = "827dbddf-5d93-4a48-b4b3-c86d0bd75edf";
+     * String flavorgroupId = "1f3801ae-000b-4442-9700-cc23de9ea5ec";
      * 
      * // Create the client and call the delete API
      * Hosts client = new Hosts(properties);
-     * client.deleteFlavorgroupHostAssociation("01b9f1bc-a17d-465d-83fc-3df5986a656c", locator);
+     * client.deleteFlavorgroupHostAssociation(hostId, flavorgroupId);
      * </pre></div>
      */
     public void deleteFlavorgroupHostAssociation(String hostId, String flavorgroupId) {
@@ -458,5 +462,99 @@ public class Hosts extends MtWilsonClient {
         map.put("hostId", hostId);
         map.put("flavorgroupId", flavorgroupId);
         getTarget().path("hosts/{hostId}/flavorgroups/{flavorgroupId}").resolveTemplates(map).request(MediaType.APPLICATION_JSON).delete();
+    }
+    
+    /**
+     * Retrieves a host-flavorgroup link.
+     * @param hostId ID of the host given as a path parameter for which the flavorgroup-host association needs to be retrieved
+     * @param flavorgroupId Flavor group ID given as a path parameter for which the flavorgroup-host association needs to be retrieved  
+     * @return <pre>The serialized FlavorgroupHostLink java model object that was retrieved:
+     *          id
+     *          flavorgroup_id
+     *          host_id</pre>
+     * @since ISecL 1.0
+     * @mtwRequiresPermissions hosts:retrieve
+     * @mtwContentTypeReturned JSON/XML/YAML
+     * @mtwMethodType GET
+     * @mtwPreRequisite flavorgroup create API, flavorgroup-host link create API, host create API
+     * @mtwSampleRestCall
+     * <div style="word-wrap: break-word; width: 1024px"><pre>
+     * https://server.com:8443/mtwilson/v2/hosts/827dbddf-5d93-4a48-b4b3-c86d0bd75edf/flavorgroups/1f3801ae-000b-4442-9700-cc23de9ea5ec
+     * output:
+     * {
+     *      "id": "5a88d764-dc3a-451b-9d80-5a1a5a1be6a0",
+     *      "flavorgroup_id": "1f3801ae-000b-4442-9700-cc23de9ea5ec",
+     *      "host_id": "827dbddf-5d93-4a48-b4b3-c86d0bd75edf"
+     * }
+     * </pre></div>
+     * @mtwSampleApiCall
+     * <div style="word-wrap: break-word; width: 1024px"><pre>
+     * // Set the hostId and the flavorgroupId
+     * String hostId = "827dbddf-5d93-4a48-b4b3-c86d0bd75edf";
+     * String flavorgroupId = "1f3801ae-000b-4442-9700-cc23de9ea5ec";
+     * 
+     * // Create the client and call the retrieveFlavorgroupHostAssociation API
+     * Hosts client = new Hosts(properties);
+     * Host obj = client.retrieveFlavorgroupHostAssociation(hostId, flavorgroupId);
+     * </pre></div>
+     */
+    public FlavorgroupHostLink retrieveFlavorgroupHostAssociation(String hostId, String flavorgroupId) {
+        log.debug("target: {}", getTarget().getUri().toString());
+        HashMap<String,Object> map = new HashMap<>();
+        map.put("hostId", hostId);
+        map.put("flavorgroupId", flavorgroupId);
+        FlavorgroupHostLink fgLink = getTarget().path("hosts/{hostId}/flavorgroups/{flavorgroupId}").resolveTemplates(map).request(MediaType.APPLICATION_JSON).get(FlavorgroupHostLink.class);
+        return fgLink;
+    }
+    
+    /**
+     * Search a host-flavorgroup link using filter criterias.
+     * @param hostId ID of the host given as a path parameter for which the flavorgroup-host association needs to be retrieved
+     * @param filterCriteria The serialized FlavorgroupHostLinkFilterCriteria java model object represents each of the filter criterias that can be used
+     * <pre>
+     *      Id                       ID of the flavorgroup-host link record in the database.   
+     *      flavorgroupId            ID of the flavorgroup that has to be linked to the host  
+     *      hostId                   ID of the host that has to be linked to the flavorgroup
+     *      filter                   Boolean value used to filter the returned records
+     * </pre>  
+     * @return <pre>The serialized FlavorgroupHostLinkCollection java model object that was retrieved, which is a collection of the following attributes:
+     *          id
+     *          flavorgroup_id
+     *          host_id</pre>
+     * @since ISecL 1.0
+     * @mtwRequiresPermissions hosts:search
+     * @mtwContentTypeReturned JSON/XML/YAML
+     * @mtwMethodType GET
+     * @mtwSampleRestCall
+     * <div style="word-wrap: break-word; width: 1024px"><pre>
+     * https://server.com:8443/mtwilson/v2/hosts/827dbddf-5d93-4a48-b4b3-c86d0bd75edf/flavorgroups?flavorgroupId=1f3801ae-000b-4442-9700-cc23de9ea5ec
+     * https://server.com:8443/mtwilson/v2/hosts/827dbddf-5d93-4a48-b4b3-c86d0bd75edf/flavorgroups?hostId=827dbddf-5d93-4a48-b4b3-c86d0bd75edf
+     * https://server.com:8443/mtwilson/v2/hosts/827dbddf-5d93-4a48-b4b3-c86d0bd75edf/flavorgroups?id=5a88d764-dc3a-451b-9d80-5a1a5a1be6a0
+     * https://server.com:8443/mtwilson/v2/hosts/827dbddf-5d93-4a48-b4b3-c86d0bd75edf/flavorgroups?filter=false
+     * output:
+     * {
+     *      "flavorgroup_host_links": [
+     *            "id": "5a88d764-dc3a-451b-9d80-5a1a5a1be6a0",
+     *            "flavorgroup_id": "1f3801ae-000b-4442-9700-cc23de9ea5ec",
+     *            "host_id": "827dbddf-5d93-4a48-b4b3-c86d0bd75edf"
+     *      ]
+     * }
+     * </pre></div>
+     * @mtwSampleApiCall
+     * <div style="word-wrap: break-word; width: 1024px"><pre>
+     * // Create the FlavorgroupHostLinkFilterCriteria model and set the filter criteria
+     * UUID hostId = UUID.valueOf("827dbddf-5d93-4a48-b4b3-c86d0bd75edf");
+     * FlavorgroupHostLinkFilterCriteria filterCriteria = new FlavorgroupHostLinkFilterCriteria();
+     * filterCriteria.flavorgroupId = UUID.valueOf("1f3801ae-000b-4442-9700-cc23de9ea5ec");
+     * 
+     * // Create the client and call the searchFlavorgroupHostAssociation API
+     * Hosts client = new Hosts(properties);
+     * Host obj = client.searchFlavorgroupHostAssociation(hostId, filterCriteria);
+     * </pre></div>
+     */
+    public FlavorgroupHostLinkCollection searchFlavorgroupHostAssociation(String hostId, FlavorgroupHostLinkFilterCriteria filterCriteria) {
+        log.debug("target: {}", getTarget().getUri().toString());
+        FlavorgroupHostLinkCollection fgLinkCollection = getTargetPathWithQueryParams("hosts/"+hostId+"/flavorgroups", filterCriteria).request(MediaType.APPLICATION_JSON).get(FlavorgroupHostLinkCollection.class);
+        return fgLinkCollection;
     }
 }

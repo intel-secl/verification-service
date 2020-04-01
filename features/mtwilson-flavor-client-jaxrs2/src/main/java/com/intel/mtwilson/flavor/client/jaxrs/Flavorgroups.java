@@ -4,7 +4,12 @@
  */
 package com.intel.mtwilson.flavor.client.jaxrs;
 
+import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.tls.policy.TlsConnection;
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorFlavorgroupLink;
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorFlavorgroupLinkCollection;
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorFlavorgroupLinkCreateCriteria;
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorFlavorgroupLinkFilterCriteria;
 import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupFilterCriteria;
@@ -440,5 +445,159 @@ public class Flavorgroups extends MtWilsonClient {
         map.put("id", locator.pathId);
         Response obj = getTarget().path("flavorgroups/{id}").resolveTemplates(map).request(MediaType.APPLICATION_JSON).delete();
         log.debug(obj.toString());
+    }
+    
+    /**
+     * Associates the flavor with the flavorgroup specified in FlavorFlavorgroupLinkCreateCriteria java model object
+     * @param flavorgroupId ID of the flavorgroup to be linked to the flavor
+     * @param createCriteria The serialized FlavorFlavorgroupLinkCreateCriteria java model object represents the content of the request body.
+     * <pre>
+     *          flavorId            ID for the flavor to be linked to flavorgroup.
+     * </pre>
+     * @since ISecL 1.0
+     * @mtwMethodType POST
+     * @mtwRequiresPermissions flavorgroups:create
+     * @mtwPreRequisite flavorgroup create API, flavor create API
+     * @mtwSampleRestCall      
+     * <div style="word-wrap: break-word; width: 1024px"><pre>
+     * https://server.com:8443/mtwilson/v2/flavorgroups/826501bd-3c75-4839-a08f-db5f744f8498/flavors
+     * Input :
+     *  {
+     *      "flavor_id" : "a0950923-596b-41f7-b9ad-09f525929ba1"
+     *  }
+     * 
+     * Output : 204 No content
+     * </pre></div>
+     * @mtwSampleApiCall
+     * <div style="word-wrap: break-word; width: 1024px"><pre>
+     * // Create the flavorgroup flavor link create criteria model and set the create criteria
+     * FlavorFlavorgroupLinkCreateCriteria createCriteria = new FlavorFlavorgroupLinkCreateCriteria();
+     * createCriteria.setFlavorId("a0950923-596b-41f7-b9ad-09f525929ba1");
+     * String flavorgroupId = "826501bd-3c75-4839-a08f-db5f744f8498";
+     * 
+     * // Create the client and call the create API
+     * Flavorgroups client = new Flavorgroups(properties);
+     * client.createFlavorgroupFlavorLinks(flavorgroupId, createCriteria);
+     * </pre></div>
+     */
+    public void createFlavorgroupFlavorLinks(String flavorgroupId, FlavorFlavorgroupLinkCreateCriteria createCriteria) {
+        log.debug("target: {}", getTarget().getUri().toString());
+        HashMap<String,Object> map = new HashMap<>();
+        map.put("flavorgroupId", flavorgroupId);
+        getTarget().path("flavorgroups/{flavorgroupId}/flavors").resolveTemplates(map).request().accept(MediaType.APPLICATION_JSON).post(Entity.json(createCriteria));
+    }
+
+    /**
+     * Deletes the link between the flavor and the flavorgroup
+     * @param flavorId Flavor ID as a path parameter that need to be dissociated from flavorgroup
+     * @param flavorgroupId Flavorgroup ID as a path parameter that need to be dissociated from flavor 
+     * @since ISecL 1.0
+     * @mtwMethodType DELETE
+     * @mtwRequiresPermissions flavorgroups:delete
+     * @mtwPreRequisite flavorgroup create API, flavorgroup-flavor link create API, flavor create API
+     * @mtwSampleRestCall
+     * <div style="word-wrap: break-word; width: 1024px"><pre>
+     * https://server.com:8443/mtwilson/v2/flavorgroups/826501bd-3c75-4839-a08f-db5f744f8498/flavors/a0950923-596b-41f7-b9ad-09f525929ba1
+     * Output: 204 No content
+     * </pre></div>
+     * @mtwSampleApiCall
+     * <div style="word-wrap: break-word; width: 1024px"><pre>
+     * String flavorId = "a0950923-596b-41f7-b9ad-09f525929ba1";
+     * String flavorgroupId = "826501bd-3c75-4839-a08f-db5f744f8498";
+     * 
+     * // Create the client and call the delete API
+     * Flavorgroups client = new Flavorgroups(properties);
+     * client.deleteFlavorgroupFlavorLinks(flavorId, flavorgroupId);
+     * </pre></div>
+     */
+    public void deleteFlavorgroupFlavorLinks(String flavorId, String flavorgroupId) {
+        log.debug("target: {}", getTarget().getUri().toString());
+        HashMap<String,Object> map = new HashMap<>();
+        map.put("flavorId", flavorId);
+        map.put("flavorgroupId", flavorgroupId);
+        getTarget().path("flavorgroups/{flavorgroupId}/flavors/{flavorId}").resolveTemplates(map).request(MediaType.APPLICATION_JSON).delete();
+    }
+    
+    /**
+     * Retrieve the link between the flavor and the flavorgroup
+     * @param flavorId ID of the flavor given as a path parameter for which the flavorgroup-flavor association needs to be retrieved
+     * @param flavorgroupId Flavor group ID given as a path parameter for which the flavorgroup-flavor association needs to be retrieved 
+     * @since ISecL 1.0
+     * @mtwMethodType GET
+     * @mtwRequiresPermissions flavorgroups:retrieve
+     * @mtwPreRequisite flavorgroup create API, flavorgroup-flavor link create API, flavor create API
+     * @mtwSampleRestCall
+     * <div style="word-wrap: break-word; width: 1024px"><pre>
+     * https://server.com:8443/mtwilson/v2/flavorgroups/826501bd-3c75-4839-a08f-db5f744f8498/flavors/a0950923-596b-41f7-b9ad-09f525929ba1
+     * Output: 204 No content
+     * </pre></div>
+     * @mtwSampleApiCall
+     * <div style="word-wrap: break-word; width: 1024px"><pre>
+     * String flavorId = "a0950923-596b-41f7-b9ad-09f525929ba1";
+     * String flavorgroupId = "826501bd-3c75-4839-a08f-db5f744f8498";
+     * 
+     * // Create the client and call the retrieve API
+     * Flavorgroups client = new Flavorgroups(properties);
+     * client.retrieveFlavorgroupFlavorLink(flavorId, flavorgroupId);
+     * </pre></div>
+     */
+    public FlavorFlavorgroupLink retrieveFlavorgroupFlavorLink(String flavorId, String flavorgroupId) {
+        log.debug("target: {}", getTarget().getUri().toString());
+        HashMap<String,Object> map = new HashMap<>();
+        map.put("flavorId", flavorId);
+        map.put("flavorgroupId", flavorgroupId);
+        FlavorFlavorgroupLink fgLink = getTarget().path("flavorgroups/{flavorgroupId}/flavors/{flavorId}").resolveTemplates(map).request(MediaType.APPLICATION_JSON).get(FlavorFlavorgroupLink.class);
+        return fgLink;
+    }
+    
+    /**
+     * Search a flavorgroup-flavor link using filter criterias.
+     * @param flavorgroupId ID of the flavorgroup given as a path parameter for which the flavorgroup-flavor association needs to be retrieved
+     * @param filterCriteria The serialized FlavorFlavorgroupLinkFilterCriteria java model object represents each of the filter criterias that can be used
+     * <pre>
+     *      Id                       ID of the flavorgroup-host link record in the database.   
+     *      flavorgroupId            ID of the flavorgroup that has to be linked to the flavor 
+     *      flavorId                 ID of the flavor that has to be linked to the flavorgroup
+     *      filter                   Boolean value used to filter the returned records
+     * </pre>  
+     * @return <pre>The serialized FlavorFlavorgroupLinkCollection java model object that was retrieved, which is a collection of the following attributes:
+     *          id
+     *          flavorgroup_id
+     *          flavor_id</pre>
+     * @since ISecL 1.0
+     * @mtwRequiresPermissions flavorgroups:search
+     * @mtwContentTypeReturned JSON/XML/YAML
+     * @mtwMethodType GET
+     * @mtwSampleRestCall
+     * <div style="word-wrap: break-word; width: 1024px"><pre>
+     * https://server.com:8443/mtwilson/v2/flavorgroups/826501bd-3c75-4839-a08f-db5f744f8498/flavors?flavorgroupId=826501bd-3c75-4839-a08f-db5f744f8498
+     * https://server.com:8443/mtwilson/v2/flavorgroups/826501bd-3c75-4839-a08f-db5f744f8498/flavors?flavorId=a0950923-596b-41f7-b9ad-09f525929ba1
+     * https://server.com:8443/mtwilson/v2/flavorgroups/826501bd-3c75-4839-a08f-db5f744f8498/flavors?id=5a88d764-dc3a-451b-9d80-5a1a5a1be6a0
+     * https://server.com:8443/mtwilson/v2/flavorgroups/826501bd-3c75-4839-a08f-db5f744f8498/flavors?filter=false
+     * output:
+     * {
+     *      "flavor_flavorgroup_links": [
+     *            "id": "5a88d764-dc3a-451b-9d80-5a1a5a1be6a0",
+     *            "flavorgroup_id": "826501bd-3c75-4839-a08f-db5f744f8498",
+     *            "flavor_id": "a0950923-596b-41f7-b9ad-09f525929ba1"
+     *      ]
+     * }
+     * </pre></div>
+     * @mtwSampleApiCall
+     * <div style="word-wrap: break-word; width: 1024px"><pre>
+     * // Create the FlavorFlavorgroupLinkFilterCriteria model and set the filter criteria
+     * String flavorgroupId  = "826501bd-3c75-4839-a08f-db5f744f8498";
+     * FlavorFlavorgroupLinkFilterCriteria filterCriteria = new FlavorFlavorgroupLinkFilterCriteria();
+     * filterCriteria.flavorId = UUID.valueOf("a0950923-596b-41f7-b9ad-09f525929ba1");
+     * 
+     * // Create the client and call the seachFlavorgroupFlavorLink API
+     * Flavorgroups client = new Flavorgroups(properties);
+     * Host obj = client.searchFlavorgroupHostAssociation(flavorgroupId, filterCriteria);
+     * </pre></div>
+     */
+    public FlavorFlavorgroupLinkCollection seachFlavorgroupFlavorLink(String flavorgroupId, FlavorFlavorgroupLinkFilterCriteria filterCriteria) {
+        log.debug("target: {}", getTarget().getUri().toString());
+        FlavorFlavorgroupLinkCollection fgLinkCollection = getTargetPathWithQueryParams("flavorgroups/"+flavorgroupId+"/flavors", filterCriteria).request(MediaType.APPLICATION_JSON).get(FlavorFlavorgroupLinkCollection.class);
+        return fgLinkCollection;
     }
 }
