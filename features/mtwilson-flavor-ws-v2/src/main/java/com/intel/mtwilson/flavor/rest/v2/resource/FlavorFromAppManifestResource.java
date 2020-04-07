@@ -99,8 +99,7 @@ public class FlavorFromAppManifestResource {
             FlavorRepository flavorRep = new FlavorRepository();
             inDBFlavor = flavorRep.retrieve(findFlavorLocator);
             if (inDBFlavor != null) {
-                throw new PreexistingEntityException("Flavor with this label " + newFlavorLabel + " already exists.",
-                        Response.Status.BAD_REQUEST);
+                throw new PreexistingEntityException("Flavor with this label " + newFlavorLabel + " already exists.");
             }
 
             // Add Flavor to the Flavorgroup
