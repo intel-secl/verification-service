@@ -9,7 +9,7 @@
     <parent>
         <groupId>com.intel.mtwilson</groupId>
         <artifactId>mtwilson-maven-build-coreutil-features</artifactId>
-        <version>5.0-SNAPSHOT</version>
+        <version>5.2-SNAPSHOT</version>
     </parent>
     
     <properties>
