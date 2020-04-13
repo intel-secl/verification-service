@@ -69,7 +69,7 @@ public class FlavorgroupResource {
     @DELETE
     @Path("/{id}")
     @RequiresPermissions("flavorgroups:delete")
-    public void delete(@BeanParam FlavorgroupLocator locator) throws IOException, NonexistentEntityException {
+    public void delete(@BeanParam FlavorgroupLocator locator){
         ValidationUtil.validate(locator);
 
         // First lets retrieve the Flavorgroup object using the locator
