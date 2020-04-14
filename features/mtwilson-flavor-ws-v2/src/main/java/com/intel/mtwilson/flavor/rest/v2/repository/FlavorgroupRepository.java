@@ -17,9 +17,10 @@ import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupCollection;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupFilterCriteria;
 import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupLocator;
 import com.intel.mtwilson.repository.*;
-
 import java.io.IOException;
 import java.util.List;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 
 /**
  *
@@ -204,7 +205,7 @@ public class FlavorgroupRepository {
                 if (obj.getName().equalsIgnoreCase(Flavorgroup.AUTOMATIC_FLAVORGROUP) || obj.getName().equalsIgnoreCase(Flavorgroup.HOST_UNIQUE_FLAVORGROUP)
                         || obj.getName().equalsIgnoreCase(Flavorgroup.WORKLOAD_SOFTWARE_FLAVORGROUP) || obj.getName().equalsIgnoreCase(Flavorgroup.PLATFORM_SOFTWARE_FLAVORGROUP)) {
                     log.error("The flavorgroup is either automatic, host_unique, platform_software or workload_software which cannot be deleted");
-                    throw new RepositoryDeleteException();
+                    throw new WebApplicationException("The flavorgroup is either automatic, host_unique, platform_software or workload_software which cannot be deleted", Response.Status.BAD_REQUEST);
                 }
 
                 MwFlavorgroupJpaController mwFlavorgroupJpa = My.jpa().mwFlavorgroup();
