@@ -19,6 +19,7 @@ public class HostCreateCriteria {
     private String tlsPolicyId;
     private String connectionString;
     private String flavorgroupName;
+    private List<String> flavorgroupNames;
     private String description;
     
     public String getDescription() {
@@ -62,4 +63,11 @@ public class HostCreateCriteria {
         this.flavorgroupName = flavorgroupName;
     }
 
+    public List<String> getFlavorgroupNames() {
+        return flavorgroupNames;
+    }
+
+    public void setFlavorgroupNames(List<String> flavorgroupNames) {
+        this.flavorgroupNames = flavorgroupNames;
+    }
 }

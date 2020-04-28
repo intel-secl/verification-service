@@ -42,7 +42,7 @@ import com.intel.mtwilson.jaxrs2.mediatype.DataMediaType;
 import com.intel.mtwilson.launcher.ws.ext.V2;
 import com.intel.mtwilson.core.common.model.HostManifest;
 import com.intel.mtwilson.repository.RepositoryInvalidInputException;
-
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorgroupHostLinkCollection;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.util.*;
@@ -172,12 +172,13 @@ public class HostResource {
 
             List<String> flavorgroupNames = new ArrayList<>();
 
-            if ((hostCreateCriteria.getFlavorgroupName() == null || hostCreateCriteria.getFlavorgroupName().isEmpty())) {
-                flavorgroupNames.add(Flavorgroup.AUTOMATIC_FLAVORGROUP);
+            if (hostCreateCriteria.getFlavorgroupName() != null && !hostCreateCriteria.getFlavorgroupName().isEmpty()) {
+                flavorgroupNames.add(hostCreateCriteria.getFlavorgroupName());
+            } else if (hostCreateCriteria.getFlavorgroupNames() != null && !hostCreateCriteria.getFlavorgroupNames().isEmpty()) {
+                for (String fgName : hostCreateCriteria.getFlavorgroupNames())
+                    flavorgroupNames.add(fgName);
             } else {
-                if(hostCreateCriteria.getFlavorgroupName() != null && !hostCreateCriteria.getFlavorgroupName().isEmpty()) {
-                    flavorgroupNames.add(hostCreateCriteria.getFlavorgroupName());
-                }
+                flavorgroupNames.add(Flavorgroup.AUTOMATIC_FLAVORGROUP);
             }
 
             // Link to default software and workload groups if host is linux
@@ -287,6 +288,27 @@ public class HostResource {
         //delete the flavorgroup-host link
         log.debug("HostFlavorgroupLink : delete - deleting the host flavorgroup link with flavorgroupid {} and hostId {}", flavorgroupHostLocator.flavorgroupId, flavorgroupHostLocator.hostId);
         flavorgroupHostLinkRepository.delete(flavorgroupHostLocator);
+    }
+    
+    @GET
+    @Path("/{hostId}/flavorgroups/{flavorgroupId}")
+    public FlavorgroupHostLink retrieveFlavorgroupHostAssociation(@PathParam("hostId") UUID hostId, @PathParam("flavorgroupId") UUID flavorgroupId) {
+        FlavorgroupHostLinkRepository repo = new FlavorgroupHostLinkRepository();
+        FlavorgroupHostLinkLocator flavorgroupHostLocator = new FlavorgroupHostLinkLocator();
+        flavorgroupHostLocator.flavorgroupId = flavorgroupId;
+        flavorgroupHostLocator.hostId = hostId;
+        return repo.retrieve(flavorgroupHostLocator);
+    }
+    
+    @GET
+    @Path("/{hostId}/flavorgroups/")
+    public FlavorgroupHostLinkCollection searchFlavorgroupHostAssociation(@PathParam("hostId") UUID hostId, @BeanParam FlavorgroupHostLinkFilterCriteria criteria, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse) {
+
+        ValidationUtil.validate(hostId);
+        ValidationUtil.validate(criteria);
+        log.debug("target: {} - {}", httpServletRequest.getRequestURI(), httpServletRequest.getQueryString());
+        FlavorgroupHostLinkRepository flavorgroupHostLinkRepository = new FlavorgroupHostLinkRepository();
+        return flavorgroupHostLinkRepository.search(criteria);
     }
 
     @GET
@@ -649,6 +671,9 @@ public class HostResource {
             validateTlsPolicyDescriptor(tlsPolicyDescriptor);
 
             tlsPolicy = TlsPolicyFactoryUtil.createTlsPolicy(tlsPolicyDescriptor);
+        }
+        if(Vendor.VMWARE.equals(connectionString.getVendor())){
+            connectionString = HostRepository.generateConnectionString(connectionString.getConnectionString());
         }
         ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
         Configuration configuration = configurationProvider.load();

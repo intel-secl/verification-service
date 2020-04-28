@@ -100,48 +100,23 @@ public class FlavorRepository {
 
     public SignedFlavor retrieve(FlavorLocator locator) {
         log.debug("flavor:retrieve - got request to retrieve flavor");
-        if (locator == null || (locator.id == null && locator.pathId == null)) {
+        if (locator == null || (locator.id == null && locator.pathId == null && (locator.label == null || locator.label.trim().equals("")))) {
             return null;
         }
 
         try {
             MwFlavorJpaController mwFlavorJpaController = My.jpa().mwFlavor();
+            MwFlavor mwFlavor = null;
             if (locator.pathId != null) {
-                MwFlavor mwFlavor = mwFlavorJpaController.findMwFlavor(locator.pathId.toString());
-                if (mwFlavor != null) {
-                    return new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature());
-                }
+                mwFlavor = mwFlavorJpaController.findMwFlavor(locator.pathId.toString());
             } else if (locator.id != null) {
-                MwFlavor mwFlavor = mwFlavorJpaController.findMwFlavor(locator.id.toString());
-                if (mwFlavor != null) {
-                    return new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature());
-                }
+                mwFlavor = mwFlavorJpaController.findMwFlavor(locator.id.toString());
+            } else if (locator.label != null && !(locator.label.trim().equals(""))) {
+                mwFlavor = mwFlavorJpaController.findMwFlavorByName(locator.label);
             }
-        } catch (Exception ex) {
-            log.error("flavor:retrieve - error during retrieval of flavor", ex);
-            throw new RepositoryRetrieveException(ex);
-        }
-        return null;
-    }
 
-    public SignedFlavor retrieveSignedFlavor(FlavorLocator locator) {
-        log.debug("flavor:retrieve - got request to retrieve flavor");
-        if (locator == null || (locator.id == null && locator.pathId == null)) {
-            return null;
-        }
-
-        try {
-            MwFlavorJpaController mwFlavorJpaController = My.jpa().mwFlavor();
-            if (locator.pathId != null) {
-                MwFlavor mwFlavor = mwFlavorJpaController.findMwFlavor(locator.pathId.toString());
-                if (mwFlavor != null) {
-                    return new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature());
-                }
-            } else if (locator.id != null) {
-                MwFlavor mwFlavor = mwFlavorJpaController.findMwFlavor(locator.id.toString());
-                if (mwFlavor != null) {
-                    return new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature());
-                }
+            if (mwFlavor != null) {
+                return new SignedFlavor(mwFlavor.getContent(), mwFlavor.getSignature());
             }
         } catch (Exception ex) {
             log.error("flavor:retrieve - error during retrieval of flavor", ex);

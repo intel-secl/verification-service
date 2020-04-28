@@ -12,6 +12,8 @@ import com.intel.mtwilson.core.verifier.policy.TrustReport;
 import com.intel.mtwilson.flavor.model.TrustInformation;
 import com.intel.mtwilson.jaxrs2.Document;
 import java.util.Date;
+import com.intel.mtwilson.core.common.model.HostInfo;
+import com.intel.mtwilson.jaxrs2.JsonOnly;
 
 /**
  *
@@ -25,6 +27,8 @@ public class Report extends Document{
     private TrustReport trustReport;
     @JsonIgnore
     private String saml;
+    @JsonOnly
+    private HostInfo hostInfo;
     private Date created;
     private Date expiration;
 
@@ -75,4 +79,9 @@ public class Report extends Document{
     public void setExpiration(Date expiration) {
         this.expiration = expiration;
     }
+
+    public HostInfo getHostInfo() {
+        return this.trustReport.getHostManifest().getHostInfo();
+    }
+
 }

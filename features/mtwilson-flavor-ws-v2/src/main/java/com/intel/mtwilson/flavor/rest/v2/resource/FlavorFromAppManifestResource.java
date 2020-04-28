@@ -9,6 +9,7 @@ import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicyBuilder;
 import com.intel.mtwilson.My;
+import com.intel.mtwilson.audit.controller.exceptions.PreexistingEntityException;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
 import com.intel.mtwilson.configuration.ConfigurationProvider;
 import com.intel.mtwilson.core.common.utils.AASConstants;
@@ -21,7 +22,9 @@ import com.intel.mtwilson.core.flavor.model.Flavor;
 import com.intel.mtwilson.core.flavor.model.SignedFlavor;
 import com.intel.mtwilson.core.host.connector.HostConnector;
 import com.intel.mtwilson.core.host.connector.HostConnectorFactory;
+import com.intel.mtwilson.flavor.rest.v2.model.FlavorLocator;
 import com.intel.mtwilson.flavor.rest.v2.model.Flavorgroup;
+import com.intel.mtwilson.flavor.rest.v2.repository.FlavorRepository;
 import com.intel.mtwilson.flavor.rest.v2.utils.FlavorGroupUtils;
 import com.intel.mtwilson.flavor.rest.v2.utils.FlavorUtils;
 import com.intel.mtwilson.flavor.rest.v2.utils.HostConnectorUtils;
@@ -36,6 +39,7 @@ import com.intel.wml.measurement.xml.Measurement;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
 import java.security.PrivateKey;
@@ -59,26 +63,44 @@ public class FlavorFromAppManifestResource {
     private static final String FLAVOR_SIGNER_KEYSTORE_FILE = "flavor.signer.keystore.file";
     private static final String FLAVOR_SIGNER_KEYSTORE_PASSWORD = "flavor.signer.keystore.password";
     private static final String FLAVOR_SIGNING_KEY_ALIAS = "flavor.signing.key.alias";
+
     @POST
-    @Consumes({MediaType.APPLICATION_XML})
-    @Produces({MediaType.APPLICATION_JSON, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML})
+    @Consumes({ MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, DataMediaType.APPLICATION_YAML, DataMediaType.TEXT_YAML })
     @RequiresPermissions("software_flavors:create")
     public Flavor createFlavor(ManifestRequest manifestRequest) {
-        log.info("FlavorFromAppManifestResource - Got request to create software flavor from app manifest {}.", manifestRequest.getManifest());
+        log.info("FlavorFromAppManifestResource - Got request to create software flavor from app manifest {}.",
+                manifestRequest.getManifest());
         validateDefaultManifest(manifestRequest.getManifest());
         try {
-            TlsPolicy tlsPolicy = TlsPolicyBuilder.factory().strictWithKeystore(My.configuration().getTruststoreFile(), KEYSTORE_PASSWORD).build();
+            TlsPolicy tlsPolicy = TlsPolicyBuilder.factory()
+                    .strictWithKeystore(My.configuration().getTruststoreFile(), KEYSTORE_PASSWORD).build();
 
-            //call host connector to get measurement from manifest
+            // call host connector to get measurement from manifest
             String manifestXml = ManifestUtils.getManifestString(manifestRequest.getManifest());
             Measurement measurementXml = getMeasurementFromManifest(manifestRequest,
                     ManifestUtils.parseManifestXML(manifestXml), tlsPolicy);
             String measurementString = MeasurementUtils.getMeasurementString(measurementXml);
 
             SoftwareFlavor softwareFlavor = new SoftwareFlavor(measurementString);
-            PrivateKeyStore privateKeyStore = new PrivateKeyStore("PKCS12", new File(MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_FILE)), MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
-            PrivateKey privateKey = privateKeyStore.getPrivateKey(MSConfig.getConfiguration().getString(FLAVOR_SIGNING_KEY_ALIAS, "flavor-signing-key"));
-            SignedFlavor signedFlavor = PlatformFlavorUtil.getSignedFlavor(softwareFlavor.getSoftwareFlavor(), privateKey);
+            PrivateKeyStore privateKeyStore = new PrivateKeyStore("PKCS12",
+                    new File(MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_FILE)),
+                    MSConfig.getConfiguration().getString(FLAVOR_SIGNER_KEYSTORE_PASSWORD).toCharArray());
+            PrivateKey privateKey = privateKeyStore.getPrivateKey(
+                    MSConfig.getConfiguration().getString(FLAVOR_SIGNING_KEY_ALIAS, "flavor-signing-key"));
+            SignedFlavor signedFlavor = PlatformFlavorUtil.getSignedFlavor(softwareFlavor.getSoftwareFlavor(),
+                    privateKey);
+
+            // ISECL-8927: Check if the flavor exists in DB before adding to the flavorgroup
+            String newFlavorLabel = signedFlavor.getFlavor().getMeta().getDescription().getLabel();
+            FlavorLocator findFlavorLocator = new FlavorLocator();
+            findFlavorLocator.label = newFlavorLabel;
+            SignedFlavor inDBFlavor = null;
+            FlavorRepository flavorRep = new FlavorRepository();
+            inDBFlavor = flavorRep.retrieve(findFlavorLocator);
+            if (inDBFlavor != null) {
+                throw new PreexistingEntityException("Flavor with this label " + newFlavorLabel + " already exists.");
+            }
 
             // Add Flavor to the Flavorgroup
             Map<String, List<SignedFlavor>> flavorPartFlavorMap = new HashMap<>();
@@ -88,53 +110,62 @@ public class FlavorFromAppManifestResource {
             List<String> partialFlavorTypes = new ArrayList();
             partialFlavorTypes.add(FlavorPart.SOFTWARE.getValue());
 
-            Flavorgroup flavorgroup = FlavorGroupUtils.getFlavorGroupByName(HostConnectorUtils.getFlavorgroupName(manifestRequest.getFlavorgroupName()));
-            if(flavorgroup == null) {
-                flavorgroup = FlavorGroupUtils.createFlavorGroupByName(manifestRequest.getFlavorgroupName());            
+            Flavorgroup flavorgroup = FlavorGroupUtils
+                    .getFlavorGroupByName(HostConnectorUtils.getFlavorgroupName(manifestRequest.getFlavorgroupName()));
+            if (flavorgroup == null) {
+                flavorgroup = FlavorGroupUtils.createFlavorGroupByName(manifestRequest.getFlavorgroupName());
             }
             new FlavorResource().addFlavorToFlavorgroup(flavorPartFlavorMap, flavorgroup.getId());
             return signedFlavor.getFlavor();
-        } catch(Exception ex) {
+        } catch (PreexistingEntityException ex) {
+            log.error("FlavorFromAppManifestResource - Error during flavor creation.", ex);
+            throw new WebApplicationException(ex.getMessage(), Response.Status.BAD_REQUEST);
+        } catch (Exception ex) {
             log.error("FlavorFromAppManifestResource - Error during flavor creation.", ex);
             throw new RepositoryException(ex);
         }
     }
 
     @POST
-    @Consumes({MediaType.APPLICATION_XML})
-    @Produces({MediaType.APPLICATION_XML})
+    @Consumes({ MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_XML })
     @RequiresPermissions("software_flavors:create")
-    public Flavor createFlavorXML(ManifestRequest manifestRequest){
-            Flavor softwareFlavor = createFlavor(manifestRequest);
-            return FlavorUtils.updatePathSeparatorForXML(softwareFlavor);
+    public Flavor createFlavorXML(ManifestRequest manifestRequest) {
+        Flavor softwareFlavor = createFlavor(manifestRequest);
+        return FlavorUtils.updatePathSeparatorForXML(softwareFlavor);
     }
 
-    private void validateDefaultManifest(Manifest manifest){
+    private void validateDefaultManifest(Manifest manifest) {
         if (manifest.getLabel().contains(SoftwareFlavorPrefix.DEFAULT_APPLICATION_FLAVOR_PREFIX.getValue())
-                || manifest.getLabel().contains(SoftwareFlavorPrefix.DEFAULT_WORKLOAD_FLAVOR_PREFIX.getValue())){
+                || manifest.getLabel().contains(SoftwareFlavorPrefix.DEFAULT_WORKLOAD_FLAVOR_PREFIX.getValue())) {
             log.error("Default manifest cannot be provided for flavor creation");
-            throw new WebApplicationException("Default manifest cannot be provided for flavor creation", 400);
+            throw new WebApplicationException("Default manifest cannot be provided for flavor creation",
+                    Response.Status.BAD_REQUEST);
         }
     }
 
     private UUID getHostId(ManifestRequest manifestRequest) {
         UUID hostId = null;
-        if(manifestRequest.getHostId() != null && !manifestRequest.getHostId().isEmpty()) {
+        if (manifestRequest.getHostId() != null && !manifestRequest.getHostId().isEmpty()) {
             hostId = UUID.valueOf(manifestRequest.getHostId());
         }
         return hostId;
     }
 
-    private Measurement getMeasurementFromManifest(ManifestRequest manifestRequest, Manifest manifest, TlsPolicy tlsPolicy) throws IOException {
+    private Measurement getMeasurementFromManifest(ManifestRequest manifestRequest, Manifest manifest,
+            TlsPolicy tlsPolicy) throws IOException {
         try {
-            log.debug("Calling the host Connector library getMeasurementFromManifest method to retrieve the measurement");
+            log.debug(
+                    "Calling the host Connector library getMeasurementFromManifest method to retrieve the measurement");
             HostConnectorFactory factory = new HostConnectorFactory();
             ConfigurationProvider configurationProvider = ConfigurationFactory.getConfigurationProvider();
             Configuration configuration = configurationProvider.load();
 
-            HostConnector hostConnector = factory.getHostConnector(
-                    HostConnectorUtils.getHostConnectionString(manifestRequest.getConnectionString(),
-                            getHostId(manifestRequest)), configuration.get(AASConstants.AAS_API_URL), tlsPolicy);
+            HostConnector hostConnector = factory
+                    .getHostConnector(
+                            HostConnectorUtils.getHostConnectionString(manifestRequest.getConnectionString(),
+                                    getHostId(manifestRequest)),
+                            configuration.get(AASConstants.AAS_API_URL), tlsPolicy);
             return hostConnector.getMeasurementFromManifest(manifest);
         } catch (IOException ex) {
             log.error("Unable to get measurement from manifest.");

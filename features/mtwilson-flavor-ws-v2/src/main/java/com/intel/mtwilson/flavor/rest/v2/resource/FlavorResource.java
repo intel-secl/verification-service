@@ -138,7 +138,7 @@ public class FlavorResource {
         ValidationUtil.validate(locator);
         SignedFlavor signedFlavor = repository.retrieve(locator);
         if (signedFlavor == null) {
-            throw new WebApplicationException("Signed Flavor not found for flavor id:" + locator.id.toString(), 404);
+            throw new WebApplicationException("Signed Flavor not found for flavor id:" + locator.id.toString(), Response.Status.NOT_FOUND);
         }
         return signedFlavor.getFlavor();
     }
@@ -178,7 +178,7 @@ public class FlavorResource {
         ValidationUtil.validate(item);
 
         if (item == null) {
-            throw new WebApplicationException("Flavor create criteria must be specified", 400);
+            throw new WebApplicationException("Flavor create criteria must be specified", Response.Status.BAD_REQUEST);
         }
 
         if (item.getPartialFlavorTypes() == null || item.getPartialFlavorTypes().isEmpty()) {
@@ -207,7 +207,7 @@ public class FlavorResource {
         ValidationUtil.validate(item);
         SignedFlavorCollection signedFlavorCollection = createFlavors(item);
         if (signedFlavorCollection == null) {
-            throw new WebApplicationException("Failed to create flavor for given criteria", 500);
+            throw new WebApplicationException("Failed to create flavor for given criteria", Response.Status.INTERNAL_SERVER_ERROR);
         }
         FlavorCollection flavorCollection = new FlavorCollection();
         flavorCollection.setFlavors(signedFlavorCollection.getFlavors());
@@ -281,7 +281,7 @@ public class FlavorResource {
             } catch (Exception e) {
                 log.debug("Flavors: Exception instance when connecting to host is {}", e.toString());
                 HostState hostState = new HostStatusResource().determineHostState(e);
-                throw new WebApplicationException(hostState.getHostStateText(), e, 400);
+                throw new WebApplicationException(hostState.getHostStateText(), e, Response.Status.BAD_REQUEST);
             }
             
             TagCertificateRepository repo = new TagCertificateRepository();
@@ -326,10 +326,10 @@ public class FlavorResource {
                 }
             }
             if (flavorPartFlavorMap.isEmpty()) {
-                throw new WebApplicationException("Flavor collection or host connection string must be specified", 400);
+                throw new WebApplicationException("Flavor collection or host connection string must be specified", Response.Status.BAD_REQUEST);
             }
         } else {
-            throw new WebApplicationException("Host connection string or flavor content must be specified", 400);
+            throw new WebApplicationException("Host connection string or flavor content must be specified", Response.Status.BAD_REQUEST);
         }
         
         // when no flavor types are specified for automatic flavor creation, set default automatic flavor types
@@ -360,19 +360,19 @@ public class FlavorResource {
         
         // throw error if no flavors are to be created
         if (flavorPartFlavorMap == null || flavorPartFlavorMap.isEmpty()) {
-            throw new WebApplicationException("Cannot create flavors", 400);
+            throw new WebApplicationException("Cannot create flavors", Response.Status.BAD_REQUEST);
         }
         return addFlavorToFlavorgroup(flavorPartFlavorMap, flavorgroup.getId());
     }
 
     private void validateFlavorMetaContent(Meta flavorMeta) {
         if(flavorMeta.getDescription().getLabel() == null || flavorMeta.getDescription().getLabel().isEmpty()) {
-            throw new WebApplicationException("Flavor label missing", 400);
+            throw new WebApplicationException("Flavor label missing", Response.Status.BAD_REQUEST);
         }
         try {
             FlavorPart.valueOf(flavorMeta.getDescription().getFlavorPart());
         } catch (IllegalArgumentException e) {
-            throw new WebApplicationException("Invalid flavor part specified", 400);
+            throw new WebApplicationException("Invalid flavor part specified", Response.Status.BAD_REQUEST);
         }
     }
 

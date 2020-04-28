@@ -67,6 +67,7 @@ public class EsxiClusterRepository implements DocumentRepository<EsxiCluster, Es
                    if(cluster!=null) {
                        List<EsxiHostRecord> hosts = hostDAO.findEsxiHostsByClusterId(criteria.id);
                        EsxiCluster obj = getClusterDetails(hosts, cluster);
+                       obj.setConnectionString(HostRepository.getConnectionStringWithoutCredentials(obj.getConnectionString()));
                        objCollection.getEsxiClusters().add(obj);
                    }
                 }
@@ -78,6 +79,7 @@ public class EsxiClusterRepository implements DocumentRepository<EsxiCluster, Es
                      if(cluster!=null) {
                        List<EsxiHostRecord> hosts = hostDAO.findEsxiHostsByClusterId(clusterDAO.findEsxiClusterByName(criteria.clustername).getId());
                        EsxiCluster obj = getClusterDetails(hosts, cluster);
+                       obj.setConnectionString(HostRepository.getConnectionStringWithoutCredentials(obj.getConnectionString()));
                        objCollection.getEsxiClusters().add(obj);
                      }
                 }
@@ -88,6 +90,7 @@ public class EsxiClusterRepository implements DocumentRepository<EsxiCluster, Es
                     for(EsxiClusterRecord record : clusters) {
                         List<EsxiHostRecord> hosts = hostDAO.findEsxiHostsByClusterId(record.getId());
                         EsxiCluster obj = getClusterDetails(hosts, record);
+                        obj.setConnectionString(HostRepository.getConnectionStringWithoutCredentials(obj.getConnectionString()));
                         objCollection.getEsxiClusters().add(obj);
                     }
                     
@@ -185,6 +188,7 @@ public class EsxiClusterRepository implements DocumentRepository<EsxiCluster, Es
                 try(EsxiHostDAO hostDAO = EsxiHostJdbiFactory.esxiHostDAO()) {
                     List<EsxiHostRecord> hosts = hostDAO.findEsxiHostsByClusterId(locator.id);
                     EsxiCluster obj = getClusterDetails(hosts, cluster);
+                    obj.setConnectionString(HostRepository.getConnectionStringWithoutCredentials(obj.getConnectionString()));
                     return obj;
                 }
             }
