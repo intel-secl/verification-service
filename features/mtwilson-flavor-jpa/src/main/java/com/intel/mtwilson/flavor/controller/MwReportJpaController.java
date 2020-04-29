@@ -272,7 +272,6 @@ public class MwReportJpaController implements Serializable {
             if (latestPerHost) {
                 auditLogAbbrv = "auj";
             }
-            //build table join string for host table if host identifier is set and aik certificate is null
             String tableJoinString = null;
             String hostIdentifierString = null;
             String additionalOptionsQueryString = String.format("WHERE %s.entity_type = 'MwReport'", auditLogAbbrv);
@@ -312,13 +311,15 @@ public class MwReportJpaController implements Serializable {
 
             //Build from date query string and add it to the additional options query string
             if (fromDate != null) {
-                String fromDateQueryString = String.format("CAST(%s.data -> 'columns' -> 3 ->> 'value' AS TIMESTAMP) >= CAST(? AS TIMESTAMP)", auditLogAbbrv);
+                //Using created column itself to make query faster
+                String fromDateQueryString = String.format("CAST(%s.created AS TIMESTAMP) >= CAST(? AS TIMESTAMP)", auditLogAbbrv);
                 additionalOptionsQueryString = String.format("%s AND %s", additionalOptionsQueryString, fromDateQueryString);
             }
 
             //Build to date and add it to the additional options query string
             if (toDate != null) {
-                String toDateQueryString = String.format("CAST(%s.data -> 'columns' -> 3 ->> 'value' AS TIMESTAMP) <= CAST(? AS TIMESTAMP)", auditLogAbbrv);
+                //Using created column itself to make query faster
+                String toDateQueryString = String.format("CAST(%s.created AS TIMESTAMP) <= CAST(? AS TIMESTAMP)", auditLogAbbrv);
                 additionalOptionsQueryString = String.format("%s AND %s", additionalOptionsQueryString, toDateQueryString);
             }
 
@@ -333,11 +334,12 @@ public class MwReportJpaController implements Serializable {
 
             // Build final formatted query string for latest per host filter criteria
             if (latestPerHost) {
-                String maxDateQueryString = String.format("INNER JOIN (SELECT entity_id, max(auj.data -> 'columns' -> 3 ->> 'value') AS max_date "
+                //Using created column itself to make query faster
+                String maxDateQueryString = String.format("INNER JOIN (SELECT entity_id, max(auj.created) AS max_date "
                         + "FROM mw_audit_log_entry auj %s GROUP BY entity_id)a "
                         + "ON a.entity_id = au.entity_id "
-                        + "AND a.max_date = au.data -> 'columns' -> 3 ->> 'value'", additionalOptionsQueryString);
-                formattedQuery = String.format("%s %s ORDER BY au.data -> 'columns' -> 3 ->> 'columnName' DESC", formattedQuery, maxDateQueryString);
+                        + "AND a.max_date = au.created", additionalOptionsQueryString);
+                formattedQuery = String.format("%s %s ORDER BY au.created DESC", formattedQuery, maxDateQueryString);
             } else {
                 formattedQuery = String.format("%s %s", formattedQuery, additionalOptionsQueryString);
             }

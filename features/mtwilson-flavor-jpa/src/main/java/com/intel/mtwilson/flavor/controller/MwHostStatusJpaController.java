@@ -374,22 +374,22 @@ public class MwHostStatusJpaController implements Serializable {
             if (latestPerHost) {
                 auditLogAbbrv = "auj";
             }
-            //build table join string for host table if host identifier is set and aik certificate is null
             String tableJoinString = null;
+            String additionalOptionsQueryString = String.format("WHERE %s.entity_type = 'MwHostStatus' ", auditLogAbbrv);
+
+            //Build table join string with host table if host identifier is set
             if (hostName != null && !hostName.isEmpty()) {
                 tableJoinString = String.format("INNER JOIN mw_host h on h.id = %s.data -> 'columns' -> 1 ->> 'value'", auditLogAbbrv);
             }
 
-            String additionalOptionsQueryString = String.format("WHERE %s.entity_type = 'MwHostStatus' ", auditLogAbbrv);
-
-            //Build additional options query string is tabel join string set
+            //Build additional options query string is table join string set
             if (tableJoinString != null && !tableJoinString.isEmpty()) {
                 //Build host ID partial query string and add it to the additional options query string
                 if (hostId != null && !hostId.isEmpty()) {
                     String hostIdQueryString = String.format("h.id = '%s'", hostId);
                     additionalOptionsQueryString = String.format("%s AND %s", additionalOptionsQueryString, hostIdQueryString);
                 }
-                //calling hostIdentifierQueryString method to improve the performance by refering to the host table when host identifier is set
+                //calling hostIdentifierQueryString method to improve the performance by referring to the host table when host identifier is set
                 additionalOptionsQueryString = String.format("%s AND %s", additionalOptionsQueryString, hostIdentifierQueryString(hostName, hardwareUuid));
             } else {
                 //Build host ID partial query string and add it to the additional options query string
@@ -400,7 +400,7 @@ public class MwHostStatusJpaController implements Serializable {
 
                 //Build host name partial query string and add it to the additional options query string
                 if (hostName != null && !hostName.isEmpty()) {
-                    String hostNameQueryString = String.format("h.name = '%s'", hostName);
+                    String hostNameQueryString = String.format("%s.data -> 'columns' -> 4 -> 'value' -> 'host_info' ->> 'host_name' = '%s'", auditLogAbbrv, hostName);
                     additionalOptionsQueryString = String.format("%s AND %s", additionalOptionsQueryString, hostNameQueryString);
                 }
 
@@ -431,13 +431,15 @@ public class MwHostStatusJpaController implements Serializable {
 
             //Build from date query string and add it to the additional options query string
             if (fromDate != null) {
-                String fromDateQueryString = String.format("CAST(%s.data -> 'columns' -> 3 ->> 'value' AS TIMESTAMP) >= CAST(? AS TIMESTAMP)", auditLogAbbrv);
+                //Using created column itself to make query faster
+                String fromDateQueryString = String.format("CAST(%s.created AS TIMESTAMP) >= CAST(? AS TIMESTAMP)", auditLogAbbrv);
                 additionalOptionsQueryString = String.format("%s AND %s", additionalOptionsQueryString, fromDateQueryString);
             }
 
             //Build to date and add it to the additional options query string
             if (toDate != null) {
-                String toDateQueryString = String.format("CAST(%s.data -> 'columns' -> 3 ->> 'value' AS TIMESTAMP) <= CAST(? AS TIMESTAMP)", auditLogAbbrv);
+                //Using created column itself to make query faster
+                String toDateQueryString = String.format("CAST(%s.created AS TIMESTAMP) <= CAST(? AS TIMESTAMP)", auditLogAbbrv);
                 additionalOptionsQueryString = String.format("%s AND %s", additionalOptionsQueryString, toDateQueryString);
             }
 
@@ -450,11 +452,12 @@ public class MwHostStatusJpaController implements Serializable {
                     + "FROM mw_audit_log_entry au ");
 
             if (latestPerHost) {
-                String maxDateQueryString = String.format("INNER JOIN (SELECT entity_id, max(auj.data -> 'columns' -> 3 ->> 'value') AS max_date "
+                //Using created column itself to make query faster
+                String maxDateQueryString = String.format("INNER JOIN (SELECT entity_id, max(auj.created) AS max_date "
                         + "FROM mw_audit_log_entry auj %s GROUP BY entity_id)a "
                         + "ON a.entity_id = au.entity_id "
-                        + "AND a.max_date = au.data -> 'columns' -> 3 ->> 'value'", additionalOptionsQueryString);
-                formattedQuery = String.format("%s %s ORDER BY au.data -> 'columns' -> 3 ->> 'columnName' DESC", formattedQuery, maxDateQueryString);
+                        + "AND a.max_date = au.created", additionalOptionsQueryString);
+                formattedQuery = String.format("%s %s ORDER BY au.created DESC", formattedQuery, maxDateQueryString);
             } else {
                 formattedQuery = String.format("%s %s", formattedQuery, additionalOptionsQueryString);
             }
