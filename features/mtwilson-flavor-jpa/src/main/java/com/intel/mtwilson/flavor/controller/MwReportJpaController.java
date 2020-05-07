@@ -53,7 +53,11 @@ public class MwReportJpaController implements Serializable {
             }
             em = getEntityManager();
             em.getTransaction().begin();
-            em.persist(mwReport);
+            MwReport report = findMwReportByHostId(mwReport.getHostId());
+            if(report == null) {
+                em.persist(mwReport);
+            } else
+                edit(mwReport);
             em.getTransaction().commit();
         } catch (Exception ex) {
             if (findMwReport(mwReport.getId()) != null) {
