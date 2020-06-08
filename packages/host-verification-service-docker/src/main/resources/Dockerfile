@@ -24,7 +24,7 @@ WORKDIR /root/
 
 # Install Verification Service
 RUN export MTWILSON_NOSETUP=yes && export SKIP_DATABASE_INIT=yes && \
-    export INSTALL_PKGS="java logrotate monit privacyca SERVICES PORTALS" && \
+    export INSTALL_PKGS="java logrotate privacyca SERVICES PORTALS" && \
     export psql=`which psql 2>/dev/null` && \
     /root/hvs-linux.bin --keep --target /root/hvs_installer &> /root/install.log
 
