@@ -149,7 +149,7 @@ public class TpmEndorsementRepository implements DocumentRepository<TpmEndorseme
                 log.error("TpmEndorsementRepository create - TpmEndorsement {} will not be created since a duplicate TpmEndorsement already exists.", item.getId().toString());                
                 throw new RepositoryCreateConflictException(locator);
             }
-            
+            item.setIssuer(item.getIssuer().replaceAll(" ", ""));
             dao.insertTpmEndorsement(item);
         } catch (IOException ex) {
             log.error("TpmEndorsementRepository create error during TpmEndorsement creation.", ex);

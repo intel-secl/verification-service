@@ -17,6 +17,7 @@ import com.intel.mtwilson.tpm.endorsement.model.TpmEndorsement;
 import gov.niarl.his.privacyca.TpmIdentityRequest;
 import gov.niarl.his.privacyca.TpmUtils;
 import java.io.File;
+import java.security.cert.CertificateEncodingException;
 import java.util.List;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -35,6 +36,16 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import org.apache.commons.io.IOUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.apache.commons.codec.binary.Base64;
+import java.io.*;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.*;
+
 
 /**
  *
@@ -88,15 +99,14 @@ public class IdentityRequestGetChallenge implements Callable<IdentityProofReques
 
         // load the trusted ek cacerts
         Map<String, X509Certificate> endorsementCerts = getEndorsementCertificates();
-
         TpmIdentityRequest tempEC = new TpmIdentityRequest(endorsementCertificate);
         X509Certificate ekCert = TpmUtils.certFromBytes(tempEC.decryptRaw(caPrivKey));
         LOG.debug("Validating endorsement certificate");
         if (!isEkCertificateVerifiedByAuthority(ekCert, endorsementCerts.get(ekCert.getIssuerDN().getName().replaceAll("\\x00", "")))
                 && !isEkCertificateVerifiedByAnyAuthority(ekCert, endorsementCerts.values())
                 && !isEkCertificateRegistered(ekCert)) {
-            // cannot trust the EC because it's not signed by any of our trusted EC CAs and is not in the mw_tpm_ec table
-            LOG.debug("EC is not trusted");
+            // cannot trust the EC because it's not signed by any of our trusted EC CAs and is not in the mw_tpm_endorements table
+            LOG.error("EC is not trusted, cannot trust the EC because it's not signed by any of trusted EC CAs in EndorsmentCA-external.pem");
             throw new RuntimeException("Invalid identity request");
         }
         // check out the endorsement certificate
@@ -149,17 +159,27 @@ public class IdentityRequestGetChallenge implements Callable<IdentityProofReques
     }
 
     private boolean isEkCertificateRegistered(X509Certificate ekCert) {
+
         try (TpmEndorsementDAO dao = TpmEndorsementJdbiFactory.tpmEndorsementDAO()) {
-            TpmEndorsement tpmEndorsement = dao.findTpmEndorsementByIssuerEqualTo(ekCert.getIssuerDN().getName().replaceAll("\\x00", "")); // SHOULD REALLY BE BY CERT SHA256
+            TpmEndorsement tpmEndorsement = dao.findTpmEndorsementByIssuerEqualTo(ekCert.getIssuerDN().getName().replaceAll(" ", "")); // SHOULD REALLY BE BY CERT SHA256
             if (tpmEndorsement == null) {
                 return false;
+            }	
+            String base64EncodedCert = Base64.encodeBase64String(tpmEndorsement.getCertificate());
+            String originalCert = new String(Base64.decodeBase64(base64EncodedCert.getBytes()));
+	    X509Certificate cert = X509Util.decodePemCertificate(originalCert);
+            if (cert.equals(ekCert)) {
+                LOG.debug("EC is registered: {}", tpmEndorsement.getId().toString());
+                return true;
             }
-            LOG.debug("EC is registered: {}", tpmEndorsement.getId().toString());
-            return true;
-        } catch (IOException e) {
+        } catch (IOException | CertificateEncodingException e) {
             LOG.debug("Cannot check if EC is registered", e);
             return false;
+        } catch (CertificateException e) {
+            LOG.debug("Error while decoding pem certificate", e);
+	    return false;
         }
+        return false;
     }
 
 }
