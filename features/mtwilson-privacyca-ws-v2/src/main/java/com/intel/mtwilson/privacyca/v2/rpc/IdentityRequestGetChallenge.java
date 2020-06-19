@@ -157,29 +157,38 @@ public class IdentityRequestGetChallenge implements Callable<IdentityProofReques
         }
         return false;
     }
+	
+   private String getCommonName(X509Certificate ekCert){
+        String issuer =  ekCert.getIssuerDN().getName().replaceAll(" ", "");
+        issuer = issuer.replaceAll("\\+", ",");
+        String[] dnFields = issuer.split(",");
+        for (String field: dnFields ) {
+            if (field.contains("CN=")){
+                String commName = field;
+                return commName.split("=")[1];
+            }
+        }
+        return "";
+    }
 
     private boolean isEkCertificateRegistered(X509Certificate ekCert) {
 
         try (TpmEndorsementDAO dao = TpmEndorsementJdbiFactory.tpmEndorsementDAO()) {
-            TpmEndorsement tpmEndorsement = dao.findTpmEndorsementByIssuerEqualTo(ekCert.getIssuerDN().getName().replaceAll(" ", "")); // SHOULD REALLY BE BY CERT SHA256
+	    String commonName = getCommonName(ekCert);
+            if (commonName.isEmpty()){
+	        LOG.debug("Common Name field is not present in issuer");
+                return false;
+            }
+            TpmEndorsement tpmEndorsement = dao.findTpmEndorsementByIssuerEqualTo(commonName); // SHOULD REALLY BE BY CERT SHA256
             if (tpmEndorsement == null) {
                 return false;
-            }	
-            String base64EncodedCert = Base64.encodeBase64String(tpmEndorsement.getCertificate());
-            String originalCert = new String(Base64.decodeBase64(base64EncodedCert.getBytes()));
-	    X509Certificate cert = X509Util.decodePemCertificate(originalCert);
-            if (cert.equals(ekCert)) {
-                LOG.debug("EC is registered: {}", tpmEndorsement.getId().toString());
-                return true;
             }
-        } catch (IOException | CertificateEncodingException e) {
+            LOG.debug("EC is registered");
+            return true;
+	} catch (IOException  e) {
             LOG.debug("Cannot check if EC is registered", e);
             return false;
-        } catch (CertificateException e) {
-            LOG.debug("Error while decoding pem certificate", e);
-	    return false;
         }
-        return false;
     }
 
 }
