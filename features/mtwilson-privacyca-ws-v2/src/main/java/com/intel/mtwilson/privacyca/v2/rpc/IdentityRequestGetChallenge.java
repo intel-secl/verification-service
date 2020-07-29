@@ -27,6 +27,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -100,14 +102,20 @@ public class IdentityRequestGetChallenge implements Callable<IdentityProofReques
         // load the trusted ek cacerts
         Map<String, X509Certificate> endorsementCerts = getEndorsementCertificates();
         TpmIdentityRequest tempEC = new TpmIdentityRequest(endorsementCertificate);
-        X509Certificate ekCert = TpmUtils.certFromBytes(tempEC.decryptRaw(caPrivKey));
+
+        // Use the Sun crypto provider since Bouncy Castle fails to parse certain 
+        // TPM manufacture certificates.
+        byte[] ekBytes = tempEC.decryptRaw(caPrivKey);
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        X509Certificate ekCert = (X509Certificate)cf.generateCertificate(new ByteArrayInputStream(ekBytes));
+
         LOG.debug("Validating endorsement certificate");
         if (!isEkCertificateVerifiedByAuthority(ekCert, endorsementCerts.get(ekCert.getIssuerDN().getName().replaceAll("\\x00", "")))
                 && !isEkCertificateVerifiedByAnyAuthority(ekCert, endorsementCerts.values())
                 && !isEkCertificateRegistered(ekCert)) {
             // cannot trust the EC because it's not signed by any of our trusted EC CAs and is not in the mw_tpm_endorements table
-            LOG.error("EC is not trusted, cannot trust the EC because it's not signed by any of trusted EC CAs in EndorsmentCA-external.pem");
-            throw new RuntimeException("Invalid identity request");
+            LOG.error("EC is not trusted, cannot trust the EC because it's not signed by any of trusted EC CAs in EndorsmentCA.pem");
+            throw new RuntimeException("The EK Certificate is not trusted by the EC CAs configured in HVS");
         }
         // check out the endorsement certificate
         // if the cert is good, issue challenge
