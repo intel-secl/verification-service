@@ -3,7 +3,7 @@
    
    <groupId>com.intel.mtwilson.packages</groupId>
    <artifactId>host-verification-service-docker</artifactId>
-   <version>5.2-SNAPSHOT</version>
+   <version>5.2.1-SNAPSHOT</version>
     
    <packaging>pom</packaging>
    <description>Host Verification Service Docker Containerization Zip Package</description>
